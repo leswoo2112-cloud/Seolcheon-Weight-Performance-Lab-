@@ -1,3873 +1,3550 @@
 /* =========================================================
    설천고 WEIGHT PERFORMANCE LAB
    EXERCISES.JS
-   Exercise Database + Pictogram + Analysis Presets
+
+   EXERCISE DATABASE
+   - Bodyweight
+   - Barbell
+   - Dumbbell
+   - Machine
+   - Cable
+   - Kettlebell
+   - Olympic Lifting
+   - Power
+   - Plyometric
+   - Core
+   - Functional
+   - Mobility / Corrective
 ========================================================= */
 
 "use strict";
 
+
 /* =========================================================
-   01. CATEGORY / EQUIPMENT LABELS
+   CATEGORY LABEL
 ========================================================= */
 
 const EXERCISE_CATEGORY_LABELS = {
+
   lower: "하체",
+
   chest: "가슴",
+
   back: "등",
+
   shoulder: "어깨",
+
   arms: "팔",
+
   core: "코어",
+
   olympic: "올림픽 리프팅",
+
   power: "파워",
+
   plyometric: "플라이오메트릭",
+
   functional: "기능성",
+
   mobility: "보강 · 가동성",
+
   fullbody: "전신"
+
 };
 
-const EQUIPMENT_LABELS = {
+
+/* =========================================================
+   EQUIPMENT LABEL
+========================================================= */
+
+const EXERCISE_EQUIPMENT_LABELS = {
+
   bodyweight: "맨몸",
+
   barbell: "바벨",
+
   dumbbell: "덤벨",
-  kettlebell: "케틀벨",
+
   machine: "머신",
+
   cable: "케이블",
+
+  kettlebell: "케틀벨",
+
   band: "밴드",
+
   medicineball: "메디신볼",
+
   box: "박스",
-  trx: "TRX",
-  landmine: "랜드마인",
-  sled: "슬레드",
+
   bench: "벤치",
+
+  trapbar: "트랩바",
+
+  landmine: "랜드마인",
+
+  sled: "슬레드",
+
   other: "기타"
-};
 
-const VIEW_LABELS = {
-  front: "정면",
-  side: "측면",
-  rear: "후면",
-  top: "상단"
 };
 
 
 /* =========================================================
-   02. EXERCISE FACTORY
+   EXERCISE DATABASE
 ========================================================= */
 
-function makeExercise(
-  id,
-  name,
-  category,
-  equipment,
-  pictogram,
-  muscles,
-  view,
-  metrics,
-  description,
-  checkpoints = [],
-  recommendations = [],
-  counter = null
-) {
-  return {
-    id,
-    name,
-    category,
-    equipment,
-    pictogram,
-    muscles,
-    view,
-    metrics,
-    description,
-    checkpoints,
-    recommendations,
-    counter
-  };
-}
-
+const EXERCISES = [
 
 /* =========================================================
-   03. EXERCISE DATABASE
+   LOWER BODY
 ========================================================= */
 
-const WEIGHT_EXERCISES = [
+{
+  id: "bodyweight-squat",
 
-/* =========================================================
-   LOWER BODY — BODYWEIGHT
-========================================================= */
+  name: "스쿼트",
 
-makeExercise(
-  "bodyweight-squat",
-  "맨몸 스쿼트",
-  "lower",
-  "bodyweight",
-  "🏋️",
-  "대퇴사두근 · 둔근 · 햄스트링 · 코어",
-  "side",
-  ["무릎", "고관절", "발목", "몸통", "대칭성", "ROM"],
-  "기본적인 하체 움직임 패턴을 평가하는 맨몸 스쿼트입니다.",
-  [
-    "무릎과 발끝 방향 확인",
-    "발뒤꿈치 지면 유지",
-    "몸통 안정성 확인",
-    "좌우 골반 높이 확인",
-    "스쿼트 깊이 확인"
-  ],
-  [
-    "Goblet Squat",
-    "Tempo Squat",
-    "Wall Ankle Mobility",
-    "Glute Bridge",
-    "Dead Bug"
-  ],
-  {
-    joint: "knee",
-    downAngle: 105,
-    upAngle: 155
-  }
-),
+  category: "lower",
 
-makeExercise(
-  "air-squat",
-  "에어 스쿼트",
-  "lower",
-  "bodyweight",
-  "🧍",
-  "대퇴사두근 · 둔근 · 코어",
-  "front",
-  ["무릎 정렬", "대칭성", "골반 이동"],
-  "정면에서 좌우 움직임과 무릎 정렬을 확인하는 스쿼트입니다.",
-  [
-    "좌우 무릎 이동 비교",
-    "골반 중심 유지",
-    "발 간격 유지"
-  ],
-  [
-    "Mini Band Squat",
-    "Single Leg Balance",
-    "Lateral Band Walk"
-  ],
-  {
-    joint: "knee",
-    downAngle: 105,
-    upAngle: 155
-  }
-),
+  equipment: "bodyweight",
 
-makeExercise(
-  "bodyweight-lunge",
-  "맨몸 런지",
-  "lower",
-  "bodyweight",
-  "🚶",
-  "대퇴사두근 · 둔근 · 햄스트링",
-  "side",
-  ["앞무릎", "뒷무릎", "고관절", "몸통"],
-  "기본 런지 움직임과 한쪽 다리 안정성을 분석합니다.",
-  [
-    "앞발 전체 지지",
-    "무릎 정렬",
-    "몸통 과도한 전방 이동 확인",
-    "좌우 수행 비교"
-  ],
-  [
-    "Split Squat",
-    "Reverse Lunge",
-    "Single Leg RDL",
-    "Step Up"
-  ],
-  {
-    joint: "knee",
-    downAngle: 105,
-    upAngle: 155
-  }
-),
+  pictogram: "🏋️",
 
-makeExercise(
-  "reverse-lunge",
-  "리버스 런지",
-  "lower",
-  "bodyweight",
-  "↩️",
-  "둔근 · 대퇴사두근 · 햄스트링",
-  "side",
-  ["무릎", "고관절", "균형"],
-  "뒤로 발을 이동하는 런지 패턴입니다.",
-  [
-    "앞발 지지 유지",
-    "골반 회전 최소화",
-    "몸통 중심 유지"
-  ],
-  [
-    "Split Squat",
-    "Step Up",
-    "Single Leg Balance"
-  ]
-),
+  muscles: "대퇴사두근 · 둔근 · 햄스트링 · 코어",
 
-makeExercise(
-  "walking-lunge",
-  "워킹 런지",
-  "lower",
-  "bodyweight",
-  "🚶",
-  "둔근 · 대퇴사두근 · 햄스트링",
-  "side",
-  ["보폭", "무릎", "골반", "몸통"],
-  "연속 이동 상황에서 하체 안정성을 분석합니다.",
-  [
-    "보폭 일정성",
-    "좌우 균형",
-    "무릎 정렬"
-  ],
-  [
-    "Reverse Lunge",
-    "Split Squat",
-    "Lateral Lunge"
-  ]
-),
+  description:
+    "기본 맨몸 스쿼트. 하지 정렬과 가동성, 좌우 대칭성을 평가하기 좋은 기본 동작입니다.",
 
-makeExercise(
-  "split-squat",
-  "스플릿 스쿼트",
-  "lower",
-  "bodyweight",
-  "🦵",
-  "둔근 · 대퇴사두근",
-  "side",
-  ["무릎", "고관절", "몸통"],
-  "고정된 스플릿 자세에서 하체 근력과 안정성을 분석합니다.",
-  [
-    "앞무릎 정렬",
-    "골반 수직 이동",
-    "몸통 안정"
-  ],
-  [
-    "Bulgarian Split Squat",
-    "Reverse Lunge",
-    "Step Up"
-  ]
-),
+  recommendedView: "front",
 
-makeExercise(
-  "lateral-lunge",
-  "사이드 런지",
-  "lower",
-  "bodyweight",
-  "↔️",
-  "둔근 · 내전근 · 대퇴사두근",
-  "front",
-  ["무릎", "골반", "좌우 이동"],
-  "측면 방향 하체 움직임을 평가합니다.",
-  [
+  metrics:
+    "무릎 각도 · 고관절 각도 · 발목 각도 · 몸통 기울기 · 좌우 대칭",
+
+  checkpoints: [
     "무릎과 발끝 방향",
-    "골반 후방 이동",
-    "반대쪽 다리 정렬"
-  ],
-  [
-    "Cossack Squat",
-    "Lateral Band Walk",
-    "Adductor Mobility"
-  ]
-),
-
-makeExercise(
-  "cossack-squat",
-  "코사크 스쿼트",
-  "lower",
-  "bodyweight",
-  "↔️",
-  "내전근 · 둔근 · 대퇴사두근",
-  "front",
-  ["고관절", "무릎", "발목", "ROM"],
-  "좌우 고관절 가동성과 하체 제어를 분석합니다.",
-  [
-    "골반 좌우 이동",
-    "발 지지",
-    "무릎 정렬"
-  ],
-  [
-    "Adductor Rock Back",
-    "Lateral Lunge",
-    "Ankle Mobility"
-  ]
-),
-
-makeExercise(
-  "single-leg-squat",
-  "싱글 레그 스쿼트",
-  "lower",
-  "bodyweight",
-  "🦵",
-  "둔근 · 대퇴사두근 · 코어",
-  "front",
-  ["무릎 정렬", "골반", "대칭성", "균형"],
-  "한발 스쿼트에서 좌우 기능 차이를 확인합니다.",
-  [
-    "무릎 안쪽 붕괴 확인",
-    "골반 기울기 확인",
-    "상체 흔들림 확인"
-  ],
-  [
-    "Step Down",
-    "Single Leg Balance",
-    "Lateral Band Walk",
-    "Split Squat"
-  ]
-),
-
-makeExercise(
-  "pistol-squat",
-  "피스톨 스쿼트",
-  "lower",
-  "bodyweight",
-  "🦵",
-  "대퇴사두근 · 둔근 · 코어",
-  "side",
-  ["무릎", "고관절", "발목", "ROM"],
-  "고난도 한발 스쿼트 동작입니다.",
-  [
-    "발뒤꿈치 유지",
-    "몸통 제어",
-    "무릎 정렬"
-  ],
-  [
-    "Box Pistol Squat",
-    "Single Leg Squat",
-    "Ankle Mobility"
-  ]
-),
-
-makeExercise(
-  "glute-bridge",
-  "글루트 브리지",
-  "lower",
-  "bodyweight",
-  "🌉",
-  "둔근 · 햄스트링",
-  "side",
-  ["고관절 신전", "골반"],
-  "둔근 활성화와 고관절 신전 패턴을 평가합니다.",
-  [
-    "허리 과신전 최소화",
-    "골반 수평 유지",
-    "둔근 수축"
-  ],
-  [
-    "Hip Thrust",
-    "Single Leg Bridge",
-    "Dead Bug"
-  ]
-),
-
-makeExercise(
-  "single-leg-bridge",
-  "싱글 레그 브리지",
-  "lower",
-  "bodyweight",
-  "🌉",
-  "둔근 · 햄스트링 · 코어",
-  "front",
-  ["골반 대칭", "고관절"],
-  "한쪽 둔근의 기능과 골반 안정성을 평가합니다.",
-  [
-    "골반 회전 확인",
-    "좌우 높이 비교"
-  ],
-  [
-    "Glute Bridge",
-    "Hip Thrust",
-    "Single Leg RDL"
-  ]
-),
-
-makeExercise(
-  "calf-raise",
-  "카프 레이즈",
-  "lower",
-  "bodyweight",
-  "🦶",
-  "비복근 · 가자미근",
-  "side",
-  ["발목", "ROM"],
-  "발목 저측굴곡 움직임과 종아리 기능을 확인합니다.",
-  [
-    "최대 높이",
-    "발목 흔들림",
-    "반복 일정성"
-  ],
-  [
-    "Single Leg Calf Raise",
-    "Ankle Mobility",
-    "Tibialis Raise"
-  ]
-),
-
-makeExercise(
-  "single-leg-calf-raise",
-  "싱글 레그 카프 레이즈",
-  "lower",
-  "bodyweight",
-  "🦶",
-  "비복근 · 가자미근",
-  "rear",
-  ["발목", "좌우 대칭"],
-  "한발 종아리 근력과 안정성을 비교합니다.",
-  [
-    "발목 좌우 흔들림",
-    "최대 높이",
-    "좌우 반복 차이"
-  ],
-  [
-    "Calf Raise",
-    "Single Leg Balance"
-  ]
-),
-
-/* =========================================================
-   LOWER BODY — BARBELL
-========================================================= */
-
-makeExercise(
-  "back-squat",
-  "바벨 백 스쿼트",
-  "lower",
-  "barbell",
-  "🏋️",
-  "대퇴사두근 · 둔근 · 햄스트링 · 코어",
-  "side",
-  ["무릎", "고관절", "몸통", "발목", "바벨 궤적"],
-  "바벨 백 스쿼트의 관절 각도와 바벨 궤적을 분석합니다.",
-  [
-    "바벨-중족부 정렬",
-    "몸통 각도",
+    "좌우 골반 높이",
     "스쿼트 깊이",
-    "무릎 이동",
-    "힙 시프트"
-  ],
-  [
-    "Tempo Squat",
-    "Pause Squat",
-    "Goblet Squat",
-    "Ankle Mobility",
-    "Core Bracing"
-  ],
-  {
-    joint: "knee",
-    downAngle: 105,
-    upAngle: 160
-  }
-),
+    "몸통 기울기",
+    "뒤꿈치 안정성"
+  ]
+},
 
-makeExercise(
-  "front-squat",
-  "프론트 스쿼트",
-  "lower",
-  "barbell",
-  "🏋️",
-  "대퇴사두근 · 둔근 · 코어",
-  "side",
-  ["무릎", "고관절", "몸통", "바벨 궤적"],
-  "프론트 랙 자세와 스쿼트 움직임을 분석합니다.",
-  [
+
+{
+  id: "air-squat",
+
+  name: "에어 스쿼트",
+
+  category: "lower",
+
+  equipment: "bodyweight",
+
+  pictogram: "🧍",
+
+  muscles: "대퇴사두근 · 둔근 · 코어",
+
+  description:
+    "반복 수행 능력과 스쿼트 패턴을 확인하는 맨몸 스쿼트입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "대칭성 · ROM · 반복 템포 · 무릎 정렬",
+
+  checkpoints: [
+    "좌우 무릎 정렬",
+    "골반 이동",
+    "반복 템포",
+    "상체 안정성"
+  ]
+},
+
+
+{
+  id: "back-squat",
+
+  name: "백 스쿼트",
+
+  category: "lower",
+
+  equipment: "barbell",
+
+  pictogram: "🏋️",
+
+  muscles: "대퇴사두근 · 둔근 · 햄스트링 · 척추기립근",
+
+  description:
+    "바벨을 등 상부에 위치시키는 대표적인 하체 근력 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "무릎 · 고관절 · 발목 · 몸통 · 바벨 궤적",
+
+  checkpoints: [
+    "바벨 수직 궤적",
+    "무릎 정렬",
+    "고관절 깊이",
+    "몸통 기울기",
+    "발 압력 중심"
+  ]
+},
+
+
+{
+  id: "front-squat",
+
+  name: "프론트 스쿼트",
+
+  category: "lower",
+
+  equipment: "barbell",
+
+  pictogram: "🏋️",
+
+  muscles: "대퇴사두근 · 둔근 · 코어 · 상부등",
+
+  description:
+    "바벨을 전면 랙 포지션에 두고 수행하는 스쿼트입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "몸통 각도 · 무릎 각도 · 고관절 각도 · 바벨 궤적",
+
+  checkpoints: [
+    "상체 직립",
     "팔꿈치 위치",
-    "몸통 수직 유지",
-    "바벨 궤적",
-    "발 전체 지지"
-  ],
-  [
-    "Goblet Squat",
-    "Front Rack Mobility",
-    "Pause Front Squat"
+    "바벨 중심",
+    "무릎 이동",
+    "스쿼트 깊이"
   ]
-),
+},
 
-makeExercise(
-  "box-squat",
-  "박스 스쿼트",
-  "lower",
-  "barbell",
-  "📦",
-  "둔근 · 대퇴사두근 · 햄스트링",
-  "side",
-  ["고관절", "무릎", "몸통"],
-  "박스를 이용한 스쿼트 패턴을 분석합니다.",
-  [
-    "후방 체중 이동",
-    "몸통 제어",
-    "박스 접촉 후 자세 유지"
-  ],
-  [
-    "Back Squat",
-    "Tempo Squat",
-    "Hip Hinge Drill"
-  ]
-),
 
-makeExercise(
-  "pause-squat",
-  "포즈 스쿼트",
-  "lower",
-  "barbell",
-  "⏸️",
-  "대퇴사두근 · 둔근 · 코어",
-  "side",
-  ["깊이", "정지 안정성", "바벨 궤적"],
-  "스쿼트 하단 정지 구간의 안정성을 분석합니다.",
-  [
-    "하단 자세 유지",
-    "바벨 흔들림",
-    "상승 시작 자세"
-  ],
-  [
-    "Tempo Squat",
-    "Goblet Squat",
-    "Core Bracing"
-  ]
-),
+{
+  id: "goblet-squat",
 
-makeExercise(
-  "tempo-squat",
-  "템포 스쿼트",
-  "lower",
-  "barbell",
-  "⏱️",
-  "대퇴사두근 · 둔근 · 코어",
-  "side",
-  ["하강 시간", "상승 시간", "관절 각도"],
-  "일정한 템포로 스쿼트 동작을 제어합니다.",
-  [
-    "하강 속도 일정",
-    "반동 최소화",
-    "상승 궤적"
-  ],
-  [
-    "Pause Squat",
-    "Bodyweight Squat",
-    "Core Bracing"
-  ]
-),
+  name: "고블릿 스쿼트",
 
-makeExercise(
-  "barbell-rdl",
-  "바벨 루마니안 데드리프트",
-  "lower",
-  "barbell",
-  "🏋️",
-  "햄스트링 · 둔근 · 척추기립근",
-  "side",
-  ["고관절", "무릎", "몸통", "바벨 궤적"],
-  "힙힌지 패턴과 햄스트링 움직임을 분석합니다.",
-  [
-    "바벨을 몸 가까이 유지",
-    "허리 중립",
-    "고관절 후방 이동",
-    "무릎 각도 유지"
-  ],
-  [
-    "Hip Hinge Drill",
-    "Single Leg RDL",
-    "Hamstring Mobility"
-  ]
-),
+  category: "lower",
 
-makeExercise(
-  "deadlift",
-  "컨벤셔널 데드리프트",
-  "lower",
-  "barbell",
-  "🏋️",
-  "둔근 · 햄스트링 · 등 · 코어",
-  "side",
-  ["고관절", "무릎", "몸통", "바벨 궤적"],
-  "데드리프트 시작 자세와 상승 궤적을 분석합니다.",
-  [
-    "바벨과 중족부 정렬",
-    "바벨 몸 가까이 유지",
-    "고관절과 무릎 신전 타이밍",
-    "몸통 안정"
-  ],
-  [
-    "RDL",
-    "Block Deadlift",
-    "Hip Hinge Drill",
-    "Core Bracing"
-  ]
-),
+  equipment: "dumbbell",
 
-makeExercise(
-  "sumo-deadlift",
-  "스모 데드리프트",
-  "lower",
-  "barbell",
-  "🏋️",
-  "둔근 · 내전근 · 햄스트링",
-  "front",
-  ["무릎", "골반", "바벨 대칭"],
-  "넓은 스탠스 데드리프트를 분석합니다.",
-  [
-    "무릎과 발끝 방향",
-    "좌우 힘 전달",
-    "바벨 중심 유지"
-  ],
-  [
-    "Sumo RDL",
-    "Adductor Mobility",
-    "Goblet Squat"
-  ]
-),
+  pictogram: "🏋",
 
-makeExercise(
-  "barbell-hip-thrust",
-  "바벨 힙 쓰러스트",
-  "lower",
-  "barbell",
-  "🏋️",
-  "둔근 · 햄스트링",
-  "side",
-  ["고관절", "골반", "몸통"],
-  "둔근 중심의 고관절 신전 운동입니다.",
-  [
-    "최상단 골반 위치",
-    "허리 과신전 확인",
-    "턱 위치 유지"
-  ],
-  [
-    "Glute Bridge",
-    "Single Leg Bridge",
-    "RDL"
-  ]
-),
+  muscles: "대퇴사두근 · 둔근 · 코어",
 
-/* =========================================================
-   LOWER — DUMBBELL / KETTLEBELL
-========================================================= */
+  description:
+    "덤벨을 가슴 앞에 들고 수행하는 스쿼트입니다.",
 
-makeExercise(
-  "goblet-squat",
-  "고블릿 스쿼트",
-  "lower",
-  "kettlebell",
-  "🏋️",
-  "대퇴사두근 · 둔근 · 코어",
-  "side",
-  ["무릎", "고관절", "발목", "몸통"],
-  "중량을 몸 앞에 들고 수행하는 스쿼트입니다.",
-  [
-    "몸통 안정",
-    "스쿼트 깊이",
-    "무릎 정렬"
-  ],
-  [
-    "Bodyweight Squat",
-    "Tempo Squat",
-    "Ankle Mobility"
-  ]
-),
+  recommendedView: "front",
 
-makeExercise(
-  "dumbbell-lunge",
-  "덤벨 런지",
-  "lower",
-  "dumbbell",
-  "🏋️",
-  "둔근 · 대퇴사두근",
-  "side",
-  ["무릎", "고관절", "몸통"],
-  "덤벨을 들고 수행하는 런지입니다.",
-  [
-    "덤벨 흔들림",
+  metrics:
+    "무릎 정렬 · 골반 대칭 · 몸통 안정성",
+
+  checkpoints: [
     "무릎 정렬",
-    "보폭"
-  ],
-  [
-    "Bodyweight Lunge",
-    "Split Squat",
-    "Step Up"
+    "골반 대칭",
+    "상체 안정성",
+    "발 압력"
   ]
-),
+},
 
-makeExercise(
-  "bulgarian-split-squat",
-  "불가리안 스플릿 스쿼트",
-  "lower",
-  "dumbbell",
-  "🦵",
-  "둔근 · 대퇴사두근",
-  "side",
-  ["무릎", "고관절", "몸통", "균형"],
-  "후방 발을 높인 한발 하체 운동입니다.",
-  [
-    "앞발 지지",
+
+{
+  id: "overhead-squat",
+
+  name: "오버헤드 스쿼트",
+
+  category: "fullbody",
+
+  equipment: "barbell",
+
+  pictogram: "🏋️",
+
+  muscles: "전신 · 어깨 · 코어 · 하체",
+
+  description:
+    "바벨을 머리 위에 유지하면서 수행하는 전신 안정성 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "어깨 · 몸통 · 고관절 · 무릎 · 발목",
+
+  checkpoints: [
+    "바벨 중심선",
+    "어깨 가동성",
+    "몸통 안정성",
+    "무릎 정렬",
+    "스쿼트 깊이"
+  ]
+},
+
+
+{
+  id: "split-squat",
+
+  name: "스플릿 스쿼트",
+
+  category: "lower",
+
+  equipment: "bodyweight",
+
+  pictogram: "🦵",
+
+  muscles: "둔근 · 대퇴사두근 · 햄스트링",
+
+  description:
+    "앞뒤 스탠스에서 수행하는 편측 하체 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "앞 무릎 각도 · 골반 높이 · 몸통 기울기",
+
+  checkpoints: [
+    "앞 무릎 정렬",
+    "골반 중심",
+    "몸통 안정성",
+    "좌우 차이"
+  ]
+},
+
+
+{
+  id: "bulgarian-split-squat",
+
+  name: "불가리안 스플릿 스쿼트",
+
+  category: "lower",
+
+  equipment: "dumbbell",
+
+  pictogram: "🦵",
+
+  muscles: "둔근 · 대퇴사두근 · 햄스트링",
+
+  description:
+    "후방 발을 벤치에 올려 수행하는 편측 하체 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "무릎 · 고관절 · 골반 · 몸통",
+
+  checkpoints: [
+    "앞발 안정성",
     "골반 정렬",
-    "몸통 흔들림"
-  ],
-  [
-    "Split Squat",
-    "Single Leg Squat",
-    "Step Up"
+    "무릎 이동",
+    "상체 기울기"
   ]
-),
+},
 
-makeExercise(
-  "step-up",
-  "스텝 업",
-  "lower",
-  "dumbbell",
-  "📦",
-  "둔근 · 대퇴사두근",
-  "front",
-  ["무릎", "골반", "대칭성"],
-  "박스 상승 동작에서 한쪽 다리의 힘 전달을 평가합니다.",
-  [
-    "지지측 무릎 정렬",
-    "반대발 반동 최소화",
-    "골반 수평"
-  ],
-  [
-    "Split Squat",
-    "Single Leg Squat",
-    "Lateral Step Down"
-  ]
-),
 
-makeExercise(
-  "single-leg-rdl",
-  "싱글 레그 RDL",
-  "lower",
-  "dumbbell",
-  "🦵",
-  "햄스트링 · 둔근 · 코어",
-  "side",
-  ["고관절", "몸통", "균형"],
-  "한발 힙힌지와 골반 안정성을 평가합니다.",
-  [
-    "골반 회전 최소화",
-    "몸통과 뒷다리 정렬",
-    "지지발 안정"
-  ],
-  [
-    "RDL",
-    "Single Leg Balance",
-    "Glute Medius Training"
+{
+  id: "reverse-lunge",
+
+  name: "리버스 런지",
+
+  category: "lower",
+
+  equipment: "bodyweight",
+
+  pictogram: "🚶",
+
+  muscles: "둔근 · 대퇴사두근 · 햄스트링",
+
+  description:
+    "한 발을 뒤로 보내며 수행하는 런지입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "무릎 정렬 · 골반 대칭 · 균형",
+
+  checkpoints: [
+    "무릎 안쪽 붕괴",
+    "골반 회전",
+    "균형",
+    "보폭"
   ]
-),
+},
+
+
+{
+  id: "forward-lunge",
+
+  name: "포워드 런지",
+
+  category: "lower",
+
+  equipment: "bodyweight",
+
+  pictogram: "🚶",
+
+  muscles: "대퇴사두근 · 둔근 · 햄스트링",
+
+  description:
+    "앞으로 한 발을 내딛으며 수행하는 기본 런지입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "무릎 정렬 · 골반 · 보폭 · 몸통",
+
+  checkpoints: [
+    "무릎과 발끝 방향",
+    "골반 흔들림",
+    "착지 안정성",
+    "몸통 제어"
+  ]
+},
+
+
+{
+  id: "walking-lunge",
+
+  name: "워킹 런지",
+
+  category: "lower",
+
+  equipment: "bodyweight",
+
+  pictogram: "🚶",
+
+  muscles: "둔근 · 대퇴사두근 · 햄스트링",
+
+  description:
+    "전진하면서 연속적으로 수행하는 런지입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "좌우 대칭 · 무릎 정렬 · 골반 이동",
+
+  checkpoints: [
+    "좌우 보폭",
+    "골반 흔들림",
+    "무릎 정렬",
+    "착지 안정성"
+  ]
+},
+
+
+{
+  id: "lateral-lunge",
+
+  name: "사이드 런지",
+
+  category: "lower",
+
+  equipment: "bodyweight",
+
+  pictogram: "↔️",
+
+  muscles: "내전근 · 둔근 · 대퇴사두근",
+
+  description:
+    "측면 방향 움직임을 사용하는 런지입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "골반 이동 · 무릎 정렬 · 좌우 ROM",
+
+  checkpoints: [
+    "측면 골반 이동",
+    "무릎 방향",
+    "반대쪽 다리 정렬",
+    "좌우 가동범위"
+  ]
+},
+
+
+{
+  id: "step-up",
+
+  name: "스텝 업",
+
+  category: "lower",
+
+  equipment: "box",
+
+  pictogram: "🪜",
+
+  muscles: "둔근 · 대퇴사두근",
+
+  description:
+    "박스나 벤치 위로 올라가는 편측 하체 운동입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "무릎 정렬 · 골반 안정성 · 좌우 차이",
+
+  checkpoints: [
+    "지지 다리 정렬",
+    "골반 상승",
+    "반대발 보조",
+    "균형"
+  ]
+},
+
+
+{
+  id: "single-leg-squat",
+
+  name: "싱글 레그 스쿼트",
+
+  category: "lower",
+
+  equipment: "bodyweight",
+
+  pictogram: "🦵",
+
+  muscles: "둔근 · 대퇴사두근 · 코어",
+
+  description:
+    "한쪽 다리로 수행하여 좌우 안정성과 근력 차이를 평가합니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "무릎 외반 · 골반 드롭 · 균형 · ROM",
+
+  checkpoints: [
+    "무릎 안쪽 이동",
+    "골반 드롭",
+    "몸통 흔들림",
+    "좌우 차이"
+  ]
+},
+
+
+{
+  id: "pistol-squat",
+
+  name: "피스톨 스쿼트",
+
+  category: "lower",
+
+  equipment: "bodyweight",
+
+  pictogram: "🦵",
+
+  muscles: "대퇴사두근 · 둔근 · 코어",
+
+  description:
+    "한 다리로 깊게 앉는 고난도 편측 스쿼트입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "무릎 · 고관절 · 발목 ROM · 균형",
+
+  checkpoints: [
+    "발목 가동성",
+    "무릎 정렬",
+    "골반 안정성",
+    "깊이"
+  ]
+},
+
+
+{
+  id: "romanian-deadlift",
+
+  name: "루마니안 데드리프트",
+
+  category: "lower",
+
+  equipment: "barbell",
+
+  pictogram: "🏋",
+
+  muscles: "햄스트링 · 둔근 · 척추기립근",
+
+  description:
+    "힙힌지 패턴을 중심으로 수행하는 후면사슬 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "고관절 각도 · 몸통 · 무릎 · 바벨 궤적",
+
+  checkpoints: [
+    "힙힌지",
+    "척추 정렬",
+    "바벨과 몸의 거리",
+    "무릎 굴곡"
+  ]
+},
+
+
+{
+  id: "deadlift",
+
+  name: "데드리프트",
+
+  category: "fullbody",
+
+  equipment: "barbell",
+
+  pictogram: "🏋",
+
+  muscles: "둔근 · 햄스트링 · 등 · 코어",
+
+  description:
+    "바닥의 바벨을 들어 올리는 대표적인 전신 근력 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "고관절 · 무릎 · 몸통 · 바벨 궤적",
+
+  checkpoints: [
+    "바벨 수직 이동",
+    "척추 정렬",
+    "고관절과 무릎 타이밍",
+    "락아웃"
+  ]
+},
+
+
+{
+  id: "sumo-deadlift",
+
+  name: "스모 데드리프트",
+
+  category: "fullbody",
+
+  equipment: "barbell",
+
+  pictogram: "🏋",
+
+  muscles: "둔근 · 내전근 · 대퇴사두근 · 등",
+
+  description:
+    "넓은 스탠스로 수행하는 데드리프트입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "무릎 정렬 · 골반 · 좌우 대칭 · 바벨",
+
+  checkpoints: [
+    "무릎 방향",
+    "좌우 하중",
+    "골반 중심",
+    "락아웃"
+  ]
+},
+
+
+{
+  id: "trap-bar-deadlift",
+
+  name: "트랩바 데드리프트",
+
+  category: "fullbody",
+
+  equipment: "trapbar",
+
+  pictogram: "⬡",
+
+  muscles: "하체 · 둔근 · 등 · 코어",
+
+  description:
+    "트랩바를 이용한 전신 근력 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "무릎 · 고관절 · 몸통 · 상승 속도",
+
+  checkpoints: [
+    "중심 위치",
+    "무릎과 고관절 타이밍",
+    "척추 정렬",
+    "락아웃"
+  ]
+},
+
+
+{
+  id: "hip-thrust",
+
+  name: "힙 쓰러스트",
+
+  category: "lower",
+
+  equipment: "barbell",
+
+  pictogram: "⬆️",
+
+  muscles: "둔근 · 햄스트링",
+
+  description:
+    "고관절 신전을 집중적으로 강화하는 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "고관절 신전 · 몸통 · 무릎",
+
+  checkpoints: [
+    "완전한 고관절 신전",
+    "과도한 허리 신전",
+    "무릎 위치",
+    "좌우 골반"
+  ]
+},
+
+
+{
+  id: "glute-bridge",
+
+  name: "글루트 브리지",
+
+  category: "lower",
+
+  equipment: "bodyweight",
+
+  pictogram: "🌉",
+
+  muscles: "둔근 · 햄스트링",
+
+  description:
+    "맨몸으로 수행하는 기본 고관절 신전 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "골반 높이 · 고관절 신전 · 좌우 대칭",
+
+  checkpoints: [
+    "골반 높이",
+    "허리 과신전",
+    "발 위치",
+    "좌우 대칭"
+  ]
+},
+
+
+{
+  id: "leg-press",
+
+  name: "레그 프레스",
+
+  category: "lower",
+
+  equipment: "machine",
+
+  pictogram: "🦿",
+
+  muscles: "대퇴사두근 · 둔근",
+
+  description:
+    "머신을 이용한 하체 프레스 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "무릎 ROM · 고관절 ROM · 좌우 정렬",
+
+  checkpoints: [
+    "무릎 깊이",
+    "골반 말림",
+    "무릎 정렬",
+    "완전 잠금 여부"
+  ]
+},
+
+
+{
+  id: "leg-extension",
+
+  name: "레그 익스텐션",
+
+  category: "lower",
+
+  equipment: "machine",
+
+  pictogram: "🦿",
+
+  muscles: "대퇴사두근",
+
+  description:
+    "무릎 신전 근력을 강화하는 머신 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "무릎 ROM · 좌우 속도",
+
+  checkpoints: [
+    "무릎 신전 범위",
+    "반동",
+    "좌우 차이",
+    "템포"
+  ]
+},
+
+
+{
+  id: "leg-curl",
+
+  name: "레그 컬",
+
+  category: "lower",
+
+  equipment: "machine",
+
+  pictogram: "🦿",
+
+  muscles: "햄스트링",
+
+  description:
+    "무릎 굴곡을 통해 햄스트링을 강화합니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "무릎 굴곡 ROM · 좌우 차이",
+
+  checkpoints: [
+    "무릎 굴곡",
+    "골반 움직임",
+    "반동",
+    "좌우 차이"
+  ]
+},
+
+
+{
+  id: "calf-raise",
+
+  name: "카프 레이즈",
+
+  category: "lower",
+
+  equipment: "bodyweight",
+
+  pictogram: "🦶",
+
+  muscles: "비복근 · 가자미근",
+
+  description:
+    "발목 저측굴곡 근력을 강화합니다.",
+
+  recommendedView: "rear",
+
+  metrics:
+    "발목 ROM · 좌우 대칭",
+
+  checkpoints: [
+    "뒤꿈치 높이",
+    "발목 정렬",
+    "좌우 차이",
+    "균형"
+  ]
+},
+
 
 /* =========================================================
    CHEST
 ========================================================= */
 
-makeExercise(
-  "push-up",
-  "푸시업",
-  "chest",
-  "bodyweight",
-  "💪",
-  "대흉근 · 삼두근 · 전면삼각근 · 코어",
-  "side",
-  ["팔꿈치", "어깨", "몸통"],
-  "기본적인 상체 밀기 패턴을 분석합니다.",
-  [
-    "머리-몸통-골반 정렬",
-    "팔꿈치 경로",
-    "가슴 하강 깊이"
-  ],
-  [
-    "Incline Push Up",
-    "Plank",
-    "Scapular Push Up"
-  ],
-  {
-    joint: "elbow",
-    downAngle: 100,
-    upAngle: 155
-  }
-),
+{
+  id: "push-up",
 
-makeExercise(
-  "incline-push-up",
-  "인클라인 푸시업",
-  "chest",
-  "bodyweight",
-  "💪",
-  "가슴 · 삼두근 · 코어",
-  "side",
-  ["팔꿈치", "몸통"],
-  "상체를 높여 수행하는 푸시업입니다.",
-  [
+  name: "푸시업",
+
+  category: "chest",
+
+  equipment: "bodyweight",
+
+  pictogram: "💪",
+
+  muscles: "대흉근 · 삼두근 · 전면삼각근 · 코어",
+
+  description:
+    "대표적인 맨몸 상체 밀기 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "팔꿈치 · 어깨 · 몸통 정렬 · ROM",
+
+  checkpoints: [
     "몸통 일직선",
-    "팔꿈치 제어"
-  ],
-  [
-    "Push Up",
-    "Plank"
-  ]
-),
-
-makeExercise(
-  "bench-press",
-  "바벨 벤치프레스",
-  "chest",
-  "barbell",
-  "🏋️",
-  "대흉근 · 삼두근 · 전면삼각근",
-  "side",
-  ["팔꿈치", "어깨", "바벨 궤적"],
-  "벤치프레스의 바벨 이동과 상지 관절을 분석합니다.",
-  [
-    "바벨 하강 위치",
-    "손목 정렬",
-    "좌우 바벨 높이",
-    "견갑 안정"
-  ],
-  [
-    "Dumbbell Bench Press",
-    "Push Up",
-    "Scapular Stability"
-  ],
-  {
-    joint: "elbow",
-    downAngle: 100,
-    upAngle: 155
-  }
-),
-
-makeExercise(
-  "incline-bench-press",
-  "인클라인 벤치프레스",
-  "chest",
-  "barbell",
-  "🏋️",
-  "상부가슴 · 삼두근 · 어깨",
-  "side",
-  ["팔꿈치", "어깨", "바벨 궤적"],
-  "인클라인 벤치에서 밀기 패턴을 분석합니다.",
-  [
-    "바벨 경로",
-    "팔꿈치 정렬",
-    "견갑 안정"
-  ],
-  [
-    "Dumbbell Incline Press",
-    "Push Up"
-  ]
-),
-
-makeExercise(
-  "dumbbell-bench",
-  "덤벨 벤치프레스",
-  "chest",
-  "dumbbell",
-  "🏋️",
-  "가슴 · 삼두근 · 어깨",
-  "front",
-  ["팔꿈치", "좌우 대칭"],
-  "덤벨 벤치프레스의 좌우 움직임을 비교합니다.",
-  [
-    "좌우 덤벨 높이",
     "팔꿈치 각도",
-    "속도 대칭"
-  ],
-  [
-    "Bench Press",
-    "Push Up",
-    "Single Arm Press"
+    "가슴 깊이",
+    "골반 처짐"
   ]
-),
+},
 
-makeExercise(
-  "dumbbell-fly",
-  "덤벨 플라이",
-  "chest",
-  "dumbbell",
-  "🏋️",
-  "대흉근",
-  "front",
-  ["어깨", "팔꿈치", "대칭성"],
-  "가슴 수평 내전 움직임을 분석합니다.",
-  [
-    "좌우 ROM",
-    "팔꿈치 각도 유지"
-  ],
-  [
-    "Cable Fly",
-    "Push Up"
-  ]
-),
 
-makeExercise(
-  "cable-fly",
-  "케이블 플라이",
-  "chest",
-  "cable",
-  "🔗",
-  "대흉근",
-  "front",
-  ["어깨", "대칭성"],
-  "케이블을 이용한 가슴 운동입니다.",
-  [
-    "좌우 손 이동",
-    "몸통 흔들림"
-  ],
-  [
-    "Dumbbell Fly",
-    "Push Up"
+{
+  id: "bench-press",
+
+  name: "벤치프레스",
+
+  category: "chest",
+
+  equipment: "barbell",
+
+  pictogram: "🏋",
+
+  muscles: "대흉근 · 삼두근 · 전면삼각근",
+
+  description:
+    "바벨을 이용하는 대표적인 상체 프레스 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "팔꿈치 · 바벨 궤적 · 좌우 대칭",
+
+  checkpoints: [
+    "바벨 하강 위치",
+    "팔꿈치 정렬",
+    "좌우 바벨 높이",
+    "바벨 궤적"
   ]
-),
+},
+
+
+{
+  id: "dumbbell-bench-press",
+
+  name: "덤벨 벤치프레스",
+
+  category: "chest",
+
+  equipment: "dumbbell",
+
+  pictogram: "🏋",
+
+  muscles: "대흉근 · 삼두근 · 어깨",
+
+  description:
+    "덤벨을 사용해 좌우 독립적으로 수행하는 벤치프레스입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "좌우 대칭 · 팔꿈치 · 어깨",
+
+  checkpoints: [
+    "덤벨 높이",
+    "좌우 속도",
+    "팔꿈치 정렬",
+    "어깨 안정성"
+  ]
+},
+
+
+{
+  id: "incline-bench",
+
+  name: "인클라인 벤치프레스",
+
+  category: "chest",
+
+  equipment: "barbell",
+
+  pictogram: "🏋",
+
+  muscles: "상부 대흉근 · 삼두근 · 어깨",
+
+  description:
+    "경사진 벤치에서 수행하는 프레스입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "바벨 궤적 · 팔꿈치 · 어깨",
+
+  checkpoints: [
+    "바벨 경로",
+    "팔꿈치 위치",
+    "어깨 안정성",
+    "좌우 균형"
+  ]
+},
+
+
+{
+  id: "chest-fly",
+
+  name: "덤벨 플라이",
+
+  category: "chest",
+
+  equipment: "dumbbell",
+
+  pictogram: "🪽",
+
+  muscles: "대흉근 · 전면삼각근",
+
+  description:
+    "덤벨을 양옆으로 벌렸다 모으는 가슴 운동입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "어깨 ROM · 팔꿈치 각도 · 좌우 대칭",
+
+  checkpoints: [
+    "팔꿈치 각도 유지",
+    "좌우 깊이",
+    "어깨 과신전",
+    "덤벨 경로"
+  ]
+},
+
+
+{
+  id: "cable-fly",
+
+  name: "케이블 플라이",
+
+  category: "chest",
+
+  equipment: "cable",
+
+  pictogram: "🪽",
+
+  muscles: "대흉근 · 어깨",
+
+  description:
+    "케이블 저항을 이용한 가슴 모으기 운동입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "좌우 대칭 · 어깨 ROM · 손 경로",
+
+  checkpoints: [
+    "좌우 손 높이",
+    "어깨 안정성",
+    "몸통 흔들림",
+    "가동범위"
+  ]
+},
+
+
+{
+  id: "dip",
+
+  name: "딥스",
+
+  category: "chest",
+
+  equipment: "bodyweight",
+
+  pictogram: "💪",
+
+  muscles: "대흉근 · 삼두근 · 어깨",
+
+  description:
+    "평행봉에서 수행하는 맨몸 프레스 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "팔꿈치 ROM · 어깨 · 몸통",
+
+  checkpoints: [
+    "하강 깊이",
+    "어깨 위치",
+    "몸통 각도",
+    "좌우 균형"
+  ]
+},
+
 
 /* =========================================================
    BACK
 ========================================================= */
 
-makeExercise(
-  "pull-up",
-  "풀업",
-  "back",
-  "bodyweight",
-  "🧗",
-  "광배근 · 이두근 · 능형근",
-  "front",
-  ["팔꿈치", "어깨", "좌우 대칭"],
-  "수직 당기기 움직임과 좌우 대칭을 분석합니다.",
-  [
-    "턱 높이",
+{
+  id: "pull-up",
+
+  name: "풀업",
+
+  category: "back",
+
+  equipment: "bodyweight",
+
+  pictogram: "🧗",
+
+  muscles: "광배근 · 승모근 · 이두근",
+
+  description:
+    "철봉을 이용한 대표적인 맨몸 당기기 운동입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "어깨 높이 · 팔꿈치 · 좌우 대칭",
+
+  checkpoints: [
     "좌우 어깨 높이",
-    "몸통 흔들림"
-  ],
-  [
-    "Lat Pulldown",
-    "Scapular Pull Up",
-    "Dead Hang"
-  ],
-  {
-    joint: "elbow",
-    downAngle: 155,
-    upAngle: 75
-  }
-),
-
-makeExercise(
-  "chin-up",
-  "친업",
-  "back",
-  "bodyweight",
-  "🧗",
-  "광배근 · 이두근",
-  "front",
-  ["팔꿈치", "어깨", "대칭성"],
-  "언더그립 수직 당기기 동작입니다.",
-  [
-    "좌우 높이",
-    "몸통 흔들림"
-  ],
-  [
-    "Pull Up",
-    "Lat Pulldown"
-  ]
-),
-
-makeExercise(
-  "barbell-row",
-  "바벨 로우",
-  "back",
-  "barbell",
-  "🏋️",
-  "광배근 · 능형근 · 후면삼각근",
-  "side",
-  ["몸통", "팔꿈치", "바벨 궤적"],
-  "힙힌지를 유지하며 수행하는 수평 당기기 운동입니다.",
-  [
-    "몸통 각도 유지",
-    "바벨 경로",
-    "허리 중립"
-  ],
-  [
-    "Chest Supported Row",
-    "RDL",
-    "Cable Row"
-  ]
-),
-
-makeExercise(
-  "one-arm-db-row",
-  "원암 덤벨 로우",
-  "back",
-  "dumbbell",
-  "🏋️",
-  "광배근 · 능형근",
-  "side",
-  ["팔꿈치", "몸통"],
-  "한팔 로우 동작을 분석합니다.",
-  [
-    "몸통 회전 최소화",
-    "팔꿈치 이동"
-  ],
-  [
-    "Cable Row",
-    "Bird Dog"
-  ]
-),
-
-makeExercise(
-  "lat-pulldown",
-  "랫 풀다운",
-  "back",
-  "cable",
-  "⬇️",
-  "광배근 · 이두근",
-  "front",
-  ["팔꿈치", "어깨", "대칭성"],
-  "수직 당기기 패턴을 분석합니다.",
-  [
-    "좌우 팔꿈치 높이",
-    "몸통 과도한 후방 기울기 확인"
-  ],
-  [
-    "Pull Up",
-    "Scapular Pulldown"
-  ]
-),
-
-makeExercise(
-  "seated-cable-row",
-  "시티드 케이블 로우",
-  "back",
-  "cable",
-  "🔗",
-  "광배근 · 능형근",
-  "side",
-  ["팔꿈치", "몸통"],
-  "수평 당기기 동작을 분석합니다.",
-  [
     "몸통 흔들림",
+    "턱 높이",
     "팔꿈치 경로"
-  ],
-  [
-    "Chest Supported Row",
-    "Face Pull"
   ]
-),
+},
 
-makeExercise(
-  "face-pull",
-  "페이스 풀",
-  "back",
-  "cable",
-  "🔗",
-  "후면삼각근 · 회전근개",
-  "front",
-  ["어깨", "팔꿈치"],
-  "견갑과 어깨 안정성 운동입니다.",
-  [
-    "팔꿈치 높이",
-    "좌우 대칭"
-  ],
-  [
-    "Band External Rotation",
-    "Y Raise"
+
+{
+  id: "chin-up",
+
+  name: "친업",
+
+  category: "back",
+
+  equipment: "bodyweight",
+
+  pictogram: "🧗",
+
+  muscles: "광배근 · 이두근",
+
+  description:
+    "언더그립으로 수행하는 철봉 당기기 운동입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "좌우 대칭 · 어깨 · 팔꿈치",
+
+  checkpoints: [
+    "어깨 정렬",
+    "팔꿈치 경로",
+    "몸통 반동",
+    "완전 ROM"
   ]
-),
+},
+
+
+{
+  id: "barbell-row",
+
+  name: "바벨 로우",
+
+  category: "back",
+
+  equipment: "barbell",
+
+  pictogram: "🏋",
+
+  muscles: "광배근 · 능형근 · 승모근 · 후면삼각근",
+
+  description:
+    "힙힌지 자세에서 바벨을 몸쪽으로 당기는 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "몸통 각도 · 바벨 경로 · 팔꿈치",
+
+  checkpoints: [
+    "허리 정렬",
+    "몸통 각도",
+    "바벨과 몸의 거리",
+    "반동"
+  ]
+},
+
+
+{
+  id: "dumbbell-row",
+
+  name: "원암 덤벨 로우",
+
+  category: "back",
+
+  equipment: "dumbbell",
+
+  pictogram: "🏋",
+
+  muscles: "광배근 · 승모근 · 후면삼각근",
+
+  description:
+    "한쪽씩 수행하는 덤벨 로우입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "몸통 회전 · 팔꿈치 · 어깨",
+
+  checkpoints: [
+    "몸통 회전",
+    "어깨 높이",
+    "팔꿈치 경로",
+    "ROM"
+  ]
+},
+
+
+{
+  id: "lat-pulldown",
+
+  name: "랫 풀다운",
+
+  category: "back",
+
+  equipment: "machine",
+
+  pictogram: "⬇️",
+
+  muscles: "광배근 · 이두근 · 승모근",
+
+  description:
+    "랫 풀다운 머신을 이용한 수직 당기기 운동입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "좌우 바 높이 · 어깨 · 팔꿈치",
+
+  checkpoints: [
+    "좌우 당김 대칭",
+    "어깨 상승",
+    "몸통 반동",
+    "바 위치"
+  ]
+},
+
+
+{
+  id: "seated-row",
+
+  name: "시티드 로우",
+
+  category: "back",
+
+  equipment: "cable",
+
+  pictogram: "⬅️",
+
+  muscles: "광배근 · 능형근 · 승모근",
+
+  description:
+    "앉은 자세에서 케이블을 몸쪽으로 당기는 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "몸통 움직임 · 팔꿈치 · 어깨",
+
+  checkpoints: [
+    "몸통 반동",
+    "견갑 움직임",
+    "팔꿈치 경로",
+    "척추 정렬"
+  ]
+},
+
+
+{
+  id: "face-pull",
+
+  name: "페이스 풀",
+
+  category: "back",
+
+  equipment: "cable",
+
+  pictogram: "🎯",
+
+  muscles: "후면삼각근 · 회전근개 · 승모근",
+
+  description:
+    "어깨 후면과 견갑 안정성을 강화하는 케이블 운동입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "팔꿈치 높이 · 좌우 대칭 · 어깨 회전",
+
+  checkpoints: [
+    "팔꿈치 높이",
+    "좌우 손 위치",
+    "어깨 외회전",
+    "몸통 반동"
+  ]
+},
+
 
 /* =========================================================
-   SHOULDERS
+   SHOULDER
 ========================================================= */
 
-makeExercise(
-  "overhead-press",
-  "오버헤드 프레스",
-  "shoulder",
-  "barbell",
-  "🏋️",
-  "삼각근 · 삼두근 · 코어",
-  "side",
-  ["팔꿈치", "어깨", "몸통", "바벨 궤적"],
-  "머리 위 밀기 패턴과 바벨 궤적을 분석합니다.",
-  [
-    "바벨 수직 이동",
-    "허리 과신전 확인",
-    "팔꿈치 정렬"
-  ],
-  [
-    "Dumbbell Shoulder Press",
-    "Wall Slide",
-    "Core Bracing"
-  ]
-),
+{
+  id: "overhead-press",
 
-makeExercise(
-  "dumbbell-shoulder-press",
-  "덤벨 숄더프레스",
-  "shoulder",
-  "dumbbell",
-  "🏋️",
-  "삼각근 · 삼두근",
-  "front",
-  ["어깨", "팔꿈치", "대칭성"],
-  "덤벨 오버헤드 프레스의 좌우 대칭을 분석합니다.",
-  [
-    "좌우 덤벨 높이",
-    "팔꿈치 경로"
-  ],
-  [
-    "Overhead Press",
-    "Landmine Press"
-  ]
-),
+  name: "오버헤드 프레스",
 
-makeExercise(
-  "lateral-raise",
-  "사이드 레터럴 레이즈",
-  "shoulder",
-  "dumbbell",
-  "🪽",
-  "측면삼각근",
-  "front",
-  ["어깨", "대칭성"],
-  "어깨 외전 움직임의 좌우 대칭을 분석합니다.",
-  [
-    "좌우 손 높이",
-    "몸통 반동"
-  ],
-  [
-    "Cable Lateral Raise",
-    "Y Raise"
-  ]
-),
+  category: "shoulder",
 
-makeExercise(
-  "front-raise",
-  "프론트 레이즈",
-  "shoulder",
-  "dumbbell",
-  "⬆️",
-  "전면삼각근",
-  "side",
-  ["어깨", "몸통"],
-  "어깨 굴곡 동작을 분석합니다.",
-  [
-    "몸통 반동 최소화",
+  equipment: "barbell",
+
+  pictogram: "⬆️",
+
+  muscles: "삼각근 · 삼두근 · 코어",
+
+  description:
+    "바벨을 머리 위로 밀어 올리는 상체 프레스입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "바벨 궤적 · 어깨 · 팔꿈치 · 몸통",
+
+  checkpoints: [
+    "바벨 중심선",
+    "허리 과신전",
+    "팔꿈치 위치",
+    "락아웃"
+  ]
+},
+
+
+{
+  id: "dumbbell-shoulder-press",
+
+  name: "덤벨 숄더 프레스",
+
+  category: "shoulder",
+
+  equipment: "dumbbell",
+
+  pictogram: "⬆️",
+
+  muscles: "삼각근 · 삼두근",
+
+  description:
+    "덤벨을 양손으로 머리 위로 밀어 올립니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "좌우 높이 · 팔꿈치 · 어깨",
+
+  checkpoints: [
+    "덤벨 높이",
+    "좌우 속도",
+    "어깨 안정성",
+    "팔꿈치 위치"
+  ]
+},
+
+
+{
+  id: "lateral-raise",
+
+  name: "사이드 레터럴 레이즈",
+
+  category: "shoulder",
+
+  equipment: "dumbbell",
+
+  pictogram: "🪽",
+
+  muscles: "측면삼각근",
+
+  description:
+    "덤벨을 측면으로 들어 올리는 어깨 운동입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "좌우 높이 · 어깨 각도 · 몸통 흔들림",
+
+  checkpoints: [
+    "좌우 높이",
+    "승모근 보상",
+    "몸통 반동",
+    "팔꿈치 각도"
+  ]
+},
+
+
+{
+  id: "front-raise",
+
+  name: "프론트 레이즈",
+
+  category: "shoulder",
+
+  equipment: "dumbbell",
+
+  pictogram: "⬆️",
+
+  muscles: "전면삼각근",
+
+  description:
+    "덤벨을 전방으로 들어 올리는 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "어깨 ROM · 몸통 · 팔꿈치",
+
+  checkpoints: [
+    "몸통 반동",
+    "팔 높이",
+    "허리 보상",
+    "템포"
+  ]
+},
+
+
+{
+  id: "rear-delt-fly",
+
+  name: "리어 델트 플라이",
+
+  category: "shoulder",
+
+  equipment: "dumbbell",
+
+  pictogram: "🪽",
+
+  muscles: "후면삼각근 · 능형근",
+
+  description:
+    "어깨 후면과 상부 등을 강화합니다.",
+
+  recommendedView: "rear",
+
+  metrics:
+    "좌우 어깨 · 팔 경로 · 몸통",
+
+  checkpoints: [
+    "좌우 대칭",
+    "견갑 움직임",
+    "몸통 반동",
     "팔 높이"
-  ],
-  [
-    "Landmine Press",
-    "Wall Slide"
   ]
-),
+},
 
-makeExercise(
-  "rear-delt-fly",
-  "리어 델트 플라이",
-  "shoulder",
-  "dumbbell",
-  "🪽",
-  "후면삼각근 · 능형근",
-  "rear",
-  ["어깨", "대칭성"],
-  "후면 어깨와 견갑 움직임을 분석합니다.",
-  [
-    "좌우 손 높이",
-    "견갑 움직임"
-  ],
-  [
-    "Face Pull",
-    "Band Pull Apart"
-  ]
-),
 
 /* =========================================================
    ARMS
 ========================================================= */
 
-makeExercise(
-  "barbell-curl",
-  "바벨 컬",
-  "arms",
-  "barbell",
-  "💪",
-  "상완이두근",
-  "side",
-  ["팔꿈치", "몸통"],
-  "팔꿈치 굴곡과 몸통 반동을 분석합니다.",
-  [
-    "팔꿈치 위치",
-    "몸통 반동 최소화"
-  ],
-  [
-    "Dumbbell Curl",
-    "Hammer Curl"
-  ]
-),
+{
+  id: "biceps-curl",
 
-makeExercise(
-  "dumbbell-curl",
-  "덤벨 컬",
-  "arms",
-  "dumbbell",
-  "💪",
-  "상완이두근",
-  "front",
-  ["팔꿈치", "대칭성"],
-  "좌우 팔꿈치 굴곡을 비교합니다.",
-  [
-    "좌우 ROM",
-    "팔꿈치 위치"
-  ],
-  [
-    "Hammer Curl",
-    "Cable Curl"
-  ]
-),
+  name: "덤벨 컬",
 
-makeExercise(
-  "hammer-curl",
-  "해머 컬",
-  "arms",
-  "dumbbell",
-  "💪",
-  "상완근 · 상완요골근",
-  "front",
-  ["팔꿈치", "대칭성"],
-  "뉴트럴 그립 컬 동작입니다.",
-  [
+  category: "arms",
+
+  equipment: "dumbbell",
+
+  pictogram: "💪",
+
+  muscles: "상완이두근",
+
+  description:
+    "덤벨을 이용한 기본 이두근 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "팔꿈치 각도 · 몸통 반동 · 좌우 차이",
+
+  checkpoints: [
+    "팔꿈치 고정",
+    "몸통 반동",
+    "완전 ROM",
+    "좌우 속도"
+  ]
+},
+
+
+{
+  id: "hammer-curl",
+
+  name: "해머 컬",
+
+  category: "arms",
+
+  equipment: "dumbbell",
+
+  pictogram: "🔨",
+
+  muscles: "상완근 · 상완요골근 · 이두근",
+
+  description:
+    "중립 그립으로 수행하는 덤벨 컬입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "좌우 ROM · 팔꿈치 위치",
+
+  checkpoints: [
+    "팔꿈치 고정",
     "좌우 높이",
-    "몸통 반동"
-  ],
-  [
-    "Dumbbell Curl"
+    "몸통 흔들림",
+    "손목 정렬"
   ]
-),
+},
 
-makeExercise(
-  "triceps-pushdown",
-  "트라이셉스 푸시다운",
-  "arms",
-  "cable",
-  "⬇️",
-  "상완삼두근",
-  "side",
-  ["팔꿈치"],
-  "팔꿈치 신전 움직임을 분석합니다.",
-  [
-    "팔꿈치 위치 고정",
-    "몸통 흔들림"
-  ],
-  [
-    "Close Grip Push Up"
-  ]
-),
 
-makeExercise(
-  "dips",
-  "딥스",
-  "arms",
-  "bodyweight",
-  "💪",
-  "삼두근 · 가슴 · 전면삼각근",
-  "side",
-  ["팔꿈치", "어깨", "몸통"],
-  "체중을 이용한 상체 밀기 운동입니다.",
-  [
-    "어깨 깊이",
-    "팔꿈치 경로",
-    "몸통 제어"
-  ],
-  [
-    "Push Up",
-    "Bench Press"
+{
+  id: "triceps-pushdown",
+
+  name: "트라이셉스 푸시다운",
+
+  category: "arms",
+
+  equipment: "cable",
+
+  pictogram: "⬇️",
+
+  muscles: "상완삼두근",
+
+  description:
+    "케이블을 아래로 밀어 삼두근을 강화합니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "팔꿈치 ROM · 몸통",
+
+  checkpoints: [
+    "팔꿈치 고정",
+    "완전 신전",
+    "몸통 반동",
+    "손목 정렬"
   ]
-),
+},
+
+
+{
+  id: "skull-crusher",
+
+  name: "라잉 트라이셉스 익스텐션",
+
+  category: "arms",
+
+  equipment: "barbell",
+
+  pictogram: "💪",
+
+  muscles: "상완삼두근",
+
+  description:
+    "누운 자세에서 팔꿈치를 굽혔다 펴는 삼두 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "팔꿈치 ROM · 어깨 안정성",
+
+  checkpoints: [
+    "팔꿈치 위치",
+    "좌우 대칭",
+    "어깨 움직임",
+    "ROM"
+  ]
+},
+
 
 /* =========================================================
    CORE
 ========================================================= */
 
-makeExercise(
-  "plank",
-  "플랭크",
-  "core",
-  "bodyweight",
-  "🧱",
-  "복횡근 · 복직근 · 둔근",
-  "side",
-  ["몸통", "골반", "어깨"],
-  "정적 코어 안정성을 평가합니다.",
-  [
-    "머리-등-골반 정렬",
-    "골반 처짐 확인",
-    "어깨 위치"
-  ],
-  [
-    "Dead Bug",
-    "Bird Dog",
-    "Side Plank"
-  ]
-),
+{
+  id: "plank",
 
-makeExercise(
-  "side-plank",
-  "사이드 플랭크",
-  "core",
-  "bodyweight",
-  "🧱",
-  "복사근 · 중둔근",
-  "front",
-  ["몸통", "골반"],
-  "측면 코어 안정성을 분석합니다.",
-  [
+  name: "플랭크",
+
+  category: "core",
+
+  equipment: "bodyweight",
+
+  pictogram: "▬",
+
+  muscles: "복부 · 코어 · 둔근",
+
+  description:
+    "몸통을 일직선으로 유지하는 기본 코어 안정화 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "몸통 정렬 · 골반 높이 · 유지 시간",
+
+  checkpoints: [
+    "머리-골반-발목 정렬",
+    "골반 처짐",
+    "허리 과신전",
+    "유지 안정성"
+  ]
+},
+
+
+{
+  id: "side-plank",
+
+  name: "사이드 플랭크",
+
+  category: "core",
+
+  equipment: "bodyweight",
+
+  pictogram: "▬",
+
+  muscles: "복사근 · 둔근 · 코어",
+
+  description:
+    "측면 코어와 골반 안정성을 강화합니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "골반 높이 · 몸통 정렬",
+
+  checkpoints: [
     "골반 높이",
-    "몸통 정렬"
-  ],
-  [
-    "Pallof Press",
-    "Suitcase Carry"
+    "어깨 정렬",
+    "몸통 회전",
+    "좌우 차이"
   ]
-),
+},
 
-makeExercise(
-  "dead-bug",
-  "데드 버그",
-  "core",
-  "bodyweight",
-  "🐞",
-  "심부 코어",
-  "top",
-  ["골반", "대측 협응"],
-  "팔다리 움직임 중 몸통 안정성을 분석합니다.",
-  [
-    "허리 중립 유지",
-    "대측 움직임"
-  ],
-  [
-    "Bird Dog",
-    "Plank"
+
+{
+  id: "dead-bug",
+
+  name: "데드버그",
+
+  category: "core",
+
+  equipment: "bodyweight",
+
+  pictogram: "✳️",
+
+  muscles: "복부 · 심부코어",
+
+  description:
+    "사지 움직임 중 몸통 안정성을 유지하는 코어 운동입니다.",
+
+  recommendedView: "top",
+
+  metrics:
+    "좌우 대칭 · 골반 안정성 · 사지 협응",
+
+  checkpoints: [
+    "허리 중립",
+    "좌우 팔·다리 대칭",
+    "골반 회전",
+    "움직임 제어"
   ]
-),
+},
 
-makeExercise(
-  "bird-dog",
-  "버드독",
-  "core",
-  "bodyweight",
-  "🐕",
-  "코어 · 둔근 · 척추 안정근",
-  "side",
-  ["몸통", "골반"],
-  "네발 자세에서 대측 팔다리 제어를 분석합니다.",
-  [
-    "골반 회전 최소화",
-    "허리 중립"
-  ],
-  [
-    "Dead Bug",
-    "Pallof Press"
+
+{
+  id: "bird-dog",
+
+  name: "버드독",
+
+  category: "core",
+
+  equipment: "bodyweight",
+
+  pictogram: "🐦",
+
+  muscles: "코어 · 둔근 · 척추 안정근",
+
+  description:
+    "네발 자세에서 반대 팔과 다리를 뻗는 안정성 운동입니다.",
+
+  recommendedView: "rear",
+
+  metrics:
+    "골반 회전 · 어깨 · 좌우 대칭",
+
+  checkpoints: [
+    "골반 수평",
+    "몸통 회전",
+    "팔·다리 높이",
+    "균형"
   ]
-),
+},
 
-makeExercise(
-  "hollow-hold",
-  "할로우 홀드",
-  "core",
-  "bodyweight",
-  "🛡️",
-  "복직근 · 심부코어",
-  "side",
-  ["몸통", "골반"],
-  "체간 전면 안정성을 평가합니다.",
-  [
-    "허리 바닥 유지",
-    "갈비뼈 제어"
-  ],
-  [
-    "Dead Bug",
-    "Plank"
+
+{
+  id: "hollow-hold",
+
+  name: "할로우 홀드",
+
+  category: "core",
+
+  equipment: "bodyweight",
+
+  pictogram: "🌙",
+
+  muscles: "복직근 · 심부코어",
+
+  description:
+    "전신을 굽힌 형태로 유지하는 체조식 코어 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "몸통 곡선 · 골반 · 유지시간",
+
+  checkpoints: [
+    "허리 바닥 접촉",
+    "다리 높이",
+    "팔 위치",
+    "유지 자세"
   ]
-),
+},
 
-makeExercise(
-  "pallof-press",
-  "팔로프 프레스",
-  "core",
-  "cable",
-  "↔️",
-  "복사근 · 심부코어",
-  "front",
-  ["몸통 회전", "골반"],
-  "회전 저항 능력을 분석합니다.",
-  [
-    "몸통 회전 최소화",
-    "골반 정면 유지"
-  ],
-  [
-    "Side Plank",
-    "Suitcase Carry"
-  ]
-),
 
-makeExercise(
-  "russian-twist",
-  "러시안 트위스트",
-  "core",
-  "medicineball",
-  "🔄",
-  "복사근 · 코어",
-  "front",
-  ["몸통 회전", "대칭성"],
-  "체간 회전 움직임을 분석합니다.",
-  [
+{
+  id: "russian-twist",
+
+  name: "러시안 트위스트",
+
+  category: "core",
+
+  equipment: "medicineball",
+
+  pictogram: "🔄",
+
+  muscles: "복사근 · 코어",
+
+  description:
+    "몸통 회전 능력을 강화하는 코어 운동입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "몸통 회전 · 좌우 ROM · 골반",
+
+  checkpoints: [
     "좌우 회전 범위",
-    "골반 안정"
-  ],
-  [
-    "Pallof Press",
-    "Dead Bug"
+    "골반 안정",
+    "몸통 기울기",
+    "템포"
   ]
-),
+},
+
+
+{
+  id: "pallof-press",
+
+  name: "팔로프 프레스",
+
+  category: "core",
+
+  equipment: "cable",
+
+  pictogram: "↔️",
+
+  muscles: "심부코어 · 복사근",
+
+  description:
+    "회전 저항을 버티며 몸통 안정성을 강화합니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "몸통 회전 · 골반 · 손 경로",
+
+  checkpoints: [
+    "몸통 회전 억제",
+    "골반 정렬",
+    "팔 경로",
+    "좌우 차이"
+  ]
+},
+
+
+{
+  id: "hanging-leg-raise",
+
+  name: "행잉 레그 레이즈",
+
+  category: "core",
+
+  equipment: "bodyweight",
+
+  pictogram: "🧗",
+
+  muscles: "복부 · 고관절 굴곡근",
+
+  description:
+    "철봉에 매달려 다리를 들어 올리는 코어 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "고관절 ROM · 몸통 흔들림",
+
+  checkpoints: [
+    "반동",
+    "골반 후방회전",
+    "다리 높이",
+    "어깨 안정성"
+  ]
+},
+
 
 /* =========================================================
    OLYMPIC LIFTING
 ========================================================= */
 
-makeExercise(
-  "power-clean",
-  "파워 클린",
-  "olympic",
-  "barbell",
-  "🏋️",
-  "둔근 · 햄스트링 · 대퇴사두근 · 승모근",
-  "side",
-  ["무릎", "고관절", "몸통", "바벨 궤적", "캐치"],
-  "폭발적인 바벨 가속과 캐치 동작을 분석합니다.",
-  [
-    "1차 당기기",
-    "무릎 재진입",
-    "고관절 폭발",
-    "바벨 몸 가까이 유지",
-    "캐치 안정성"
-  ],
-  [
-    "Clean Pull",
-    "Hang Power Clean",
-    "Front Squat",
-    "Jump Shrug"
-  ]
-),
+{
+  id: "clean",
 
-makeExercise(
-  "hang-power-clean",
-  "행 파워 클린",
-  "olympic",
-  "barbell",
-  "🏋️",
-  "둔근 · 햄스트링 · 승모근",
-  "side",
-  ["고관절", "무릎", "바벨 궤적", "캐치"],
-  "행 포지션에서 폭발적인 클린 동작을 분석합니다.",
-  [
-    "행 시작 자세",
+  name: "클린",
+
+  category: "olympic",
+
+  equipment: "barbell",
+
+  pictogram: "🏋️",
+
+  muscles: "전신 · 둔근 · 대퇴사두근 · 등 · 어깨",
+
+  description:
+    "바벨을 지면에서 어깨 랙 위치까지 폭발적으로 이동시키는 리프트입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "바벨 궤적 · 1차풀 · 2차풀 · 캐치 · 고관절",
+
+  checkpoints: [
+    "바벨과 몸의 거리",
+    "무릎 재굽힘",
     "고관절 신전",
-    "바벨 수직 궤적",
-    "캐치"
-  ],
-  [
-    "Clean Pull",
-    "Jump Shrug",
-    "Front Squat"
+    "캐치 위치",
+    "바벨 최고점"
   ]
-),
+},
 
-makeExercise(
-  "clean-pull",
-  "클린 풀",
-  "olympic",
-  "barbell",
-  "⬆️",
-  "후면사슬 · 승모근",
-  "side",
-  ["바벨 궤적", "고관절", "무릎"],
-  "클린 당기기 구간의 바벨 움직임을 분석합니다.",
-  [
-    "바벨 몸 가까이 유지",
-    "고관절 신전 타이밍"
-  ],
-  [
-    "Power Clean",
-    "RDL",
-    "Jump Shrug"
-  ]
-),
 
-makeExercise(
-  "power-snatch",
-  "파워 스내치",
-  "olympic",
-  "barbell",
-  "🏋️",
-  "전신 · 어깨 · 후면사슬",
-  "side",
-  ["바벨 궤적", "고관절", "무릎", "캐치"],
-  "스내치의 폭발적 당기기와 오버헤드 캐치를 분석합니다.",
-  [
-    "바벨 경로",
-    "고관절 폭발",
-    "오버헤드 안정"
-  ],
-  [
-    "Snatch Pull",
-    "Overhead Squat",
-    "Snatch Balance"
-  ]
-),
+{
+  id: "power-clean",
 
-makeExercise(
-  "hang-snatch",
-  "행 파워 스내치",
-  "olympic",
-  "barbell",
-  "🏋️",
-  "전신 · 어깨 · 둔근",
-  "side",
-  ["고관절", "바벨 궤적", "캐치"],
-  "행 포지션 스내치 동작을 분석합니다.",
-  [
-    "고관절 신전",
+  name: "파워 클린",
+
+  category: "olympic",
+
+  equipment: "barbell",
+
+  pictogram: "⚡",
+
+  muscles: "전신 · 하체 · 등 · 어깨",
+
+  description:
+    "높은 캐치 위치에서 받는 폭발적인 클린 동작입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "바벨 속도 · 궤적 · 고관절 신전 · 캐치",
+
+  checkpoints: [
+    "폭발적 신전",
     "바벨 수직 이동",
-    "캐치 안정"
-  ],
-  [
-    "Snatch Pull",
-    "Overhead Squat"
+    "캐치 높이",
+    "발 이동"
   ]
-),
+},
 
-makeExercise(
-  "overhead-squat",
-  "오버헤드 스쿼트",
-  "olympic",
-  "barbell",
-  "🏋️",
-  "하체 · 어깨 · 코어",
-  "side",
-  ["어깨", "몸통", "고관절", "무릎", "발목"],
-  "오버헤드 안정성과 전신 가동성을 분석합니다.",
-  [
-    "바벨 중족부 정렬",
-    "어깨 안정",
-    "몸통 수직성",
-    "스쿼트 깊이"
-  ],
-  [
-    "Wall Squat",
-    "Shoulder Mobility",
-    "Ankle Mobility"
+
+{
+  id: "hang-clean",
+
+  name: "행 클린",
+
+  category: "olympic",
+
+  equipment: "barbell",
+
+  pictogram: "⚡",
+
+  muscles: "둔근 · 햄스트링 · 등 · 어깨",
+
+  description:
+    "행 포지션에서 시작하는 클린 변형입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "힙힌지 · 바벨 궤적 · 신전 타이밍",
+
+  checkpoints: [
+    "행 시작 위치",
+    "고관절 신전",
+    "바벨 거리",
+    "캐치 안정성"
   ]
-),
+},
 
-makeExercise(
-  "push-press",
-  "푸시 프레스",
-  "power",
-  "barbell",
-  "🏋️",
-  "하체 · 어깨 · 삼두근",
-  "side",
-  ["무릎", "고관절", "바벨 궤적"],
-  "하체 드라이브를 이용한 오버헤드 파워 동작입니다.",
-  [
-    "딥 깊이",
-    "하체-상체 타이밍",
-    "바벨 수직 궤적"
-  ],
-  [
-    "Overhead Press",
-    "Push Jerk",
-    "Jump Squat"
+
+{
+  id: "snatch",
+
+  name: "스내치",
+
+  category: "olympic",
+
+  equipment: "barbell",
+
+  pictogram: "🏋️",
+
+  muscles: "전신 · 하체 · 등 · 어깨 · 코어",
+
+  description:
+    "바벨을 한 번의 연속 동작으로 머리 위까지 이동시키는 리프트입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "바벨 궤적 · 속도 · 고관절 · 캐치 · 오버헤드",
+
+  checkpoints: [
+    "바벨 수직 경로",
+    "2차풀",
+    "오버헤드 위치",
+    "캐치 깊이",
+    "발 이동"
   ]
-),
+},
 
-makeExercise(
-  "push-jerk",
-  "푸시 저크",
-  "olympic",
-  "barbell",
-  "🏋️",
-  "전신 · 어깨 · 하체",
-  "side",
-  ["딥", "드라이브", "캐치", "바벨 궤적"],
-  "하체 드라이브와 오버헤드 캐치를 분석합니다.",
-  [
+
+{
+  id: "power-snatch",
+
+  name: "파워 스내치",
+
+  category: "olympic",
+
+  equipment: "barbell",
+
+  pictogram: "⚡",
+
+  muscles: "전신 · 어깨 · 하체",
+
+  description:
+    "높은 자세에서 바벨을 캐치하는 스내치 변형입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "바벨 속도 · 궤적 · 캐치 높이",
+
+  checkpoints: [
+    "폭발적 신전",
+    "바벨 경로",
+    "캐치 위치",
+    "오버헤드 안정성"
+  ]
+},
+
+
+{
+  id: "clean-and-jerk",
+
+  name: "클린 앤 저크",
+
+  category: "olympic",
+
+  equipment: "barbell",
+
+  pictogram: "🏋️",
+
+  muscles: "전신",
+
+  description:
+    "클린 후 바벨을 머리 위로 올리는 올림픽 리프팅 종목입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "클린 궤적 · 딥 · 드라이브 · 저크 · 캐치",
+
+  checkpoints: [
+    "클린 캐치",
     "딥 수직성",
-    "드라이브 타이밍",
-    "캐치 안정"
-  ],
-  [
-    "Push Press",
-    "Jerk Dip",
-    "Overhead Stability"
+    "드라이브",
+    "오버헤드 중심",
+    "발 위치"
   ]
-),
+},
+
+
+{
+  id: "push-press",
+
+  name: "푸시 프레스",
+
+  category: "power",
+
+  equipment: "barbell",
+
+  pictogram: "⬆️",
+
+  muscles: "하체 · 어깨 · 삼두근",
+
+  description:
+    "하체의 힘을 이용해 바벨을 머리 위로 밀어 올립니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "딥 각도 · 바벨 속도 · 몸통 · 락아웃",
+
+  checkpoints: [
+    "딥 수직성",
+    "하체-상체 연결",
+    "바벨 경로",
+    "락아웃"
+  ]
+},
+
+
+{
+  id: "high-pull",
+
+  name: "하이 풀",
+
+  category: "power",
+
+  equipment: "barbell",
+
+  pictogram: "⚡",
+
+  muscles: "둔근 · 등 · 승모근 · 하체",
+
+  description:
+    "폭발적인 고관절 신전과 상체 당기기를 결합한 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "바벨 속도 · 고관절 신전 · 바벨 높이",
+
+  checkpoints: [
+    "고관절 완전 신전",
+    "바벨과 몸 거리",
+    "팔 당김 타이밍",
+    "최고 높이"
+  ]
+},
+
 
 /* =========================================================
-   POWER
+   POWER / PLYOMETRIC
 ========================================================= */
 
-makeExercise(
-  "kettlebell-swing",
-  "케틀벨 스윙",
-  "power",
-  "kettlebell",
-  "🏋️",
-  "둔근 · 햄스트링 · 코어",
-  "side",
-  ["고관절", "무릎", "몸통"],
-  "폭발적인 힙힌지 파워를 분석합니다.",
-  [
-    "스쿼트가 아닌 힙힌지",
+{
+  id: "box-jump",
+
+  name: "박스 점프",
+
+  category: "plyometric",
+
+  equipment: "box",
+
+  pictogram: "📦",
+
+  muscles: "둔근 · 대퇴사두근 · 종아리",
+
+  description:
+    "박스 위로 폭발적으로 점프하는 플라이오메트릭 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "도약 각도 · 착지 · 무릎 · 고관절",
+
+  checkpoints: [
+    "팔 스윙",
     "고관절 신전",
-    "허리 중립"
-  ],
-  [
-    "RDL",
-    "Hip Hinge Drill",
-    "Broad Jump"
+    "착지 충격 흡수",
+    "무릎 정렬"
   ]
-),
+},
 
-makeExercise(
-  "jump-squat",
-  "점프 스쿼트",
-  "power",
-  "bodyweight",
-  "🚀",
-  "둔근 · 대퇴사두근 · 종아리",
-  "side",
-  ["무릎", "고관절", "점프 높이", "착지"],
-  "수직 점프 파워와 착지 패턴을 분석합니다.",
-  [
+
+{
+  id: "vertical-jump",
+
+  name: "수직 점프",
+
+  category: "plyometric",
+
+  equipment: "bodyweight",
+
+  pictogram: "⬆️",
+
+  muscles: "하체 · 둔근 · 종아리",
+
+  description:
+    "제자리에서 최대 높이로 점프하는 파워 테스트입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "점프 높이 · 체공시간 · 무릎 · 고관절",
+
+  checkpoints: [
     "카운터무브먼트",
-    "완전 신전",
-    "착지 충격 제어"
-  ],
-  [
-    "Countermovement Jump",
-    "Snap Down",
-    "Squat"
+    "고관절 신전",
+    "도약 타이밍",
+    "착지"
   ]
-),
+},
 
-makeExercise(
-  "medicine-ball-slam",
-  "메디신볼 슬램",
-  "power",
-  "medicineball",
-  "🏐",
-  "광배근 · 코어 · 어깨",
-  "side",
-  ["어깨", "몸통", "고관절"],
-  "전신 굴곡을 이용한 폭발적 슬램 동작입니다.",
-  [
-    "오버헤드 시작",
-    "몸통-고관절 협응"
-  ],
-  [
-    "Overhead Throw",
-    "Dead Bug"
+
+{
+  id: "squat-jump",
+
+  name: "스쿼트 점프",
+
+  category: "plyometric",
+
+  equipment: "bodyweight",
+
+  pictogram: "🚀",
+
+  muscles: "하체 · 둔근",
+
+  description:
+    "스쿼트 자세에서 폭발적으로 점프합니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "점프 높이 · 무릎 · 고관절 · 착지",
+
+  checkpoints: [
+    "스쿼트 깊이",
+    "신전 속도",
+    "착지 무릎",
+    "좌우 균형"
   ]
-),
+},
 
-makeExercise(
-  "medicine-ball-chest-pass",
-  "메디신볼 체스트 패스",
-  "power",
-  "medicineball",
-  "🏐",
-  "가슴 · 삼두근 · 코어",
-  "side",
-  ["팔꿈치", "몸통"],
-  "상체 수평 파워를 분석합니다.",
-  [
-    "양팔 대칭",
-    "몸통 힘 전달"
-  ],
-  [
-    "Push Up",
-    "Bench Press"
+
+{
+  id: "broad-jump",
+
+  name: "제자리 멀리뛰기",
+
+  category: "plyometric",
+
+  equipment: "bodyweight",
+
+  pictogram: "➡️",
+
+  muscles: "둔근 · 햄스트링 · 대퇴사두근",
+
+  description:
+    "수평 방향 폭발력을 평가하는 점프입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "도약 각도 · 거리 · 착지 · 몸통",
+
+  checkpoints: [
+    "팔 스윙",
+    "도약 각도",
+    "고관절 신전",
+    "착지 안정성"
   ]
-),
+},
 
-makeExercise(
-  "rotational-med-ball-throw",
-  "회전 메디신볼 스로우",
-  "power",
-  "medicineball",
-  "🏐",
-  "코어 · 둔근 · 어깨",
-  "front",
-  ["몸통 회전", "골반 회전"],
-  "회전 파워와 상하체 연결을 분석합니다.",
-  [
+
+{
+  id: "depth-jump",
+
+  name: "뎁스 점프",
+
+  category: "plyometric",
+
+  equipment: "box",
+
+  pictogram: "⚡",
+
+  muscles: "하체 · 종아리 · 둔근",
+
+  description:
+    "박스에서 내려온 뒤 빠르게 재도약하는 반응성 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "접지시간 · 점프높이 · 무릎 · 착지",
+
+  checkpoints: [
+    "접지시간",
+    "무릎 정렬",
+    "재도약 속도",
+    "착지 안정"
+  ]
+},
+
+
+{
+  id: "lateral-bound",
+
+  name: "레터럴 바운드",
+
+  category: "plyometric",
+
+  equipment: "bodyweight",
+
+  pictogram: "↔️",
+
+  muscles: "둔근 · 하체 · 발목",
+
+  description:
+    "좌우 방향으로 폭발적으로 이동하는 편측 점프입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "좌우 거리 · 무릎 · 골반 · 착지",
+
+  checkpoints: [
+    "착지 무릎",
+    "골반 안정",
+    "좌우 거리",
+    "균형"
+  ]
+},
+
+
+{
+  id: "single-leg-hop",
+
+  name: "싱글 레그 홉",
+
+  category: "plyometric",
+
+  equipment: "bodyweight",
+
+  pictogram: "🦵",
+
+  muscles: "하체 · 발목 · 둔근",
+
+  description:
+    "한 다리로 도약과 착지를 반복하는 운동입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "무릎 정렬 · 착지 · 좌우 차이",
+
+  checkpoints: [
+    "무릎 외반",
+    "골반 안정",
+    "착지 균형",
+    "좌우 차이"
+  ]
+},
+
+
+{
+  id: "medicine-ball-chest-pass",
+
+  name: "메디신볼 체스트 패스",
+
+  category: "power",
+
+  equipment: "medicineball",
+
+  pictogram: "🏐",
+
+  muscles: "가슴 · 삼두 · 코어",
+
+  description:
+    "메디신볼을 전방으로 폭발적으로 던지는 상체 파워 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "팔 속도 · 몸통 · 공 릴리즈",
+
+  checkpoints: [
+    "몸통 안정성",
+    "팔 신전",
+    "릴리즈 타이밍",
+    "좌우 대칭"
+  ]
+},
+
+
+{
+  id: "medicine-ball-slam",
+
+  name: "메디신볼 슬램",
+
+  category: "power",
+
+  equipment: "medicineball",
+
+  pictogram: "💥",
+
+  muscles: "광배근 · 코어 · 어깨 · 하체",
+
+  description:
+    "메디신볼을 머리 위에서 바닥으로 강하게 던지는 전신 파워 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "몸통 굴곡 · 팔 경로 · 고관절",
+
+  checkpoints: [
+    "오버헤드 위치",
+    "몸통 사용",
+    "고관절 굴곡",
+    "릴리즈 타이밍"
+  ]
+},
+
+
+{
+  id: "rotational-med-ball-throw",
+
+  name: "회전 메디신볼 던지기",
+
+  category: "power",
+
+  equipment: "medicineball",
+
+  pictogram: "🔄",
+
+  muscles: "코어 · 둔근 · 어깨",
+
+  description:
+    "몸통 회전을 이용해 메디신볼을 던지는 회전 파워 운동입니다.",
+
+  recommendedView: "top",
+
+  metrics:
+    "몸통 회전 · 골반 회전 · 어깨 회전",
+
+  checkpoints: [
     "골반 선행",
     "몸통 회전",
-    "발 회전"
-  ],
-  [
-    "Pallof Press",
-    "Cable Rotation"
+    "체중 이동",
+    "릴리즈"
   ]
-),
+},
+
 
 /* =========================================================
-   PLYOMETRIC
+   KETTLEBELL / FUNCTIONAL
 ========================================================= */
 
-makeExercise(
-  "countermovement-jump",
-  "카운터무브먼트 점프",
-  "plyometric",
-  "bodyweight",
-  "⬆️",
-  "하체 전반",
-  "side",
-  ["점프 높이", "무릎", "고관절", "착지"],
-  "기본적인 수직 점프 능력을 평가합니다.",
-  [
-    "하강 깊이",
-    "이륙 타이밍",
-    "착지 안정"
-  ],
-  [
-    "Jump Squat",
-    "Snap Down",
-    "Calf Raise"
+{
+  id: "kettlebell-swing",
+
+  name: "케틀벨 스윙",
+
+  category: "functional",
+
+  equipment: "kettlebell",
+
+  pictogram: "🔔",
+
+  muscles: "둔근 · 햄스트링 · 코어 · 등",
+
+  description:
+    "힙힌지와 폭발적인 고관절 신전을 사용하는 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "고관절 · 몸통 · 케틀벨 궤적",
+
+  checkpoints: [
+    "힙힌지",
+    "고관절 신전",
+    "무릎 과굴곡",
+    "케틀벨 궤적"
   ]
-),
+},
 
-makeExercise(
-  "squat-jump",
-  "스쿼트 점프",
-  "plyometric",
-  "bodyweight",
-  "⬆️",
-  "대퇴사두근 · 둔근 · 종아리",
-  "side",
-  ["점프 높이", "이륙"],
-  "정적 스쿼트 자세에서 수직 파워를 평가합니다.",
-  [
-    "시작 깊이 일정",
-    "이륙 시 완전 신전"
-  ],
-  [
-    "Countermovement Jump",
-    "Jump Squat"
+
+{
+  id: "turkish-get-up",
+
+  name: "터키시 겟업",
+
+  category: "functional",
+
+  equipment: "kettlebell",
+
+  pictogram: "🔔",
+
+  muscles: "전신 · 어깨 · 코어 · 둔근",
+
+  description:
+    "누운 자세에서 일어나는 전신 안정성 운동입니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "어깨 안정성 · 몸통 · 고관절 · 균형",
+
+  checkpoints: [
+    "팔 수직 유지",
+    "몸통 제어",
+    "고관절 안정성",
+    "단계별 균형"
   ]
-),
+},
 
-makeExercise(
-  "box-jump",
-  "박스 점프",
-  "plyometric",
-  "box",
-  "📦",
-  "하체 전반",
-  "side",
-  ["이륙", "무릎", "착지"],
-  "박스로 점프하는 폭발력 동작입니다.",
-  [
-    "양발 이륙",
-    "부드러운 착지",
-    "무릎 정렬"
-  ],
-  [
-    "Countermovement Jump",
-    "Snap Down"
-  ]
-),
 
-makeExercise(
-  "broad-jump",
-  "제자리 멀리뛰기",
-  "plyometric",
-  "bodyweight",
-  "➡️",
-  "둔근 · 햄스트링 · 대퇴사두근",
-  "side",
-  ["이륙각", "고관절", "착지"],
-  "수평 방향 폭발력을 분석합니다.",
-  [
-    "팔 스윙",
-    "완전 신전",
-    "착지 안정"
-  ],
-  [
-    "Kettlebell Swing",
-    "Jump Squat"
-  ]
-),
+{
+  id: "farmers-walk",
 
-makeExercise(
-  "depth-jump",
-  "뎁스 점프",
-  "plyometric",
-  "box",
-  "⬇️",
-  "하체 전반",
-  "side",
-  ["접지시간", "무릎", "점프"],
-  "착지 후 빠르게 재도약하는 반응성 동작을 평가합니다.",
-  [
-    "착지 제어",
-    "짧은 접지",
-    "무릎 정렬"
-  ],
-  [
-    "Pogo Jump",
-    "Snap Down",
-    "Box Jump"
-  ]
-),
+  name: "파머스 워크",
 
-makeExercise(
-  "pogo-jump",
-  "포고 점프",
-  "plyometric",
-  "bodyweight",
-  "⬆️",
-  "종아리 · 발목",
-  "side",
-  ["발목", "접지시간"],
-  "발목 중심의 빠른 탄성 움직임을 분석합니다.",
-  [
-    "짧은 접지",
-    "무릎 움직임 최소화"
-  ],
-  [
-    "Calf Raise",
-    "Jump Rope"
-  ]
-),
+  category: "functional",
 
-makeExercise(
-  "lateral-bound",
-  "라테럴 바운드",
-  "plyometric",
-  "bodyweight",
-  "↔️",
-  "둔근 · 대퇴사두근 · 중둔근",
-  "front",
-  ["좌우 거리", "무릎", "착지"],
-  "측면 폭발력과 한발 착지 안정성을 분석합니다.",
-  [
-    "무릎 정렬",
-    "착지 후 골반 안정"
-  ],
-  [
-    "Single Leg Balance",
-    "Lateral Lunge"
-  ]
-),
+  equipment: "dumbbell",
 
-makeExercise(
-  "single-leg-hop",
-  "싱글 레그 홉",
-  "plyometric",
-  "bodyweight",
-  "🦵",
-  "하체 · 발목",
-  "side",
-  ["거리", "착지", "무릎"],
-  "한발 점프 능력과 착지 안정성을 평가합니다.",
-  [
-    "무릎 정렬",
-    "착지 유지",
-    "골반 안정"
-  ],
-  [
-    "Single Leg Balance",
-    "Step Down"
-  ]
-),
+  pictogram: "🚶",
 
-/* =========================================================
-   FUNCTIONAL
-========================================================= */
+  muscles: "그립 · 승모근 · 코어 · 하체",
 
-makeExercise(
-  "farmers-carry",
-  "파머스 캐리",
-  "functional",
-  "dumbbell",
-  "🚶",
-  "전신 · 코어 · 전완",
-  "front",
-  ["몸통", "골반", "보행 대칭"],
-  "중량을 들고 걷는 동안 체간 안정성을 분석합니다.",
-  [
-    "좌우 어깨 높이",
+  description:
+    "중량을 들고 걸으며 전신 안정성과 그립을 강화합니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "좌우 어깨 · 골반 · 보행 대칭",
+
+  checkpoints: [
+    "어깨 높이",
     "몸통 기울기",
-    "보폭"
-  ],
-  [
-    "Suitcase Carry",
-    "Plank"
+    "보폭 대칭",
+    "골반 안정성"
   ]
-),
+},
 
-makeExercise(
-  "suitcase-carry",
-  "수트케이스 캐리",
-  "functional",
-  "dumbbell",
-  "🧳",
-  "코어 · 전완 · 중둔근",
-  "front",
-  ["몸통 기울기", "골반"],
-  "한쪽 중량에 저항하는 체간 안정성을 분석합니다.",
-  [
-    "몸통 측굴 최소화",
-    "골반 수평"
-  ],
-  [
-    "Side Plank",
-    "Pallof Press"
-  ]
-),
 
-makeExercise(
-  "sled-push",
-  "슬레드 푸시",
-  "functional",
-  "sled",
-  "➡️",
-  "둔근 · 대퇴사두근 · 종아리",
-  "side",
-  ["몸통", "무릎", "고관절"],
-  "슬레드를 미는 가속 패턴을 분석합니다.",
-  [
+{
+  id: "sled-push",
+
+  name: "슬레드 푸시",
+
+  category: "functional",
+
+  equipment: "sled",
+
+  pictogram: "➡️",
+
+  muscles: "하체 · 둔근 · 종아리 · 코어",
+
+  description:
+    "슬레드를 밀면서 가속력과 하체 추진력을 강화합니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "몸통 각도 · 무릎 · 고관절 · 보폭",
+
+  checkpoints: [
     "몸통 각도",
-    "발 접지 위치",
-    "고관절 신전"
-  ],
-  [
-    "Walking Lunge",
-    "Calf Raise",
-    "Plank"
+    "발 접지",
+    "고관절 신전",
+    "보폭"
   ]
-),
+},
 
-makeExercise(
-  "bear-crawl",
-  "베어 크롤",
-  "functional",
-  "bodyweight",
-  "🐻",
-  "코어 · 어깨 · 고관절",
-  "top",
-  ["골반", "어깨", "대측 협응"],
-  "네발 이동 중 코어와 사지 협응을 분석합니다.",
-  [
-    "골반 흔들림",
-    "대측 움직임",
+
+{
+  id: "bear-crawl",
+
+  name: "베어 크롤",
+
+  category: "functional",
+
+  equipment: "bodyweight",
+
+  pictogram: "🐻",
+
+  muscles: "코어 · 어깨 · 하체",
+
+  description:
+    "네발 자세로 이동하며 전신 협응과 코어 안정성을 강화합니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "몸통 안정성 · 골반 · 좌우 협응",
+
+  checkpoints: [
+    "골반 높이",
+    "몸통 회전",
+    "반대 손발 협응",
     "무릎 높이"
-  ],
-  [
-    "Bird Dog",
-    "Dead Bug"
   ]
-),
+},
 
-makeExercise(
-  "turkish-get-up",
-  "터키시 겟업",
-  "functional",
-  "kettlebell",
-  "🏋️",
-  "전신 · 어깨 · 코어",
-  "side",
-  ["어깨", "고관절", "몸통"],
-  "다단계 전신 안정성 움직임을 분석합니다.",
-  [
-    "중량 수직 유지",
-    "어깨 안정",
-    "단계별 자세"
-  ],
-  [
-    "Half Kneeling Press",
-    "Windmill",
-    "Side Plank"
-  ]
-),
 
-makeExercise(
-  "battle-rope",
-  "배틀로프",
-  "functional",
-  "other",
-  "〰️",
-  "어깨 · 팔 · 코어",
-  "front",
-  ["좌우 대칭", "몸통"],
-  "반복적인 상체 파워와 좌우 대칭을 분석합니다.",
-  [
-    "좌우 파동 높이",
-    "몸통 안정"
-  ],
-  [
-    "Plank",
-    "Shoulder Press"
+{
+  id: "mountain-climber",
+
+  name: "마운틴 클라이머",
+
+  category: "functional",
+
+  equipment: "bodyweight",
+
+  pictogram: "⛰️",
+
+  muscles: "코어 · 고관절 · 어깨",
+
+  description:
+    "플랭크 자세에서 무릎을 빠르게 당기는 전신 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "몸통 · 골반 · 무릎 속도",
+
+  checkpoints: [
+    "골반 높이",
+    "몸통 안정",
+    "무릎 이동",
+    "좌우 템포"
   ]
-),
+},
+
+
+{
+  id: "burpee",
+
+  name: "버피",
+
+  category: "fullbody",
+
+  equipment: "bodyweight",
+
+  pictogram: "🔥",
+
+  muscles: "전신",
+
+  description:
+    "스쿼트, 플랭크, 점프를 연속으로 수행하는 전신 운동입니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "전환시간 · 몸통 · 무릎 · 점프",
+
+  checkpoints: [
+    "플랭크 정렬",
+    "발 착지 위치",
+    "점프",
+    "반복 템포"
+  ]
+},
+
 
 /* =========================================================
    MOBILITY / CORRECTIVE
 ========================================================= */
 
-makeExercise(
-  "ankle-mobility",
-  "발목 가동성 드릴",
-  "mobility",
-  "bodyweight",
-  "🦶",
-  "발목",
-  "side",
-  ["발목 ROM", "무릎 이동"],
-  "발목 배측굴곡 가동범위를 확인합니다.",
-  [
-    "뒤꿈치 지면 유지",
-    "무릎 전방 이동"
-  ],
-  [
-    "Calf Stretch",
-    "Tibialis Raise"
-  ]
-),
+{
+  id: "ankle-mobility",
 
-makeExercise(
-  "hip-90-90",
-  "90/90 힙 모빌리티",
-  "mobility",
-  "bodyweight",
-  "🧘",
-  "고관절",
-  "front",
-  ["고관절 회전", "대칭성"],
-  "고관절 내외회전 가동성을 확인합니다.",
-  [
-    "좌우 ROM 비교",
-    "몸통 보상 최소화"
-  ],
-  [
-    "Hip Airplane",
-    "Adductor Mobility"
-  ]
-),
+  name: "발목 가동성 테스트",
 
-makeExercise(
-  "wall-slide",
-  "월 슬라이드",
-  "mobility",
-  "bodyweight",
-  "🧱",
-  "어깨 · 견갑",
-  "rear",
-  ["어깨", "견갑 대칭"],
-  "오버헤드 어깨 가동성과 견갑 움직임을 확인합니다.",
-  [
-    "허리 과신전 최소화",
-    "좌우 팔 높이"
-  ],
-  [
-    "Band Pull Apart",
-    "Face Pull"
-  ]
-),
+  category: "mobility",
 
-makeExercise(
-  "band-pull-apart",
-  "밴드 풀 어파트",
-  "mobility",
-  "band",
-  "↔️",
-  "후면삼각근 · 견갑",
-  "front",
-  ["어깨", "대칭성"],
-  "견갑 후인과 어깨 안정성을 강화합니다.",
-  [
+  equipment: "bodyweight",
+
+  pictogram: "🦶",
+
+  muscles: "발목 · 종아리",
+
+  description:
+    "발목 배측굴곡 가동범위를 평가합니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "발목 각도 · 무릎 이동거리",
+
+  checkpoints: [
+    "뒤꿈치 들림",
+    "무릎 진행 방향",
+    "좌우 차이",
+    "최대 ROM"
+  ]
+},
+
+
+{
+  id: "hip-mobility",
+
+  name: "고관절 가동성 테스트",
+
+  category: "mobility",
+
+  equipment: "bodyweight",
+
+  pictogram: "🦵",
+
+  muscles: "고관절",
+
+  description:
+    "고관절의 움직임과 좌우 가동범위를 확인합니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "고관절 ROM · 골반 회전 · 좌우 차이",
+
+  checkpoints: [
+    "골반 보상",
+    "좌우 ROM",
+    "몸통 움직임",
+    "고관절 회전"
+  ]
+},
+
+
+{
+  id: "shoulder-mobility",
+
+  name: "어깨 가동성 테스트",
+
+  category: "mobility",
+
+  equipment: "bodyweight",
+
+  pictogram: "🙆",
+
+  muscles: "어깨 · 흉추",
+
+  description:
+    "어깨 굴곡과 좌우 가동성을 확인합니다.",
+
+  recommendedView: "side",
+
+  metrics:
+    "어깨 굴곡 · 몸통 보상 · 좌우 차이",
+
+  checkpoints: [
+    "팔 높이",
+    "허리 과신전",
+    "좌우 차이",
+    "흉추 움직임"
+  ]
+},
+
+
+{
+  id: "wall-slide",
+
+  name: "월 슬라이드",
+
+  category: "mobility",
+
+  equipment: "bodyweight",
+
+  pictogram: "🙆",
+
+  muscles: "견갑 안정근 · 어깨",
+
+  description:
+    "벽을 이용해 어깨 가동성과 견갑 움직임을 개선합니다.",
+
+  recommendedView: "rear",
+
+  metrics:
+    "어깨 높이 · 견갑 대칭 · 팔 ROM",
+
+  checkpoints: [
+    "좌우 팔 높이",
+    "견갑 움직임",
+    "허리 보상",
+    "손목 접촉"
+  ]
+},
+
+
+{
+  id: "band-pull-apart",
+
+  name: "밴드 풀 어파트",
+
+  category: "mobility",
+
+  equipment: "band",
+
+  pictogram: "↔️",
+
+  muscles: "후면삼각근 · 능형근 · 승모근",
+
+  description:
+    "밴드를 양옆으로 벌려 상부 등과 어깨 안정성을 강화합니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "좌우 대칭 · 어깨 높이 · 팔 경로",
+
+  checkpoints: [
+    "어깨 상승",
     "좌우 대칭",
-    "어깨 으쓱 최소화"
-  ],
-  [
-    "Face Pull",
-    "Wall Slide"
+    "팔꿈치 정렬",
+    "몸통 반동"
   ]
-),
+},
 
-makeExercise(
-  "band-external-rotation",
-  "밴드 외회전",
-  "mobility",
-  "band",
-  "🔄",
-  "회전근개",
-  "front",
-  ["어깨 외회전", "대칭성"],
-  "회전근개 기능을 보강합니다.",
-  [
-    "팔꿈치 고정",
-    "좌우 ROM"
-  ],
-  [
-    "Face Pull",
-    "Wall Slide"
-  ]
-),
 
-makeExercise(
-  "hip-airplane",
-  "힙 에어플레인",
-  "mobility",
-  "bodyweight",
-  "✈️",
-  "둔근 · 고관절 · 코어",
-  "rear",
-  ["골반 회전", "균형"],
-  "한발 상태에서 고관절 회전 제어를 평가합니다.",
-  [
-    "지지 무릎 정렬",
-    "골반 회전 제어"
-  ],
-  [
-    "Single Leg RDL",
-    "Single Leg Balance"
+{
+  id: "single-leg-balance",
+
+  name: "싱글 레그 밸런스",
+
+  category: "mobility",
+
+  equipment: "bodyweight",
+
+  pictogram: "⚖️",
+
+  muscles: "발목 · 둔근 · 코어",
+
+  description:
+    "한 다리 지지 능력과 자세 안정성을 평가합니다.",
+
+  recommendedView: "front",
+
+  metrics:
+    "골반 흔들림 · 무릎 · 몸통 · 유지시간",
+
+  checkpoints: [
+    "골반 수평",
+    "무릎 정렬",
+    "발목 흔들림",
+    "몸통 이동"
   ]
-),
+}
+
+];
+
 
 /* =========================================================
-   FULL BODY
+   ADDITIONAL EXERCISES
 ========================================================= */
 
-makeExercise(
-  "burpee",
-  "버피",
-  "fullbody",
-  "bodyweight",
-  "🔥",
-  "전신",
-  "side",
-  ["몸통", "고관절", "무릎", "템포"],
-  "스쿼트·플랭크·점프가 연결되는 전신 운동입니다.",
-  [
-    "플랭크 자세",
-    "발 착지 위치",
-    "점프 자세"
-  ],
-  [
-    "Squat",
-    "Push Up",
-    "Plank"
-  ]
-),
+EXERCISES.push(
 
-makeExercise(
-  "thruster",
-  "덤벨 스러스터",
-  "fullbody",
-  "dumbbell",
-  "🚀",
-  "하체 · 어깨 · 코어",
-  "side",
-  ["무릎", "고관절", "어깨", "타이밍"],
-  "스쿼트와 오버헤드 프레스를 연결한 전신 운동입니다.",
-  [
+{
+  id: "hack-squat",
+  name: "핵 스쿼트",
+  category: "lower",
+  equipment: "machine",
+  pictogram: "🦿",
+  muscles: "대퇴사두근 · 둔근",
+  description: "핵 스쿼트 머신을 이용한 하체 운동입니다.",
+  recommendedView: "side",
+  metrics: "무릎 · 고관절 · ROM",
+  checkpoints: [
+    "무릎 정렬",
     "스쿼트 깊이",
-    "하체-상체 연결",
-    "오버헤드 안정"
-  ],
-  [
-    "Goblet Squat",
-    "Shoulder Press",
-    "Push Press"
+    "골반 위치",
+    "발 압력"
   ]
-),
+},
 
-makeExercise(
-  "devils-press",
-  "데빌 프레스",
-  "fullbody",
-  "dumbbell",
-  "🔥",
-  "전신",
-  "side",
-  ["고관절", "어깨", "몸통"],
-  "버피와 덤벨 오버헤드 동작이 결합된 전신 운동입니다.",
-  [
-    "허리 중립",
-    "힙 드라이브",
-    "오버헤드 안정"
-  ],
-  [
-    "Burpee",
-    "Kettlebell Swing",
-    "Shoulder Press"
+{
+  id: "smith-squat",
+  name: "스미스머신 스쿼트",
+  category: "lower",
+  equipment: "machine",
+  pictogram: "🏋",
+  muscles: "대퇴사두근 · 둔근",
+  description: "스미스머신에서 수행하는 스쿼트입니다.",
+  recommendedView: "side",
+  metrics: "무릎 · 고관절 · 몸통",
+  checkpoints: [
+    "발 위치",
+    "무릎 정렬",
+    "깊이",
+    "골반"
   ]
-)
+},
 
-];
+{
+  id: "dumbbell-rdl",
+  name: "덤벨 루마니안 데드리프트",
+  category: "lower",
+  equipment: "dumbbell",
+  pictogram: "🏋",
+  muscles: "햄스트링 · 둔근",
+  description: "덤벨을 이용한 힙힌지 운동입니다.",
+  recommendedView: "side",
+  metrics: "고관절 · 몸통 · 무릎",
+  checkpoints: [
+    "힙힌지",
+    "허리 정렬",
+    "덤벨 경로",
+    "무릎 굴곡"
+  ]
+},
+
+{
+  id: "single-leg-rdl",
+  name: "싱글 레그 RDL",
+  category: "lower",
+  equipment: "dumbbell",
+  pictogram: "🦵",
+  muscles: "햄스트링 · 둔근 · 코어",
+  description: "한 다리로 수행하는 힙힌지 운동입니다.",
+  recommendedView: "rear",
+  metrics: "골반 · 균형 · 고관절",
+  checkpoints: [
+    "골반 회전",
+    "지지 무릎",
+    "몸통 정렬",
+    "균형"
+  ]
+},
+
+{
+  id: "nordic-curl",
+  name: "노르딕 햄스트링 컬",
+  category: "lower",
+  equipment: "bodyweight",
+  pictogram: "🦵",
+  muscles: "햄스트링",
+  description: "햄스트링의 편심성 근력을 강화하는 운동입니다.",
+  recommendedView: "side",
+  metrics: "무릎 · 몸통 정렬 · 하강 속도",
+  checkpoints: [
+    "몸통 일직선",
+    "고관절 굴곡",
+    "하강 제어",
+    "좌우 대칭"
+  ]
+},
+
+{
+  id: "copenhagen-plank",
+  name: "코펜하겐 플랭크",
+  category: "core",
+  equipment: "bodyweight",
+  pictogram: "▬",
+  muscles: "내전근 · 코어",
+  description: "내전근과 측면 코어를 강화하는 운동입니다.",
+  recommendedView: "front",
+  metrics: "골반 · 몸통 · 유지시간",
+  checkpoints: [
+    "골반 높이",
+    "몸통 정렬",
+    "지지 다리",
+    "좌우 차이"
+  ]
+},
+
+{
+  id: "landmine-press",
+  name: "랜드마인 프레스",
+  category: "shoulder",
+  equipment: "landmine",
+  pictogram: "↗️",
+  muscles: "어깨 · 가슴 · 삼두 · 코어",
+  description: "랜드마인을 전상방으로 밀어 올리는 운동입니다.",
+  recommendedView: "side",
+  metrics: "어깨 · 몸통 · 바벨 경로",
+  checkpoints: [
+    "몸통 회전",
+    "팔 경로",
+    "어깨 안정성",
+    "락아웃"
+  ]
+},
+
+{
+  id: "thruster",
+  name: "쓰러스터",
+  category: "fullbody",
+  equipment: "barbell",
+  pictogram: "🚀",
+  muscles: "하체 · 어깨 · 코어",
+  description: "프론트 스쿼트와 오버헤드 프레스를 연결한 전신 운동입니다.",
+  recommendedView: "side",
+  metrics: "스쿼트 · 신전 · 바벨 궤적",
+  checkpoints: [
+    "스쿼트 깊이",
+    "하체 신전",
+    "바벨 타이밍",
+    "락아웃"
+  ]
+},
+
+{
+  id: "battle-rope",
+  name: "배틀로프",
+  category: "functional",
+  equipment: "other",
+  pictogram: "〰️",
+  muscles: "어깨 · 팔 · 코어",
+  description: "로프를 반복적으로 움직이는 전신 컨디셔닝 운동입니다.",
+  recommendedView: "front",
+  metrics: "좌우 리듬 · 어깨 · 몸통",
+  checkpoints: [
+    "좌우 리듬",
+    "어깨 높이",
+    "몸통 안정",
+    "무릎 자세"
+  ]
+},
+
+{
+  id: "inverted-row",
+  name: "인버티드 로우",
+  category: "back",
+  equipment: "bodyweight",
+  pictogram: "↖️",
+  muscles: "광배근 · 능형근 · 이두근",
+  description: "몸을 기울인 상태에서 자신의 체중을 당기는 운동입니다.",
+  recommendedView: "side",
+  metrics: "몸통 정렬 · 팔꿈치 · 어깨",
+  checkpoints: [
+    "몸통 일직선",
+    "가슴 높이",
+    "견갑 움직임",
+    "팔꿈치"
+  ]
+},
+
+{
+  id: "diamond-push-up",
+  name: "다이아몬드 푸시업",
+  category: "arms",
+  equipment: "bodyweight",
+  pictogram: "💎",
+  muscles: "삼두근 · 가슴 · 어깨",
+  description: "좁은 손 간격으로 수행하는 푸시업입니다.",
+  recommendedView: "side",
+  metrics: "팔꿈치 · 몸통 · ROM",
+  checkpoints: [
+    "팔꿈치 경로",
+    "몸통 정렬",
+    "가슴 깊이",
+    "골반"
+  ]
+},
+
+{
+  id: "pike-push-up",
+  name: "파이크 푸시업",
+  category: "shoulder",
+  equipment: "bodyweight",
+  pictogram: "🔺",
+  muscles: "어깨 · 삼두근",
+  description: "엉덩이를 높여 수행하는 맨몸 어깨 프레스입니다.",
+  recommendedView: "side",
+  metrics: "어깨 · 팔꿈치 · 몸통",
+  checkpoints: [
+    "머리 경로",
+    "팔꿈치",
+    "골반 높이",
+    "어깨 ROM"
+  ]
+},
+
+{
+  id: "jump-lunge",
+  name: "점프 런지",
+  category: "plyometric",
+  equipment: "bodyweight",
+  pictogram: "🚀",
+  muscles: "둔근 · 대퇴사두근 · 종아리",
+  description: "런지 자세에서 좌우 다리를 교대하며 점프합니다.",
+  recommendedView: "front",
+  metrics: "착지 · 무릎 · 골반 · 좌우 대칭",
+  checkpoints: [
+    "착지 무릎",
+    "골반 안정",
+    "좌우 대칭",
+    "점프 리듬"
+  ]
+},
+
+{
+  id: "tuck-jump",
+  name: "턱 점프",
+  category: "plyometric",
+  equipment: "bodyweight",
+  pictogram: "⬆️",
+  muscles: "하체 · 코어",
+  description: "점프 중 무릎을 빠르게 가슴 방향으로 당기는 운동입니다.",
+  recommendedView: "side",
+  metrics: "점프높이 · 무릎 · 착지",
+  checkpoints: [
+    "도약",
+    "무릎 상승",
+    "착지",
+    "반복 리듬"
+  ]
+},
+
+{
+  id: "skater-jump",
+  name: "스케이터 점프",
+  category: "plyometric",
+  equipment: "bodyweight",
+  pictogram: "⛸️",
+  muscles: "둔근 · 하체 · 코어",
+  description: "좌우 측면으로 이동하며 한 발 착지를 반복합니다.",
+  recommendedView: "front",
+  metrics: "측면거리 · 무릎 · 골반 · 균형",
+  checkpoints: [
+    "측면 이동거리",
+    "착지 무릎",
+    "골반",
+    "균형"
+  ]
+}
+
+);
 
 
 /* =========================================================
-   04. EXTRA EXERCISES
-
-   기본 DB에 추가로 넣을 종목
-========================================================= */
-
-const EXTRA_EXERCISES = [
-
-makeExercise(
-  "wall-sit",
-  "월 싯",
-  "lower",
-  "bodyweight",
-  "🧱",
-  "대퇴사두근 · 둔근",
-  "side",
-  ["무릎", "고관절"],
-  "벽을 이용한 정적 하체 근지구력 운동입니다."
-),
-
-makeExercise(
-  "step-down",
-  "스텝 다운",
-  "lower",
-  "bodyweight",
-  "📦",
-  "둔근 · 대퇴사두근",
-  "front",
-  ["무릎 정렬", "골반"],
-  "한발 하강 동작에서 무릎과 골반 제어를 분석합니다."
-),
-
-makeExercise(
-  "lateral-step-up",
-  "라테럴 스텝 업",
-  "lower",
-  "dumbbell",
-  "📦",
-  "중둔근 · 대퇴사두근",
-  "front",
-  ["무릎", "골반"],
-  "측면 방향 스텝 업입니다."
-),
-
-makeExercise(
-  "good-morning",
-  "굿모닝",
-  "lower",
-  "barbell",
-  "🏋️",
-  "햄스트링 · 둔근 · 척추기립근",
-  "side",
-  ["고관절", "몸통"],
-  "바벨을 이용한 힙힌지 운동입니다."
-),
-
-makeExercise(
-  "leg-press",
-  "레그 프레스",
-  "lower",
-  "machine",
-  "🦵",
-  "대퇴사두근 · 둔근",
-  "side",
-  ["무릎", "고관절"],
-  "머신 하체 밀기 운동입니다."
-),
-
-makeExercise(
-  "leg-extension",
-  "레그 익스텐션",
-  "lower",
-  "machine",
-  "🦵",
-  "대퇴사두근",
-  "side",
-  ["무릎"],
-  "무릎 신전 운동입니다."
-),
-
-makeExercise(
-  "leg-curl",
-  "레그 컬",
-  "lower",
-  "machine",
-  "🦵",
-  "햄스트링",
-  "side",
-  ["무릎"],
-  "무릎 굴곡을 통한 햄스트링 운동입니다."
-),
-
-makeExercise(
-  "hack-squat",
-  "핵 스쿼트",
-  "lower",
-  "machine",
-  "🏋️",
-  "대퇴사두근 · 둔근",
-  "side",
-  ["무릎", "고관절"],
-  "머신을 이용한 스쿼트 운동입니다."
-),
-
-makeExercise(
-  "chest-press",
-  "체스트 프레스",
-  "chest",
-  "machine",
-  "💪",
-  "가슴 · 삼두근",
-  "side",
-  ["팔꿈치", "어깨"],
-  "머신을 이용한 가슴 밀기 운동입니다."
-),
-
-makeExercise(
-  "pec-deck",
-  "펙덱 플라이",
-  "chest",
-  "machine",
-  "🪽",
-  "대흉근",
-  "front",
-  ["어깨", "대칭성"],
-  "머신 가슴 플라이 운동입니다."
-),
-
-makeExercise(
-  "machine-row",
-  "머신 로우",
-  "back",
-  "machine",
-  "⬅️",
-  "광배근 · 능형근",
-  "side",
-  ["팔꿈치", "어깨"],
-  "머신 수평 당기기 운동입니다."
-),
-
-makeExercise(
-  "straight-arm-pulldown",
-  "스트레이트 암 풀다운",
-  "back",
-  "cable",
-  "⬇️",
-  "광배근",
-  "side",
-  ["어깨"],
-  "팔꿈치 움직임을 최소화한 광배근 운동입니다."
-),
-
-makeExercise(
-  "shrug",
-  "바벨 슈러그",
-  "back",
-  "barbell",
-  "⬆️",
-  "승모근",
-  "front",
-  ["어깨 높이", "대칭성"],
-  "승모근을 이용한 견갑 상승 운동입니다."
-),
-
-makeExercise(
-  "arnold-press",
-  "아놀드 프레스",
-  "shoulder",
-  "dumbbell",
-  "🔄",
-  "삼각근",
-  "front",
-  ["어깨", "팔꿈치"],
-  "회전 동작을 포함한 덤벨 숄더프레스입니다."
-),
-
-makeExercise(
-  "upright-row",
-  "업라이트 로우",
-  "shoulder",
-  "barbell",
-  "⬆️",
-  "삼각근 · 승모근",
-  "front",
-  ["팔꿈치", "어깨"],
-  "바벨을 수직으로 당기는 상체 운동입니다."
-),
-
-makeExercise(
-  "close-grip-bench",
-  "클로즈그립 벤치프레스",
-  "arms",
-  "barbell",
-  "🏋️",
-  "삼두근 · 가슴",
-  "side",
-  ["팔꿈치", "바벨 궤적"],
-  "삼두근 비중이 높은 벤치프레스입니다."
-),
-
-makeExercise(
-  "skull-crusher",
-  "스컬 크러셔",
-  "arms",
-  "barbell",
-  "💪",
-  "삼두근",
-  "side",
-  ["팔꿈치"],
-  "누운 자세의 팔꿈치 신전 운동입니다."
-),
-
-makeExercise(
-  "hanging-knee-raise",
-  "행잉 니 레이즈",
-  "core",
-  "bodyweight",
-  "⬆️",
-  "복근 · 고관절굴곡근",
-  "side",
-  ["고관절", "몸통"],
-  "매달린 자세에서 무릎을 들어올리는 코어 운동입니다."
-),
-
-makeExercise(
-  "hanging-leg-raise",
-  "행잉 레그 레이즈",
-  "core",
-  "bodyweight",
-  "⬆️",
-  "복근 · 고관절굴곡근",
-  "side",
-  ["고관절", "몸통"],
-  "매달린 자세의 다리 들기 운동입니다."
-),
-
-makeExercise(
-  "ab-wheel",
-  "AB 휠 롤아웃",
-  "core",
-  "other",
-  "🛞",
-  "복근 · 광배근 · 어깨",
-  "side",
-  ["몸통", "어깨", "고관절"],
-  "전방으로 몸을 뻗으며 코어를 제어합니다."
-),
-
-makeExercise(
-  "mountain-climber",
-  "마운틴 클라이머",
-  "core",
-  "bodyweight",
-  "⛰️",
-  "코어 · 고관절굴곡근",
-  "side",
-  ["몸통", "고관절", "템포"],
-  "플랭크 자세에서 반복적인 무릎 드라이브를 수행합니다."
-),
-
-makeExercise(
-  "clean-and-jerk",
-  "클린 앤 저크",
-  "olympic",
-  "barbell",
-  "🏋️",
-  "전신",
-  "side",
-  ["바벨 궤적", "캐치", "저크"],
-  "클린과 저크가 연결되는 올림픽 리프팅 동작입니다."
-),
-
-makeExercise(
-  "snatch",
-  "스내치",
-  "olympic",
-  "barbell",
-  "🏋️",
-  "전신",
-  "side",
-  ["바벨 궤적", "고관절", "캐치"],
-  "바벨을 한 동작으로 머리 위까지 들어올립니다."
-),
-
-makeExercise(
-  "high-pull",
-  "하이 풀",
-  "power",
-  "barbell",
-  "⬆️",
-  "후면사슬 · 승모근",
-  "side",
-  ["고관절", "팔꿈치", "바벨 궤적"],
-  "폭발적인 고관절 신전 후 바벨을 당기는 운동입니다."
-),
-
-makeExercise(
-  "jump-shrug",
-  "점프 슈러그",
-  "power",
-  "barbell",
-  "🚀",
-  "둔근 · 종아리 · 승모근",
-  "side",
-  ["고관절", "무릎", "바벨 궤적"],
-  "클린 파워 향상을 위한 폭발적 당기기 드릴입니다."
-),
-
-makeExercise(
-  "tuck-jump",
-  "턱 점프",
-  "plyometric",
-  "bodyweight",
-  "🚀",
-  "하체",
-  "side",
-  ["점프 높이", "무릎", "착지"],
-  "점프 중 무릎을 빠르게 들어올리는 플라이오 운동입니다."
-),
-
-makeExercise(
-  "split-jump",
-  "스플릿 점프",
-  "plyometric",
-  "bodyweight",
-  "🦵",
-  "하체",
-  "side",
-  ["무릎", "착지", "대칭성"],
-  "런지 자세에서 다리를 교환하며 점프합니다."
-),
-
-makeExercise(
-  "skater-jump",
-  "스케이터 점프",
-  "plyometric",
-  "bodyweight",
-  "⛸️",
-  "중둔근 · 둔근 · 하체",
-  "front",
-  ["좌우 거리", "착지", "골반"],
-  "좌우 방향으로 이동하는 측면 플라이오 운동입니다."
-),
-
-makeExercise(
-  "jump-rope",
-  "줄넘기",
-  "plyometric",
-  "other",
-  "➰",
-  "종아리 · 발목",
-  "front",
-  ["접지", "리듬", "대칭성"],
-  "반복적인 짧은 접지 능력을 평가합니다."
-),
-
-makeExercise(
-  "inchworm",
-  "인치웜",
-  "functional",
-  "bodyweight",
-  "🐛",
-  "코어 · 햄스트링 · 어깨",
-  "side",
-  ["몸통", "고관절", "어깨"],
-  "전신 가동성과 코어를 연결하는 맨몸 운동입니다."
-),
-
-makeExercise(
-  "crab-walk",
-  "크랩 워크",
-  "functional",
-  "bodyweight",
-  "🦀",
-  "어깨 · 둔근 · 코어",
-  "side",
-  ["골반", "어깨"],
-  "후방 지지 자세에서 이동하는 전신 운동입니다."
-),
-
-makeExercise(
-  "band-lateral-walk",
-  "밴드 라테럴 워크",
-  "mobility",
-  "band",
-  "↔️",
-  "중둔근",
-  "front",
-  ["무릎", "골반"],
-  "중둔근 활성화와 무릎 정렬 보강 운동입니다."
-),
-
-makeExercise(
-  "tibialis-raise",
-  "티비얼리스 레이즈",
-  "mobility",
-  "bodyweight",
-  "🦶",
-  "전경골근",
-  "side",
-  ["발목"],
-  "발목 배측굴곡 근력을 강화합니다."
-),
-
-makeExercise(
-  "adductor-rockback",
-  "내전근 락백",
-  "mobility",
-  "bodyweight",
-  "🧘",
-  "내전근 · 고관절",
-  "side",
-  ["고관절 ROM"],
-  "내전근과 고관절 가동성을 위한 드릴입니다."
-),
-
-makeExercise(
-  "worlds-greatest-stretch",
-  "월드 그레이티스트 스트레치",
-  "mobility",
-  "bodyweight",
-  "🧘",
-  "고관절 · 흉추 · 햄스트링",
-  "side",
-  ["고관절", "몸통 회전"],
-  "전신 가동성을 위한 복합 모빌리티 드릴입니다."
-)
-
-];
-
-WEIGHT_EXERCISES.push(...EXTRA_EXERCISES);
-
-
-/* =========================================================
-   05. UTILITY
+   EXERCISE UTILS
 ========================================================= */
 
 function getExerciseById(id) {
-  return WEIGHT_EXERCISES.find(exercise => exercise.id === id);
+
+  return EXERCISES.find(
+    exercise => exercise.id === id
+  ) || null;
+
 }
 
-function getExerciseName(id) {
-  return getExerciseById(id)?.name || id || "-";
-}
 
-function getCategoryLabel(category) {
+function getExerciseCategoryLabel(category) {
+
   return EXERCISE_CATEGORY_LABELS[category] || category;
-}
 
-function getEquipmentLabel(equipment) {
-  return EQUIPMENT_LABELS[equipment] || equipment;
-}
-
-function getViewLabel(view) {
-  return VIEW_LABELS[view] || view;
 }
 
 
-/* =========================================================
-   06. STATE
-========================================================= */
+function getExerciseEquipmentLabel(equipment) {
 
-let currentExerciseCategory = "all";
-let currentExerciseEquipment = "all";
-let currentExerciseSearch = "";
-let currentExerciseFavoritesOnly = false;
-let selectedExerciseId = null;
+  return EXERCISE_EQUIPMENT_LABELS[equipment] || equipment;
 
-function getExerciseFavorites() {
-  try {
-    return JSON.parse(
-      localStorage.getItem("weightLabExerciseFavorites") || "[]"
-    );
-  } catch {
-    return [];
+}
+
+
+function getExercisesByCategory(category) {
+
+  if (!category || category === "all") {
+
+    return [...EXERCISES];
+
   }
-}
 
-function saveExerciseFavorites(list) {
-  localStorage.setItem(
-    "weightLabExerciseFavorites",
-    JSON.stringify(list)
+  return EXERCISES.filter(
+    exercise => exercise.category === category
   );
+
 }
 
-function isFavoriteExercise(id) {
-  return getExerciseFavorites().includes(id);
-}
 
-function toggleExerciseFavorite(id) {
+function getExercisesByEquipment(equipment) {
 
-  let favorites = getExerciseFavorites();
+  if (!equipment || equipment === "all") {
 
-  if (favorites.includes(id)) {
-    favorites = favorites.filter(item => item !== id);
-  } else {
-    favorites.push(id);
+    return [...EXERCISES];
+
   }
 
-  saveExerciseFavorites(favorites);
+  return EXERCISES.filter(
+    exercise => exercise.equipment === equipment
+  );
 
-  renderExerciseLibrary();
-
-  if (selectedExerciseId === id) {
-    updateModalFavoriteButton(id);
-  }
 }
 
 
 /* =========================================================
-   07. RENDER EXERCISE LIBRARY
+   SEARCH
 ========================================================= */
 
-function renderExerciseLibrary() {
+function searchExercises(
+  keyword = "",
+  category = "all",
+  equipment = "all"
+) {
 
-  const grid = document.getElementById("exerciseGrid");
-  const count = document.getElementById("exerciseTotalCount");
+  const search = keyword
+    .trim()
+    .toLowerCase();
 
-  if (!grid) return;
 
-  const searchText =
-    currentExerciseSearch
-      .trim()
-      .toLowerCase();
-
-  let filtered = WEIGHT_EXERCISES.filter(exercise => {
+  return EXERCISES.filter(exercise => {
 
     const categoryMatch =
-      currentExerciseCategory === "all" ||
-      exercise.category === currentExerciseCategory;
+      category === "all" ||
+      exercise.category === category;
+
 
     const equipmentMatch =
-      currentExerciseEquipment === "all" ||
-      exercise.equipment === currentExerciseEquipment;
+      equipment === "all" ||
+      exercise.equipment === equipment;
 
-    const searchMatch =
-      !searchText ||
-      exercise.name.toLowerCase().includes(searchText) ||
-      exercise.muscles.toLowerCase().includes(searchText) ||
-      exercise.description.toLowerCase().includes(searchText) ||
-      getCategoryLabel(exercise.category)
-        .toLowerCase()
-        .includes(searchText);
 
-    const favoriteMatch =
-      !currentExerciseFavoritesOnly ||
-      isFavoriteExercise(exercise.id);
+    const searchTarget = [
+
+      exercise.name,
+
+      exercise.muscles,
+
+      exercise.description,
+
+      getExerciseCategoryLabel(
+        exercise.category
+      ),
+
+      getExerciseEquipmentLabel(
+        exercise.equipment
+      )
+
+    ]
+      .join(" ")
+      .toLowerCase();
+
+
+    const keywordMatch =
+      !search ||
+      searchTarget.includes(search);
+
 
     return (
       categoryMatch &&
       equipmentMatch &&
-      searchMatch &&
-      favoriteMatch
+      keywordMatch
     );
+
   });
 
-  if (count) {
-    count.textContent = filtered.length;
-  }
-
-  if (!filtered.length) {
-
-    grid.innerHTML = `
-      <div class="empty-state">
-        조건에 맞는 운동이 없습니다.
-      </div>
-    `;
-
-    return;
-  }
-
-  grid.innerHTML = filtered
-    .map(exercise => {
-
-      const favorite =
-        isFavoriteExercise(exercise.id);
-
-      return `
-        <article
-          class="exercise-card"
-          data-exercise-id="${exercise.id}"
-        >
-
-          <button
-            class="favorite-button"
-            type="button"
-            data-favorite-exercise="${exercise.id}"
-            title="즐겨찾기"
-          >
-            ${favorite ? "★" : "☆"}
-          </button>
-
-          <div class="exercise-pictogram">
-            ${exercise.pictogram}
-          </div>
-
-          <span class="eyebrow">
-            ${getCategoryLabel(exercise.category)}
-          </span>
-
-          <h3>
-            ${exercise.name}
-          </h3>
-
-          <p>
-            ${exercise.muscles}
-          </p>
-
-          <div class="exercise-meta">
-
-            <span class="exercise-tag">
-              ${getEquipmentLabel(exercise.equipment)}
-            </span>
-
-            <span class="exercise-tag">
-              ${getViewLabel(exercise.view)} 분석
-            </span>
-
-            ${
-              exercise.counter
-                ? `
-                <span class="exercise-tag">
-                  REP AI
-                </span>
-                `
-                : ""
-            }
-
-          </div>
-
-        </article>
-      `;
-    })
-    .join("");
-
-  bindExerciseCards();
 }
 
 
 /* =========================================================
-   08. CARD EVENTS
+   ANALYSIS PROFILE
+
+   운동별 기본 분석 설정
 ========================================================= */
 
-function bindExerciseCards() {
-
-  document
-    .querySelectorAll(".exercise-card")
-    .forEach(card => {
-
-      card.addEventListener("click", event => {
-
-        if (
-          event.target.closest(
-            "[data-favorite-exercise]"
-          )
-        ) {
-          return;
-        }
-
-        const id =
-          card.dataset.exerciseId;
-
-        openExerciseModal(id);
-
-      });
-
-    });
-
-  document
-    .querySelectorAll("[data-favorite-exercise]")
-    .forEach(button => {
-
-      button.addEventListener("click", event => {
-
-        event.stopPropagation();
-
-        toggleExerciseFavorite(
-          button.dataset.favoriteExercise
-        );
-
-      });
-
-    });
-}
-
-
-/* =========================================================
-   09. MODAL
-========================================================= */
-
-function openExerciseModal(id) {
-
-  const exercise = getExerciseById(id);
-  const modal = document.getElementById("exerciseModal");
-
-  if (!exercise || !modal) return;
-
-  selectedExerciseId = id;
-
-  const pictogram =
-    document.getElementById("modalExercisePictogram");
-
-  const category =
-    document.getElementById("modalExerciseCategory");
-
-  const name =
-    document.getElementById("modalExerciseName");
-
-  const description =
-    document.getElementById("modalExerciseDescription");
-
-  const muscles =
-    document.getElementById("modalExerciseMuscles");
-
-  const equipment =
-    document.getElementById("modalExerciseEquipment");
-
-  const view =
-    document.getElementById("modalExerciseView");
-
-  const metrics =
-    document.getElementById("modalExerciseMetrics");
-
-  if (pictogram) {
-    pictogram.textContent = exercise.pictogram;
-  }
-
-  if (category) {
-    category.textContent =
-      getCategoryLabel(exercise.category);
-  }
-
-  if (name) {
-    name.textContent = exercise.name;
-  }
-
-  if (description) {
-    description.textContent =
-      exercise.description;
-  }
-
-  if (muscles) {
-    muscles.textContent =
-      exercise.muscles;
-  }
-
-  if (equipment) {
-    equipment.textContent =
-      getEquipmentLabel(exercise.equipment);
-  }
-
-  if (view) {
-    view.textContent =
-      getViewLabel(exercise.view);
-  }
-
-  if (metrics) {
-    metrics.textContent =
-      exercise.metrics?.join(" · ") || "-";
-  }
-
-  renderExerciseModalCheckpoints(exercise);
-
-  modal.classList.add("open");
-
-  updateModalFavoriteButton(id);
-}
-
-function closeExerciseModal() {
-
-  const modal =
-    document.getElementById("exerciseModal");
-
-  modal?.classList.remove("open");
-}
-
-
-/* =========================================================
-   10. MODAL CHECKPOINTS
-========================================================= */
-
-function renderExerciseModalCheckpoints(exercise) {
-
-  let container =
-    document.getElementById(
-      "modalExerciseCheckpoints"
-    );
-
-  if (!container) {
-
-    const detailGrid =
-      document.querySelector(
-        "#exerciseModal .exercise-detail-grid"
-      );
-
-    if (!detailGrid) return;
-
-    container =
-      document.createElement("div");
-
-    container.id =
-      "modalExerciseCheckpoints";
-
-    container.className =
-      "modal-checkpoint-list";
-
-    detailGrid.insertAdjacentElement(
-      "afterend",
-      container
-    );
-  }
-
-  if (!exercise.checkpoints?.length) {
-
-    container.innerHTML = `
-      <div class="checkpoint-row">
-        <span>
-          기본 관절 정렬 및 움직임을 분석합니다.
-        </span>
-        <strong>CHECK</strong>
-      </div>
-    `;
-
-    return;
-  }
-
-  container.innerHTML =
-    exercise.checkpoints
-      .map(item => `
-        <div class="checkpoint-row">
-          <span>${item}</span>
-          <strong>CHECK</strong>
-        </div>
-      `)
-      .join("");
-}
-
-
-/* =========================================================
-   11. FAVORITE BUTTON IN MODAL
-========================================================= */
-
-function updateModalFavoriteButton(id) {
-
-  const modalCard =
-    document.querySelector(
-      "#exerciseModal .modal-card"
-    );
-
-  if (!modalCard) return;
-
-  let button =
-    document.getElementById(
-      "modalFavoriteExerciseBtn"
-    );
-
-  if (!button) {
-
-    button =
-      document.createElement("button");
-
-    button.id =
-      "modalFavoriteExerciseBtn";
-
-    button.type = "button";
-
-    button.className =
-      "favorite-modal-button";
-
-    modalCard.appendChild(button);
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        if (selectedExerciseId) {
-          toggleExerciseFavorite(
-            selectedExerciseId
-          );
-        }
-
-      }
-    );
-  }
-
-  button.textContent =
-    isFavoriteExercise(id)
-      ? "★"
-      : "☆";
-}
-
-
-/* =========================================================
-   12. GO TO ANALYSIS
-
-   중요:
-   운동 선택 → 자세분석 페이지 → 운동 자동 선택
-========================================================= */
-
-function analyzeSelectedExercise() {
-
-  if (!selectedExerciseId) return;
+function getExerciseAnalysisProfile(exerciseId) {
 
   const exercise =
-    getExerciseById(selectedExerciseId);
-
-  if (!exercise) return;
-
-  closeExerciseModal();
-
-  selectExerciseForAnalysis(exercise.id);
-
-  if (
-    typeof navigateToPage === "function"
-  ) {
-
-    navigateToPage("analysis");
-
-  } else {
-
-    document
-      .querySelectorAll(".page")
-      .forEach(page => {
-        page.classList.remove("active");
-      });
-
-    document
-      .getElementById("page-analysis")
-      ?.classList.add("active");
-
-    document
-      .querySelectorAll(".nav-item")
-      .forEach(button => {
-        button.classList.remove("active");
-      });
-
-    document
-      .querySelector(
-        '[data-page="analysis"]'
-      )
-      ?.classList.add("active");
-  }
-
-  setTimeout(() => {
-
-    document
-      .getElementById("page-analysis")
-      ?.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-
-  }, 100);
-}
-
-
-/* =========================================================
-   13. SELECT EXERCISE FOR ANALYSIS
-========================================================= */
-
-function selectExerciseForAnalysis(id) {
-
-  const exercise =
-    getExerciseById(id);
-
-  if (!exercise) return;
-
-  const select =
-    document.getElementById(
-      "analysisExercise"
-    );
-
-  if (select) {
-
-    populateAnalysisExerciseSelect();
-
-    select.value = exercise.id;
-
-    select.dispatchEvent(
-      new Event("change")
-    );
-  }
-
-  applyExerciseAnalysisPreset(exercise);
-}
-
-
-/* =========================================================
-   14. ANALYSIS SELECT OPTIONS
-========================================================= */
-
-function populateAnalysisExerciseSelect() {
-
-  const select =
-    document.getElementById(
-      "analysisExercise"
-    );
-
-  if (!select) return;
-
-  const oldValue = select.value;
-
-  select.innerHTML = `
-    <option value="">
-      운동 선택
-    </option>
-
-    ${WEIGHT_EXERCISES
-      .map(exercise => `
-        <option value="${exercise.id}">
-          ${exercise.name}
-        </option>
-      `)
-      .join("")}
-  `;
-
-  if (
-    WEIGHT_EXERCISES.some(
-      item => item.id === oldValue
-    )
-  ) {
-    select.value = oldValue;
-  }
-}
-
-
-/* =========================================================
-   15. PROGRAM EXERCISE OPTIONS
-========================================================= */
-
-function populateProgramExerciseSelect() {
-
-  const select =
-    document.getElementById(
-      "programExercise"
-    );
-
-  if (!select) return;
-
-  select.innerHTML = `
-    <option value="">
-      운동 선택
-    </option>
-
-    ${WEIGHT_EXERCISES
-      .map(exercise => `
-        <option value="${exercise.id}">
-          ${exercise.name}
-        </option>
-      `)
-      .join("")}
-  `;
-}
-
-
-/* =========================================================
-   16. RECORD FILTER OPTIONS
-========================================================= */
-
-function populateRecordExerciseFilter() {
-
-  const select =
-    document.getElementById(
-      "recordExerciseFilter"
-    );
-
-  if (!select) return;
-
-  select.innerHTML = `
-    <option value="all">
-      전체 운동
-    </option>
-
-    ${WEIGHT_EXERCISES
-      .map(exercise => `
-        <option value="${exercise.id}">
-          ${exercise.name}
-        </option>
-      `)
-      .join("")}
-  `;
-}
-
-
-/* =========================================================
-   17. EXERCISE ANALYSIS PRESET
-========================================================= */
-
-function applyExerciseAnalysisPreset(exercise) {
-
-  if (!exercise) return;
-
-  const title =
-    document.getElementById(
-      "motionAnalysisTitle"
-    );
-
-  if (title) {
-    title.textContent =
-      `${exercise.name} 자세 분석`;
-  }
-
-  updateRecommendedView(exercise.view);
-
-  renderAnalysisCheckpoints(exercise);
-
-  renderPreAnalysisRecommendations(exercise);
-}
-
-
-/* =========================================================
-   18. RECOMMENDED VIEW
-========================================================= */
-
-function updateRecommendedView(view) {
-
-  document
-    .querySelectorAll(".view-button")
-    .forEach(button => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.view === view
-      );
-
-    });
-
-  if (
-    typeof window.setAnalysisView ===
-    "function"
-  ) {
-    window.setAnalysisView(view);
-  }
-}
-
-
-/* =========================================================
-   19. ANALYSIS CHECKPOINTS
-========================================================= */
-
-function renderAnalysisCheckpoints(exercise) {
-
-  const container =
-    document.getElementById(
-      "checkpointList"
-    );
-
-  if (!container) return;
-
-  const checkpoints =
-    exercise.checkpoints?.length
-      ? exercise.checkpoints
-      : [
-          "관절 정렬",
-          "좌우 대칭",
-          "동작 범위",
-          "몸통 안정성"
-        ];
-
-  container.innerHTML =
-    checkpoints
-      .map((item, index) => `
-        <div class="checkpoint-row">
-          <span>
-            ${index + 1}. ${item}
-          </span>
-
-          <strong>
-            READY
-          </strong>
-        </div>
-      `)
-      .join("");
-}
-
-
-/* =========================================================
-   20. PRE-ANALYSIS RECOMMENDATIONS
-========================================================= */
-
-function renderPreAnalysisRecommendations(exercise) {
-
-  const container =
-    document.getElementById(
-      "trainingRecommendations"
-    );
-
-  if (!container) return;
-
-  const recommendations =
-    exercise.recommendations?.length
-      ? exercise.recommendations
-      : getDefaultRecommendations(
-          exercise.category
-        );
-
-  container.innerHTML =
-    recommendations
-      .slice(0, 8)
-      .map((name, index) => `
-        <div class="recommendation-card">
-
-          <span class="eyebrow">
-            ${
-              index < 2
-                ? "HIGH PRIORITY"
-                : "TRAINING"
-            }
-          </span>
-
-          <strong>
-            ${name}
-          </strong>
-
-          <p>
-            ${exercise.name}의 움직임 품질과
-            관련 능력을 향상시키기 위한
-            보조 훈련입니다.
-          </p>
-
-        </div>
-      `)
-      .join("");
-}
-
-
-/* =========================================================
-   21. DEFAULT RECOMMENDATIONS
-========================================================= */
-
-function getDefaultRecommendations(category) {
-
-  const map = {
-
-    lower: [
-      "Goblet Squat",
-      "Split Squat",
-      "Single Leg RDL",
-      "Glute Bridge",
-      "Ankle Mobility",
-      "Lateral Band Walk",
-      "Dead Bug"
-    ],
-
-    chest: [
-      "Push Up",
-      "Dumbbell Bench Press",
-      "Scapular Push Up",
-      "Plank",
-      "Band Pull Apart"
-    ],
-
-    back: [
-      "Lat Pulldown",
-      "Cable Row",
-      "Face Pull",
-      "Scapular Pull Up",
-      "Bird Dog"
-    ],
-
-    shoulder: [
-      "Wall Slide",
-      "Landmine Press",
-      "Face Pull",
-      "Band External Rotation",
-      "Core Bracing"
-    ],
-
-    arms: [
-      "Push Up",
-      "Cable Curl",
-      "Triceps Pushdown",
-      "Farmer Carry"
-    ],
-
-    core: [
-      "Dead Bug",
-      "Bird Dog",
-      "Pallof Press",
-      "Side Plank",
-      "Farmer Carry"
-    ],
-
-    olympic: [
-      "Front Squat",
-      "Clean Pull",
-      "Jump Shrug",
-      "RDL",
-      "Overhead Squat",
-      "Ankle Mobility"
-    ],
-
-    power: [
-      "Countermovement Jump",
-      "Jump Squat",
-      "Kettlebell Swing",
-      "Medicine Ball Throw"
-    ],
-
-    plyometric: [
-      "Snap Down",
-      "Pogo Jump",
-      "Countermovement Jump",
-      "Single Leg Balance",
-      "Calf Raise"
-    ],
-
-    functional: [
-      "Farmer Carry",
-      "Pallof Press",
-      "Split Squat",
-      "Bear Crawl",
-      "Dead Bug"
-    ],
-
-    mobility: [
-      "Ankle Mobility",
-      "90/90 Hip Mobility",
-      "Wall Slide",
-      "Adductor Mobility"
-    ],
-
-    fullbody: [
-      "Squat",
-      "Push Up",
-      "RDL",
-      "Plank",
-      "Farmer Carry"
-    ]
-
-  };
-
-  return map[category] || [
-    "Mobility Training",
-    "Core Stability",
-    "Movement Control"
-  ];
-}
-
-
-/* =========================================================
-   22. FILTER EVENTS
-========================================================= */
-
-function initializeExerciseFilters() {
-
-  const search =
-    document.getElementById(
-      "exerciseSearch"
-    );
-
-  const equipment =
-    document.getElementById(
-      "equipmentFilter"
-    );
-
-  if (search) {
-
-    search.addEventListener(
-      "input",
-      () => {
-
-        currentExerciseSearch =
-          search.value;
-
-        renderExerciseLibrary();
-
-      }
-    );
-  }
-
-  if (equipment) {
-
-    equipment.addEventListener(
-      "change",
-      () => {
-
-        currentExerciseEquipment =
-          equipment.value;
-
-        renderExerciseLibrary();
-
-      }
-    );
-  }
-
-  document
-    .querySelectorAll(".category-tab")
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          document
-            .querySelectorAll(
-              ".category-tab"
-            )
-            .forEach(item =>
-              item.classList.remove(
-                "active"
-              )
-            );
-
-          button.classList.add("active");
-
-          currentExerciseCategory =
-            button.dataset.category;
-
-          renderExerciseLibrary();
-
-        }
-      );
-
-    });
-}
-
-
-/* =========================================================
-   23. ANALYSIS EXERCISE CHANGE
-========================================================= */
-
-function initializeAnalysisExerciseChange() {
-
-  const select =
-    document.getElementById(
-      "analysisExercise"
-    );
-
-  if (!select) return;
-
-  select.addEventListener(
-    "change",
-    () => {
-
-      const exercise =
-        getExerciseById(select.value);
-
-      if (!exercise) return;
-
-      selectedExerciseId =
-        exercise.id;
-
-      applyExerciseAnalysisPreset(
-        exercise
-      );
-
-    }
-  );
-}
-
-
-/* =========================================================
-   24. MODAL EVENTS
-========================================================= */
-
-function initializeExerciseModalEvents() {
-
-  const closeButton =
-    document.getElementById(
-      "closeExerciseModal"
-    );
-
-  const analyzeButton =
-    document.getElementById(
-      "analyzeSelectedExerciseBtn"
-    );
-
-  const modal =
-    document.getElementById(
-      "exerciseModal"
-    );
-
-  closeButton?.addEventListener(
-    "click",
-    closeExerciseModal
-  );
-
-  analyzeButton?.addEventListener(
-    "click",
-    analyzeSelectedExercise
-  );
-
-  modal?.addEventListener(
-    "click",
-    event => {
-
-      if (event.target === modal) {
-        closeExerciseModal();
-      }
-
-    }
-  );
-}
-
-
-/* =========================================================
-   25. KEYBOARD
-========================================================= */
-
-function initializeExerciseKeyboard() {
-
-  document.addEventListener(
-    "keydown",
-    event => {
-
-      if (event.key === "Escape") {
-        closeExerciseModal();
-      }
-
-    }
-  );
-}
-
-
-/* =========================================================
-   26. GET ANALYSIS CONFIG
-
-   app.js에서 REP 카운터가 사용할 수 있음
-========================================================= */
-
-function getCurrentExerciseAnalysisConfig() {
-
-  const select =
-    document.getElementById(
-      "analysisExercise"
-    );
-
-  if (!select?.value) return null;
-
-  return getExerciseById(
-    select.value
-  );
-}
-
-
-/* =========================================================
-   27. FIND RELATED EXERCISES
-========================================================= */
-
-function getRelatedExercises(exerciseId, limit = 8) {
-
-  const source =
     getExerciseById(exerciseId);
 
-  if (!source) return [];
 
-  return WEIGHT_EXERCISES
-    .filter(item =>
-      item.id !== source.id &&
-      (
-        item.category === source.category ||
-        item.equipment === source.equipment
-      )
-    )
-    .slice(0, limit);
-}
+  if (!exercise) {
+
+    return null;
+
+  }
 
 
-/* =========================================================
-   28. EXERCISE STATISTICS
-========================================================= */
+  const profile = {
 
-function getExerciseDatabaseStats() {
+    exerciseId: exercise.id,
 
-  const stats = {
-    total: WEIGHT_EXERCISES.length,
-    categories: {},
-    equipment: {}
+    name: exercise.name,
+
+    recommendedView:
+      exercise.recommendedView || "side",
+
+    checkpoints:
+      exercise.checkpoints || [],
+
+
+    angles: {
+
+      knee: true,
+
+      hip: true,
+
+      trunk: true,
+
+      ankle: true
+
+    },
+
+
+    trackBar:
+      exercise.equipment === "barbell" ||
+      exercise.equipment === "trapbar" ||
+      exercise.equipment === "landmine",
+
+
+    repDetection: true,
+
+    symmetryAnalysis: true,
+
+    stabilityAnalysis: true,
+
+    romAnalysis: true,
+
+    tempoAnalysis: true
+
   };
 
-  WEIGHT_EXERCISES.forEach(exercise => {
 
-    stats.categories[
-      exercise.category
-    ] =
-      (
-        stats.categories[
-          exercise.category
-        ] || 0
-      ) + 1;
+  /* -------------------------------------------------------
+     UPPER BODY
+  ------------------------------------------------------- */
 
-    stats.equipment[
-      exercise.equipment
-    ] =
-      (
-        stats.equipment[
-          exercise.equipment
-        ] || 0
-      ) + 1;
+  if (
+    exercise.category === "chest" ||
+    exercise.category === "back" ||
+    exercise.category === "shoulder" ||
+    exercise.category === "arms"
+  ) {
 
-  });
+    profile.angles = {
 
-  return stats;
+      knee: false,
+
+      hip: false,
+
+      trunk: true,
+
+      ankle: false,
+
+      shoulder: true,
+
+      elbow: true
+
+    };
+
+  }
+
+
+  /* -------------------------------------------------------
+     CORE
+  ------------------------------------------------------- */
+
+  if (exercise.category === "core") {
+
+    profile.angles = {
+
+      knee: true,
+
+      hip: true,
+
+      trunk: true,
+
+      ankle: false,
+
+      shoulder: true
+
+    };
+
+  }
+
+
+  /* -------------------------------------------------------
+     OLYMPIC
+  ------------------------------------------------------- */
+
+  if (
+    exercise.category === "olympic" ||
+    exercise.category === "power"
+  ) {
+
+    profile.trackBar = true;
+
+    profile.velocityAnalysis = true;
+
+    profile.phaseAnalysis = true;
+
+  }
+
+
+  /* -------------------------------------------------------
+     PLYOMETRIC
+  ------------------------------------------------------- */
+
+  if (exercise.category === "plyometric") {
+
+    profile.jumpAnalysis = true;
+
+    profile.flightTimeAnalysis = true;
+
+    profile.landingAnalysis = true;
+
+  }
+
+
+  /* -------------------------------------------------------
+     MOBILITY
+  ------------------------------------------------------- */
+
+  if (exercise.category === "mobility") {
+
+    profile.repDetection = false;
+
+    profile.mobilityAnalysis = true;
+
+  }
+
+
+  return profile;
+
 }
 
 
 /* =========================================================
-   29. GLOBAL EXPORTS
+   ANALYSIS RECOMMENDATIONS
 ========================================================= */
 
-window.WEIGHT_EXERCISES =
-  WEIGHT_EXERCISES;
+function getExerciseRecommendations(
+  exerciseId,
+  result = {}
+) {
+
+  const exercise =
+    getExerciseById(exerciseId);
+
+
+  if (!exercise) {
+
+    return [];
+
+  }
+
+
+  const recommendations = [];
+
+
+  const symmetry =
+    Number(result.symmetry || 100);
+
+
+  const stability =
+    Number(result.stability || 100);
+
+
+  const mobility =
+    Number(result.mobility || 100);
+
+
+  const technique =
+    Number(result.technique || 100);
+
+
+  /* -------------------------------------------------------
+     SYMMETRY
+  ------------------------------------------------------- */
+
+  if (symmetry < 85) {
+
+    recommendations.push({
+
+      title: "좌우 대칭 보강",
+
+      description:
+        "편측 운동과 낮은 강도의 컨트롤 훈련으로 좌우 움직임 차이를 확인하세요."
+
+    });
+
+  }
+
+
+  /* -------------------------------------------------------
+     STABILITY
+  ------------------------------------------------------- */
+
+  if (stability < 80) {
+
+    recommendations.push({
+
+      title: "안정성 훈련",
+
+      description:
+        "코어 안정성과 느린 템포 동작을 활용해 자세 제어 능력을 강화하세요."
+
+    });
+
+  }
+
+
+  /* -------------------------------------------------------
+     MOBILITY
+  ------------------------------------------------------- */
+
+  if (mobility < 80) {
+
+    recommendations.push({
+
+      title: "가동성 보강",
+
+      description:
+        "해당 동작에 필요한 발목·고관절·어깨 가동범위를 단계적으로 확보하세요."
+
+    });
+
+  }
+
+
+  /* -------------------------------------------------------
+     TECHNIQUE
+  ------------------------------------------------------- */
+
+  if (technique < 80) {
+
+    recommendations.push({
+
+      title: "기술 패턴 교정",
+
+      description:
+        "중량이나 속도를 낮추고 기준선과 관절 각도를 확인하며 정확한 동작을 반복하세요."
+
+    });
+
+  }
+
+
+  /* -------------------------------------------------------
+     LOWER BODY
+  ------------------------------------------------------- */
+
+  if (exercise.category === "lower") {
+
+    recommendations.push({
+
+      title: "하체 컨트롤",
+
+      description:
+        "스플릿 스쿼트·싱글 레그 밸런스 등으로 무릎과 골반 제어 능력을 강화할 수 있습니다."
+
+    });
+
+  }
+
+
+  /* -------------------------------------------------------
+     OLYMPIC
+  ------------------------------------------------------- */
+
+  if (exercise.category === "olympic") {
+
+    recommendations.push({
+
+      title: "리프팅 기술",
+
+      description:
+        "가벼운 중량에서 바벨 궤적과 각 구간의 타이밍을 먼저 안정시키는 것이 좋습니다."
+
+    });
+
+  }
+
+
+  /* -------------------------------------------------------
+     PLYOMETRIC
+  ------------------------------------------------------- */
+
+  if (exercise.category === "plyometric") {
+
+    recommendations.push({
+
+      title: "착지 안정성",
+
+      description:
+        "점프 높이보다 안정적인 착지와 좌우 무릎 정렬을 우선 확인하세요."
+
+    });
+
+  }
+
+
+  return recommendations.slice(0, 6);
+
+}
+
+
+/* =========================================================
+   EXPOSE GLOBAL
+========================================================= */
+
+window.EXERCISES =
+  EXERCISES;
+
+
+window.EXERCISE_CATEGORY_LABELS =
+  EXERCISE_CATEGORY_LABELS;
+
+
+window.EXERCISE_EQUIPMENT_LABELS =
+  EXERCISE_EQUIPMENT_LABELS;
+
 
 window.getExerciseById =
   getExerciseById;
 
-window.getExerciseName =
-  getExerciseName;
 
-window.getCurrentExerciseAnalysisConfig =
-  getCurrentExerciseAnalysisConfig;
+window.getExerciseCategoryLabel =
+  getExerciseCategoryLabel;
 
-window.getRelatedExercises =
-  getRelatedExercises;
 
-window.getExerciseDatabaseStats =
-  getExerciseDatabaseStats;
+window.getExerciseEquipmentLabel =
+  getExerciseEquipmentLabel;
 
-window.selectExerciseForAnalysis =
-  selectExerciseForAnalysis;
 
-window.populateAnalysisExerciseSelect =
-  populateAnalysisExerciseSelect;
+window.getExercisesByCategory =
+  getExercisesByCategory;
 
-window.populateProgramExerciseSelect =
-  populateProgramExerciseSelect;
+
+window.getExercisesByEquipment =
+  getExercisesByEquipment;
+
+
+window.searchExercises =
+  searchExercises;
+
+
+window.getExerciseAnalysisProfile =
+  getExerciseAnalysisProfile;
+
+
+window.getExerciseRecommendations =
+  getExerciseRecommendations;
 
 
 /* =========================================================
-   30. INITIALIZE
+   DEBUG
 ========================================================= */
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    renderExerciseLibrary();
-
-    initializeExerciseFilters();
-
-    initializeExerciseModalEvents();
-
-    initializeExerciseKeyboard();
-
-    populateAnalysisExerciseSelect();
-
-    populateProgramExerciseSelect();
-
-    populateRecordExerciseFilter();
-
-    initializeAnalysisExerciseChange();
-
-    console.log(
-      `[WEIGHT LAB] Exercise DB loaded: ${WEIGHT_EXERCISES.length} exercises`
-    );
-
-  }
+console.log(
+  `[WEIGHT LAB] Exercise Database Loaded: ${EXERCISES.length}`
 );
