@@ -1,0 +1,3112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <meta
+    name="description"
+    content="설천고 Weight Performance Lab - Strength, Power and Motion Analysis"
+  />
+
+  <meta name="theme-color" content="#031521" />
+
+  <title>설천고 WEIGHT PERFORMANCE LAB</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- MediaPipe -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
+    crossorigin="anonymous">
+  </script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
+    crossorigin="anonymous">
+  </script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"
+    crossorigin="anonymous">
+  </script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<div id="app">
+
+  <!-- =====================================================
+       MOBILE TOP BAR
+  ====================================================== -->
+
+  <div class="mobile-topbar">
+
+    <button
+      class="mobile-menu-btn"
+      id="mobileMenuBtn"
+      aria-label="메뉴 열기"
+    >
+      ☰
+    </button>
+
+    <div class="mobile-brand">
+      <strong>설천고</strong>
+      <span>WEIGHT PERFORMANCE LAB</span>
+    </div>
+
+  </div>
+
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand">
+
+      <div class="brand-logo">
+        SH
+      </div>
+
+      <div class="brand-title">
+        설천고
+      </div>
+
+      <div class="brand-subtitle">
+        WEIGHT PERFORMANCE LAB
+      </div>
+
+    </div>
+
+
+    <div class="sidebar-divider"></div>
+
+
+    <nav class="sidebar-nav">
+
+      <button
+        class="nav-item active"
+        data-page="dashboard"
+      >
+        <span class="nav-icon">⌂</span>
+        <span>대시보드</span>
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="athletes"
+      >
+        <span class="nav-icon">♙</span>
+        <span>선수 관리</span>
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="exercises"
+      >
+        <span class="nav-icon">🏋</span>
+        <span>웨이트 종목</span>
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="analysis"
+      >
+        <span class="nav-icon">◎</span>
+        <span>자세 분석</span>
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="records"
+      >
+        <span class="nav-icon">▣</span>
+        <span>분석 기록</span>
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="program"
+      >
+        <span class="nav-icon">▤</span>
+        <span>훈련 프로그램</span>
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="report"
+      >
+        <span class="nav-icon">◇</span>
+        <span>리포트</span>
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="settings"
+      >
+        <span class="nav-icon">⚙</span>
+        <span>시스템</span>
+      </button>
+
+    </nav>
+
+
+    <div class="sidebar-footer">
+
+      <div class="system-status">
+
+        <span class="status-dot"></span>
+
+        SYSTEM ONLINE
+
+      </div>
+
+      <strong>
+        SCIENCE FOR PERFORMANCE
+      </strong>
+
+      <p>
+        STRENGTH · POWER<br>
+        MOTION ANALYSIS
+      </p>
+
+    </div>
+
+  </aside>
+
+
+
+  <!-- =====================================================
+       MAIN
+  ====================================================== -->
+
+  <main class="main">
+
+
+    <!-- ===================================================
+         HEADER
+    ==================================================== -->
+
+    <header class="top-header">
+
+      <div class="header-left">
+
+        <div class="header-logo">
+          SH
+        </div>
+
+        <div>
+
+          <h1>
+            설천고 WEIGHT PERFORMANCE LAB
+          </h1>
+
+          <p>
+            STRENGTH · POWER · MOTION ANALYSIS
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="header-right">
+
+        <div class="header-clock">
+
+          <span id="headerDate">
+            ----.--.--
+          </span>
+
+          <strong id="headerTime">
+            --:--
+          </strong>
+
+        </div>
+
+
+        <button
+          class="coach-button"
+          id="coachModeBtn"
+        >
+          👤 코치 모드
+        </button>
+
+
+        <button
+          class="icon-button"
+          data-page-target="settings"
+          aria-label="설정"
+        >
+          ⚙
+        </button>
+
+      </div>
+
+    </header>
+
+
+
+    <!-- ===================================================
+         PAGE CONTAINER
+    ==================================================== -->
+
+    <div class="page-container">
+
+
+      <!-- =================================================
+           DASHBOARD
+      ================================================== -->
+
+      <section
+        class="page active"
+        id="page-dashboard"
+      >
+
+        <div class="page-heading">
+
+          <div>
+
+            <span class="eyebrow">
+              PERFORMANCE CENTER
+            </span>
+
+            <h2>
+              PERFORMANCE DASHBOARD
+            </h2>
+
+            <p>
+              선수의 웨이트 퍼포먼스와 자세 분석 데이터를 확인합니다.
+            </p>
+
+          </div>
+
+
+          <button
+            class="primary-button"
+            data-page-target="analysis"
+          >
+            + 새 분석 시작
+          </button>
+
+        </div>
+
+
+
+        <!-- DASHBOARD KPI -->
+
+        <div class="stats-grid">
+
+          <article class="stat-card">
+
+            <span>
+              등록 선수
+            </span>
+
+            <strong id="dashboardAthleteCount">
+              0
+            </strong>
+
+            <small>
+              ATHLETES
+            </small>
+
+          </article>
+
+
+          <article class="stat-card">
+
+            <span>
+              총 분석
+            </span>
+
+            <strong id="dashboardAnalysisCount">
+              0
+            </strong>
+
+            <small>
+              ANALYSIS
+            </small>
+
+          </article>
+
+
+          <article class="stat-card">
+
+            <span>
+              평균 기술 점수
+            </span>
+
+            <strong id="dashboardAverageScore">
+              --
+            </strong>
+
+            <small>
+              / 100
+            </small>
+
+          </article>
+
+
+          <article class="stat-card">
+
+            <span>
+              개인 기록
+            </span>
+
+            <strong id="dashboardPRCount">
+              0
+            </strong>
+
+            <small>
+              PR
+            </small>
+
+          </article>
+
+        </div>
+
+
+
+        <!-- CURRENT ATHLETE + RADAR -->
+
+        <div class="dashboard-grid">
+
+          <article class="panel athlete-overview-panel">
+
+            <div class="panel-header">
+
+              <div>
+
+                <span class="eyebrow">
+                  ATHLETE PROFILE
+                </span>
+
+                <h3>
+                  선택 선수
+                </h3>
+
+              </div>
+
+              <span class="live-badge">
+                ACTIVE
+              </span>
+
+            </div>
+
+
+            <div class="athlete-overview">
+
+              <div class="athlete-avatar">
+                👤
+              </div>
+
+              <div>
+
+                <h3 id="dashboardAthleteName">
+                  선수 미선택
+                </h3>
+
+                <p id="dashboardAthleteSport">
+                  -
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div class="athlete-mini-info">
+
+              <div>
+                <span>신장</span>
+                <strong id="dashboardHeight">-</strong>
+              </div>
+
+              <div>
+                <span>체중</span>
+                <strong id="dashboardWeight">-</strong>
+              </div>
+
+              <div>
+                <span>최근 점수</span>
+                <strong id="dashboardLatestScore">-</strong>
+              </div>
+
+            </div>
+
+
+            <button
+              class="secondary-button full"
+              data-page-target="athletes"
+            >
+              선수 관리
+            </button>
+
+          </article>
+
+
+
+          <article class="panel radar-panel">
+
+            <div class="panel-header">
+
+              <div>
+
+                <span class="eyebrow">
+                  PERFORMANCE RADAR
+                </span>
+
+                <h3>
+                  선수 퍼포먼스 육각형
+                </h3>
+
+              </div>
+
+            </div>
+
+
+            <div class="radar-wrapper">
+
+              <canvas id="performanceRadar"></canvas>
+
+            </div>
+
+
+            <div class="radar-label-grid">
+
+              <div>
+                <span>근력</span>
+                <strong id="radarStrength">0</strong>
+              </div>
+
+              <div>
+                <span>파워</span>
+                <strong id="radarPower">0</strong>
+              </div>
+
+              <div>
+                <span>안정성</span>
+                <strong id="radarStability">0</strong>
+              </div>
+
+              <div>
+                <span>대칭성</span>
+                <strong id="radarSymmetry">0</strong>
+              </div>
+
+              <div>
+                <span>가동성</span>
+                <strong id="radarMobility">0</strong>
+              </div>
+
+              <div>
+                <span>기술</span>
+                <strong id="radarTechnique">0</strong>
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
+
+
+
+        <!-- TRAINING LOAD -->
+
+        <article class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <span class="eyebrow">
+                TRAINING LOAD
+              </span>
+
+              <h3>
+                최근 퍼포먼스 변화
+              </h3>
+
+            </div>
+
+            <select id="dashboardPeriod">
+
+              <option value="7">
+                최근 7회
+              </option>
+
+              <option value="14">
+                최근 14회
+              </option>
+
+              <option value="30">
+                최근 30회
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="chart-large">
+
+            <canvas id="performanceTrendChart"></canvas>
+
+          </div>
+
+        </article>
+
+
+
+        <!-- RECENT / PR -->
+
+        <div class="dashboard-grid">
+
+          <article class="panel">
+
+            <div class="panel-header">
+
+              <div>
+
+                <span class="eyebrow">
+                  RECENT ANALYSIS
+                </span>
+
+                <h3>
+                  최근 분석
+                </h3>
+
+              </div>
+
+              <button
+                class="text-button"
+                data-page-target="records"
+              >
+                전체보기 →
+              </button>
+
+            </div>
+
+
+            <div
+              class="recent-list"
+              id="dashboardRecentList"
+            >
+
+              <div class="empty-state">
+
+                아직 분석 기록이 없습니다.
+
+              </div>
+
+            </div>
+
+          </article>
+
+
+
+          <article class="panel">
+
+            <div class="panel-header">
+
+              <div>
+
+                <span class="eyebrow">
+                  PERSONAL RECORD
+                </span>
+
+                <h3>
+                  최근 PR
+                </h3>
+
+              </div>
+
+            </div>
+
+
+            <div
+              class="pr-list"
+              id="dashboardPRList"
+            >
+
+              <div class="empty-state">
+
+                기록된 PR이 없습니다.
+
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- =================================================
+           ATHLETE MANAGEMENT
+      ================================================== -->
+
+      <section
+        class="page"
+        id="page-athletes"
+      >
+
+        <div class="page-heading">
+
+          <div>
+
+            <span class="eyebrow">
+              ATHLETE MANAGEMENT
+            </span>
+
+            <h2>
+              선수 등록 · 관리
+            </h2>
+
+            <p>
+              선수 프로필과 웨이트 분석 기록을 관리합니다.
+            </p>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="athlete-management-grid">
+
+
+          <!-- FORM -->
+
+          <article class="panel">
+
+            <div class="panel-header">
+
+              <div>
+
+                <span class="eyebrow">
+                  ATHLETE PROFILE
+                </span>
+
+                <h3>
+                  선수 등록
+                </h3>
+
+              </div>
+
+            </div>
+
+
+            <form id="athleteForm">
+
+
+              <div class="profile-avatar-large">
+                👤
+              </div>
+
+
+              <label class="form-field">
+
+                <span>
+                  선수 이름
+                </span>
+
+                <input
+                  id="athleteName"
+                  type="text"
+                  placeholder="선수 이름"
+                  required
+                />
+
+              </label>
+
+
+              <label class="form-field">
+
+                <span>
+                  생년월일
+                </span>
+
+                <input
+                  id="athleteBirth"
+                  type="date"
+                />
+
+              </label>
+
+
+              <label class="form-field">
+
+                <span>
+                  주 종목
+                </span>
+
+                <input
+                  id="athleteSport"
+                  type="text"
+                  placeholder="예: 바이애슬론"
+                />
+
+              </label>
+
+
+              <div class="form-row">
+
+                <label class="form-field">
+
+                  <span>
+                    신장
+                  </span>
+
+                  <div class="input-unit">
+
+                    <input
+                      id="athleteHeight"
+                      type="number"
+                      min="0"
+                      placeholder="175"
+                    />
+
+                    <span>
+                      cm
+                    </span>
+
+                  </div>
+
+                </label>
+
+
+                <label class="form-field">
+
+                  <span>
+                    체중
+                  </span>
+
+                  <div class="input-unit">
+
+                    <input
+                      id="athleteWeight"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="65"
+                    />
+
+                    <span>
+                      kg
+                    </span>
+
+                  </div>
+
+                </label>
+
+              </div>
+
+
+              <label class="form-field">
+
+                <span>
+                  훈련 그룹
+                </span>
+
+                <input
+                  id="athleteGroup"
+                  type="text"
+                  placeholder="예: 설천고 웨이트 A"
+                />
+
+              </label>
+
+
+              <label class="form-field">
+
+                <span>
+                  선수 메모
+                </span>
+
+                <textarea
+                  id="athleteMemo"
+                  rows="5"
+                  placeholder="훈련 목표와 참고사항을 입력하세요."
+                ></textarea>
+
+              </label>
+
+
+              <button
+                type="submit"
+                class="primary-button full"
+              >
+                선수 등록
+              </button>
+
+            </form>
+
+          </article>
+
+
+
+          <!-- ATHLETE LIST -->
+
+          <article class="panel">
+
+            <div class="panel-header">
+
+              <div>
+
+                <span class="eyebrow">
+                  ATHLETE DATABASE
+                </span>
+
+                <h3>
+                  등록 선수
+                </h3>
+
+              </div>
+
+
+              <input
+                class="small-search"
+                id="athleteSearch"
+                type="search"
+                placeholder="선수 검색"
+              />
+
+            </div>
+
+
+            <div
+              class="athlete-list"
+              id="athleteList"
+            >
+
+              <div class="empty-state">
+                등록된 선수가 없습니다.
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- =================================================
+           EXERCISES
+      ================================================== -->
+
+      <section
+        class="page"
+        id="page-exercises"
+      >
+
+        <div class="page-heading">
+
+          <div>
+
+            <span class="eyebrow">
+              EXERCISE DATABASE
+            </span>
+
+            <h2>
+              WEIGHT EXERCISE LIBRARY
+            </h2>
+
+            <p>
+              부위·장비·목적에 따라 웨이트 종목을 선택합니다.
+            </p>
+
+          </div>
+
+
+          <div class="exercise-count-box">
+
+            <span>
+              등록 운동
+            </span>
+
+            <strong id="exerciseTotalCount">
+              0
+            </strong>
+
+          </div>
+
+        </div>
+
+
+
+        <!-- FILTER -->
+
+        <article class="panel exercise-toolbar">
+
+          <input
+            id="exerciseSearch"
+            type="search"
+            placeholder="운동 검색 · 예: 스쿼트, 벤치프레스, 클린..."
+          />
+
+
+          <select id="equipmentFilter">
+
+            <option value="all">
+              모든 장비
+            </option>
+
+            <option value="barbell">
+              바벨
+            </option>
+
+            <option value="dumbbell">
+              덤벨
+            </option>
+
+            <option value="machine">
+              머신
+            </option>
+
+            <option value="cable">
+              케이블
+            </option>
+
+            <option value="bodyweight">
+              맨몸
+            </option>
+
+            <option value="kettlebell">
+              케틀벨
+            </option>
+
+            <option value="band">
+              밴드
+            </option>
+
+            <option value="medicineball">
+              메디신볼
+            </option>
+
+            <option value="other">
+              기타
+            </option>
+
+          </select>
+
+        </article>
+
+
+
+        <!-- CATEGORY -->
+
+        <div
+          class="category-tabs"
+          id="exerciseCategoryTabs"
+        >
+
+          <button
+            class="category-tab active"
+            data-category="all"
+          >
+            전체
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="lower"
+          >
+            하체
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="chest"
+          >
+            가슴
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="back"
+          >
+            등
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="shoulder"
+          >
+            어깨
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="arms"
+          >
+            팔
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="core"
+          >
+            코어
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="olympic"
+          >
+            올림픽 리프팅
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="power"
+          >
+            파워
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="plyometric"
+          >
+            플라이오
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="functional"
+          >
+            기능성
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="mobility"
+          >
+            보강·가동성
+          </button>
+
+          <button
+            class="category-tab"
+            data-category="fullbody"
+          >
+            전신
+          </button>
+
+        </div>
+
+
+
+        <div
+          class="exercise-grid"
+          id="exerciseGrid"
+        >
+
+          <!-- exercises.js -->
+
+        </div>
+
+      </section>
+
+
+
+      <!-- =================================================
+           ANALYSIS
+      ================================================== -->
+
+      <section
+        class="page"
+        id="page-analysis"
+      >
+
+        <div class="page-heading">
+
+          <div>
+
+            <span class="eyebrow">
+              AI MOTION ANALYSIS
+            </span>
+
+            <h2>
+              웨이트 자세 분석
+            </h2>
+
+            <p>
+              카메라 또는 영상을 이용해 움직임을 분석합니다.
+            </p>
+
+          </div>
+
+
+          <div class="analysis-status">
+
+            <span class="status-dot"></span>
+
+            <strong id="analysisEngineStatus">
+              ENGINE READY
+            </strong>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="analysis-layout">
+
+
+          <!-- LEFT CONTROL -->
+
+          <aside class="analysis-control panel">
+
+            <span class="eyebrow">
+              MEASUREMENT SETUP
+            </span>
+
+            <h3>
+              분석 설정
+            </h3>
+
+
+            <label class="form-field">
+
+              <span>
+                측정 선수
+              </span>
+
+              <select id="analysisAthlete">
+
+                <option value="">
+                  선수 선택
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <label class="form-field">
+
+              <span>
+                분석 운동
+              </span>
+
+              <select id="analysisExercise">
+
+                <option value="">
+                  운동 선택
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <label class="form-field">
+
+              <span>
+                목표 반복
+              </span>
+
+              <input
+                id="analysisTargetReps"
+                type="number"
+                value="10"
+                min="1"
+                max="100"
+              />
+
+            </label>
+
+
+
+            <!-- CAMERA VIEW -->
+
+            <div class="control-section">
+
+              <span class="control-title">
+                촬영 방향
+              </span>
+
+              <div
+                class="view-selector"
+                id="viewSelector"
+              >
+
+                <button
+                  class="view-button active"
+                  data-view="front"
+                >
+                  정면
+                </button>
+
+                <button
+                  class="view-button"
+                  data-view="side"
+                >
+                  측면
+                </button>
+
+                <button
+                  class="view-button"
+                  data-view="rear"
+                >
+                  후면
+                </button>
+
+                <button
+                  class="view-button"
+                  data-view="top"
+                >
+                  상단
+                </button>
+
+              </div>
+
+            </div>
+
+
+
+            <!-- ANALYSIS MODE -->
+
+            <div class="control-section">
+
+              <span class="control-title">
+                분석 모드
+              </span>
+
+              <div class="mode-selector">
+
+                <button
+                  class="mode-button active"
+                  data-analysis-mode="2d"
+                >
+                  2D
+                </button>
+
+                <button
+                  class="mode-button"
+                  data-analysis-mode="3d"
+                >
+                  3D
+                </button>
+
+              </div>
+
+            </div>
+
+
+
+            <!-- SOURCE -->
+
+            <button
+              class="primary-button full"
+              id="connectCameraBtn"
+              type="button"
+            >
+              📷 카메라 연결
+            </button>
+
+
+            <button
+              class="secondary-button full"
+              id="switchCameraBtn"
+              type="button"
+            >
+              🔄 카메라 전환
+            </button>
+
+
+            <label
+              class="upload-button"
+              for="analysisVideoUpload"
+            >
+              🎬 영상 업로드
+            </label>
+
+            <input
+              id="analysisVideoUpload"
+              type="file"
+              accept="video/*"
+              hidden
+            />
+
+
+            <label
+              class="upload-button"
+              for="analysisImageUpload"
+            >
+              🖼 사진 업로드
+            </label>
+
+            <input
+              id="analysisImageUpload"
+              type="file"
+              accept="image/*"
+              hidden
+            />
+
+
+
+            <!-- ANALYSIS ACTION -->
+
+            <button
+              class="primary-button full"
+              id="startAnalysisBtn"
+              type="button"
+            >
+              자세 분석 시작
+            </button>
+
+
+            <button
+              class="danger-button full"
+              id="stopAnalysisBtn"
+              type="button"
+            >
+              측정 종료
+            </button>
+
+          </aside>
+
+
+
+          <!-- MAIN MOTION AREA -->
+
+          <div class="analysis-main">
+
+
+            <article class="panel motion-panel">
+
+              <div class="panel-header">
+
+                <div>
+
+                  <span class="eyebrow">
+                    LIVE MOTION CAPTURE
+                  </span>
+
+                  <h3 id="motionAnalysisTitle">
+                    자세 분석
+                  </h3>
+
+                </div>
+
+
+                <span
+                  class="live-badge standby"
+                  id="liveStatusBadge"
+                >
+                  ● STANDBY
+                </span>
+
+              </div>
+
+
+
+              <!-- METRICS -->
+
+              <div class="motion-kpi-grid">
+
+                <div>
+
+                  <span>
+                    반복 횟수
+                  </span>
+
+                  <strong>
+                    <span id="currentRepCount">0</span>
+                    /
+                    <span id="targetRepCount">10</span>
+                  </strong>
+
+                </div>
+
+
+                <div>
+
+                  <span>
+                    자세 점수
+                  </span>
+
+                  <strong id="currentPoseScore">
+                    --
+                  </strong>
+
+                </div>
+
+
+                <div>
+
+                  <span>
+                    측정 시간
+                  </span>
+
+                  <strong id="analysisTimer">
+                    00:00
+                  </strong>
+
+                </div>
+
+
+                <div>
+
+                  <span>
+                    템포
+                  </span>
+
+                  <strong id="analysisTempo">
+                    --
+                  </strong>
+
+                </div>
+
+              </div>
+
+
+
+              <!-- VIEWER -->
+
+              <div class="motion-viewer">
+
+                <video
+                  id="cameraVideo"
+                  autoplay
+                  playsinline
+                  muted
+                ></video>
+
+
+                <video
+                  id="uploadedVideo"
+                  playsinline
+                  controls
+                  hidden
+                ></video>
+
+
+                <img
+                  id="uploadedImage"
+                  alt="업로드 분석 이미지"
+                  hidden
+                />
+
+
+                <canvas id="poseCanvas"></canvas>
+
+
+                <!-- REFERENCE LINES -->
+
+                <div
+                  class="reference-line reference-vertical"
+                  id="referenceVertical"
+                ></div>
+
+                <div
+                  class="reference-line reference-horizontal"
+                  id="referenceHorizontal"
+                ></div>
+
+
+                <div
+                  class="viewer-placeholder"
+                  id="viewerPlaceholder"
+                >
+
+                  <div class="camera-target">
+                    ◎
+                  </div>
+
+                  <h3>
+                    카메라 분석 대기
+                  </h3>
+
+                  <p>
+                    카메라 연결 또는 영상을 업로드하세요.
+                  </p>
+
+                </div>
+
+
+
+                <!-- ANGLE CARDS -->
+
+                <div class="angle-overlay">
+
+                  <div class="angle-card">
+
+                    <span>
+                      무릎
+                    </span>
+
+                    <strong id="kneeAngle">
+                      -°
+                    </strong>
+
+                  </div>
+
+
+                  <div class="angle-card">
+
+                    <span>
+                      고관절
+                    </span>
+
+                    <strong id="hipAngle">
+                      -°
+                    </strong>
+
+                  </div>
+
+
+                  <div class="angle-card">
+
+                    <span>
+                      몸통
+                    </span>
+
+                    <strong id="trunkAngle">
+                      -°
+                    </strong>
+
+                  </div>
+
+
+                  <div class="angle-card">
+
+                    <span>
+                      발목
+                    </span>
+
+                    <strong id="ankleAngle">
+                      -°
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+                <!-- BAR PATH -->
+
+                <canvas id="barPathCanvas"></canvas>
+
+              </div>
+
+
+
+              <!-- PLAYBACK -->
+
+              <div class="playback-controls">
+
+                <button
+                  id="frameBackBtn"
+                  type="button"
+                >
+                  ◀ 1F
+                </button>
+
+
+                <button
+                  id="playPauseBtn"
+                  type="button"
+                >
+                  ▶ / Ⅱ
+                </button>
+
+
+                <button
+                  id="frameForwardBtn"
+                  type="button"
+                >
+                  1F ▶
+                </button>
+
+
+                <select id="playbackSpeed">
+
+                  <option value="0.1">
+                    0.1×
+                  </option>
+
+                  <option value="0.25">
+                    0.25×
+                  </option>
+
+                  <option value="0.5">
+                    0.5×
+                  </option>
+
+                  <option
+                    value="1"
+                    selected
+                  >
+                    1×
+                  </option>
+
+                </select>
+
+
+                <button
+                  id="toggleSkeletonBtn"
+                  type="button"
+                >
+                  스켈레톤
+                </button>
+
+
+                <button
+                  id="toggleReferenceBtn"
+                  type="button"
+                >
+                  기준선
+                </button>
+
+
+                <button
+                  id="toggleBarPathBtn"
+                  type="button"
+                >
+                  궤적
+                </button>
+
+              </div>
+
+            </article>
+
+
+
+            <!-- LIVE DATA -->
+
+            <article class="panel">
+
+              <div class="panel-header">
+
+                <div>
+
+                  <span class="eyebrow">
+                    LIVE BIOMECHANICS
+                  </span>
+
+                  <h3>
+                    실시간 분석값
+                  </h3>
+
+                </div>
+
+              </div>
+
+
+              <div class="biomechanics-grid">
+
+                <div class="bio-card">
+
+                  <span>
+                    무릎 각도
+                  </span>
+
+                  <strong id="liveKnee">
+                    -°
+                  </strong>
+
+                  <small id="kneeRange">
+                    운동별 기준
+                  </small>
+
+                </div>
+
+
+                <div class="bio-card">
+
+                  <span>
+                    고관절 각도
+                  </span>
+
+                  <strong id="liveHip">
+                    -°
+                  </strong>
+
+                  <small id="hipRange">
+                    운동별 기준
+                  </small>
+
+                </div>
+
+
+                <div class="bio-card">
+
+                  <span>
+                    몸통 기울기
+                  </span>
+
+                  <strong id="liveTrunk">
+                    -°
+                  </strong>
+
+                  <small id="trunkRange">
+                    운동별 기준
+                  </small>
+
+                </div>
+
+
+                <div class="bio-card">
+
+                  <span>
+                    발목 각도
+                  </span>
+
+                  <strong id="liveAnkle">
+                    -°
+                  </strong>
+
+                  <small id="ankleRange">
+                    운동별 기준
+                  </small>
+
+                </div>
+
+
+                <div class="bio-card">
+
+                  <span>
+                    좌우 대칭
+                  </span>
+
+                  <strong id="liveSymmetry">
+                    --
+                  </strong>
+
+                  <small>
+                    %
+                  </small>
+
+                </div>
+
+
+                <div class="bio-card">
+
+                  <span>
+                    ROM
+                  </span>
+
+                  <strong id="liveROM">
+                    --
+                  </strong>
+
+                  <small>
+                    RANGE OF MOTION
+                  </small>
+
+                </div>
+
+
+                <div class="bio-card">
+
+                  <span>
+                    안정성
+                  </span>
+
+                  <strong id="liveStability">
+                    --
+                  </strong>
+
+                  <small>
+                    /100
+                  </small>
+
+                </div>
+
+
+                <div class="bio-card">
+
+                  <span>
+                    기술
+                  </span>
+
+                  <strong id="liveTechnique">
+                    --
+                  </strong>
+
+                  <small>
+                    /100
+                  </small>
+
+                </div>
+
+              </div>
+
+            </article>
+
+
+
+            <!-- ANGLE GRAPH -->
+
+            <article class="panel">
+
+              <div class="panel-header">
+
+                <div>
+
+                  <span class="eyebrow">
+                    ANGLE TRACKING
+                  </span>
+
+                  <h3>
+                    관절 각도 변화
+                  </h3>
+
+                </div>
+
+              </div>
+
+
+              <div class="chart-large">
+
+                <canvas id="angleChart"></canvas>
+
+              </div>
+
+            </article>
+
+
+
+            <!-- CHECKPOINT -->
+
+            <article class="panel">
+
+              <div class="panel-header">
+
+                <div>
+
+                  <span class="eyebrow">
+                    MOVEMENT CHECK
+                  </span>
+
+                  <h3>
+                    주요 체크 포인트
+                  </h3>
+
+                </div>
+
+              </div>
+
+
+              <div
+                class="checkpoint-list"
+                id="checkpointList"
+              >
+
+                <div class="checkpoint-row">
+
+                  <span>
+                    운동을 선택하면 분석 기준이 표시됩니다.
+                  </span>
+
+                  <strong>
+                    -
+                  </strong>
+
+                </div>
+
+              </div>
+
+            </article>
+
+
+
+            <!-- TRAINING RECOMMENDATION -->
+
+            <article class="panel recommendation-panel">
+
+              <div class="panel-header">
+
+                <div>
+
+                  <span class="eyebrow">
+                    TRAINING RECOMMENDATION
+                  </span>
+
+                  <h3>
+                    분석 기반 추천 훈련
+                  </h3>
+
+                </div>
+
+              </div>
+
+
+              <div
+                class="recommendation-grid"
+                id="trainingRecommendations"
+              >
+
+                <div class="empty-state">
+                  분석 완료 후 추천 훈련이 표시됩니다.
+                </div>
+
+              </div>
+
+            </article>
+
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- =================================================
+           RECORDS
+      ================================================== -->
+
+      <section
+        class="page"
+        id="page-records"
+      >
+
+        <div class="page-heading">
+
+          <div>
+
+            <span class="eyebrow">
+              ANALYSIS RECORDS
+            </span>
+
+            <h2>
+              분석 기록
+            </h2>
+
+            <p>
+              선수별 웨이트 자세 분석 결과를 확인합니다.
+            </p>
+
+          </div>
+
+
+          <button
+            class="secondary-button"
+            id="exportCSVBtn"
+          >
+            CSV 저장
+          </button>
+
+        </div>
+
+
+
+        <article class="panel">
+
+          <div class="record-toolbar">
+
+            <select id="recordAthleteFilter">
+
+              <option value="all">
+                전체 선수
+              </option>
+
+            </select>
+
+
+            <select id="recordExerciseFilter">
+
+              <option value="all">
+                전체 운동
+              </option>
+
+            </select>
+
+
+            <input
+              id="recordSearch"
+              type="search"
+              placeholder="기록 검색"
+            />
+
+          </div>
+
+
+          <div class="table-scroll">
+
+            <table class="records-table">
+
+              <thead>
+
+                <tr>
+
+                  <th>측정일</th>
+
+                  <th>선수</th>
+
+                  <th>운동</th>
+
+                  <th>반복</th>
+
+                  <th>점수</th>
+
+                  <th>대칭성</th>
+
+                  <th>ROM</th>
+
+                  <th>보기</th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody id="recordsTableBody">
+
+                <tr>
+
+                  <td
+                    colspan="8"
+                    class="empty-table"
+                  >
+                    저장된 분석 기록이 없습니다.
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </article>
+
+      </section>
+
+
+
+      <!-- =================================================
+           TRAINING PROGRAM
+      ================================================== -->
+
+      <section
+        class="page"
+        id="page-program"
+      >
+
+        <div class="page-heading">
+
+          <div>
+
+            <span class="eyebrow">
+              STRENGTH PROGRAM
+            </span>
+
+            <h2>
+              훈련 프로그램
+            </h2>
+
+            <p>
+              선수별 웨이트 프로그램을 구성합니다.
+            </p>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="program-layout">
+
+
+          <article class="panel">
+
+            <div class="panel-header">
+
+              <div>
+
+                <span class="eyebrow">
+                  PROGRAM BUILDER
+                </span>
+
+                <h3>
+                  프로그램 작성
+                </h3>
+
+              </div>
+
+            </div>
+
+
+            <label class="form-field">
+
+              <span>
+                선수
+              </span>
+
+              <select id="programAthlete">
+
+                <option value="">
+                  선수 선택
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <label class="form-field">
+
+              <span>
+                프로그램 이름
+              </span>
+
+              <input
+                id="programName"
+                type="text"
+                placeholder="예: 하체 최대근력 DAY 1"
+              />
+
+            </label>
+
+
+            <label class="form-field">
+
+              <span>
+                운동
+              </span>
+
+              <select id="programExercise">
+
+                <option value="">
+                  운동 선택
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <div class="form-row">
+
+              <label class="form-field">
+
+                <span>
+                  세트
+                </span>
+
+                <input
+                  id="programSets"
+                  type="number"
+                  value="3"
+                  min="1"
+                />
+
+              </label>
+
+
+              <label class="form-field">
+
+                <span>
+                  반복
+                </span>
+
+                <input
+                  id="programReps"
+                  type="number"
+                  value="8"
+                  min="1"
+                />
+
+              </label>
+
+            </div>
+
+
+            <div class="form-row">
+
+              <label class="form-field">
+
+                <span>
+                  중량
+                </span>
+
+                <div class="input-unit">
+
+                  <input
+                    id="programWeight"
+                    type="number"
+                    value="0"
+                    min="0"
+                    step="0.5"
+                  />
+
+                  <span>
+                    kg
+                  </span>
+
+                </div>
+
+              </label>
+
+
+              <label class="form-field">
+
+                <span>
+                  휴식
+                </span>
+
+                <div class="input-unit">
+
+                  <input
+                    id="programRest"
+                    type="number"
+                    value="120"
+                    min="0"
+                  />
+
+                  <span>
+                    sec
+                  </span>
+
+                </div>
+
+              </label>
+
+            </div>
+
+
+            <button
+              class="primary-button full"
+              id="addProgramExerciseBtn"
+            >
+              + 운동 추가
+            </button>
+
+          </article>
+
+
+
+          <article class="panel">
+
+            <div class="panel-header">
+
+              <div>
+
+                <span class="eyebrow">
+                  SESSION PLAN
+                </span>
+
+                <h3>
+                  오늘의 프로그램
+                </h3>
+
+              </div>
+
+            </div>
+
+
+            <div
+              id="programExerciseList"
+              class="program-exercise-list"
+            >
+
+              <div class="empty-state">
+                추가된 운동이 없습니다.
+              </div>
+
+            </div>
+
+
+            <div class="program-summary">
+
+              <div>
+
+                <span>
+                  운동 수
+                </span>
+
+                <strong id="programExerciseCount">
+                  0
+                </strong>
+
+              </div>
+
+
+              <div>
+
+                <span>
+                  총 세트
+                </span>
+
+                <strong id="programTotalSets">
+                  0
+                </strong>
+
+              </div>
+
+
+              <div>
+
+                <span>
+                  예상 볼륨
+                </span>
+
+                <strong id="programTotalVolume">
+                  0 kg
+                </strong>
+
+              </div>
+
+            </div>
+
+
+            <button
+              class="primary-button full"
+              id="saveProgramBtn"
+            >
+              프로그램 저장
+            </button>
+
+          </article>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- =================================================
+           REPORT
+      ================================================== -->
+
+      <section
+        class="page"
+        id="page-report"
+      >
+
+        <div class="page-heading">
+
+          <div>
+
+            <span class="eyebrow">
+              PERFORMANCE REPORT
+            </span>
+
+            <h2>
+              선수 분석 리포트
+            </h2>
+
+            <p>
+              분석 결과와 훈련 권장사항을 리포트로 생성합니다.
+            </p>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="report-layout">
+
+
+          <!-- REPORT CONTROL -->
+
+          <aside class="panel report-control">
+
+            <label class="form-field">
+
+              <span>
+                선수 선택
+              </span>
+
+              <select id="reportAthlete">
+
+                <option value="">
+                  선수 선택
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <button
+              class="primary-button full"
+              id="generateReportBtn"
+            >
+              보고서 생성
+            </button>
+
+
+            <button
+              class="secondary-button full"
+              id="printReportBtn"
+            >
+              인쇄 · PDF 저장
+            </button>
+
+          </aside>
+
+
+
+          <!-- REPORT PAPER -->
+
+          <article
+            class="report-paper"
+            id="reportPaper"
+          >
+
+            <header class="report-header">
+
+              <div>
+
+                <span>
+                  SEOLCHEON HIGH SCHOOL
+                </span>
+
+                <h2>
+                  WEIGHT PERFORMANCE REPORT
+                </h2>
+
+                <p id="reportGeneratedDate">
+                  -
+                </p>
+
+              </div>
+
+
+              <div class="report-score">
+
+                <strong id="reportOverallScore">
+                  --
+                </strong>
+
+                <span>
+                  OVERALL
+                </span>
+
+              </div>
+
+            </header>
+
+
+
+            <!-- ATHLETE -->
+
+            <section class="report-section">
+
+              <h3>
+                1. 선수 정보
+              </h3>
+
+
+              <div class="report-info-grid">
+
+                <div>
+
+                  <span>
+                    선수
+                  </span>
+
+                  <strong id="reportAthleteName">
+                    -
+                  </strong>
+
+                </div>
+
+
+                <div>
+
+                  <span>
+                    주 종목
+                  </span>
+
+                  <strong id="reportSport">
+                    -
+                  </strong>
+
+                </div>
+
+
+                <div>
+
+                  <span>
+                    신장
+                  </span>
+
+                  <strong id="reportHeight">
+                    -
+                  </strong>
+
+                </div>
+
+
+                <div>
+
+                  <span>
+                    체중
+                  </span>
+
+                  <strong id="reportWeight">
+                    -
+                  </strong>
+
+                </div>
+
+              </div>
+
+            </section>
+
+
+
+            <!-- EXERCISE VISUAL -->
+
+            <section class="report-section">
+
+              <h3>
+                2. 분석 운동
+              </h3>
+
+
+              <div class="report-exercise-card">
+
+                <div
+                  class="report-exercise-pictogram"
+                  id="reportExercisePictogram"
+                >
+                  🏋
+                </div>
+
+
+                <div>
+
+                  <h4 id="reportExerciseName">
+                    운동 분석 기록 없음
+                  </h4>
+
+                  <p id="reportExerciseCategory">
+                    -
+                  </p>
+
+                </div>
+
+              </div>
+
+            </section>
+
+
+
+            <!-- RADAR -->
+
+            <section class="report-section">
+
+              <h3>
+                3. 퍼포먼스 육각형
+              </h3>
+
+
+              <div class="report-radar">
+
+                <canvas id="reportRadarChart"></canvas>
+
+              </div>
+
+            </section>
+
+
+
+            <!-- SCORE -->
+
+            <section class="report-section">
+
+              <h3>
+                4. 움직임 분석
+              </h3>
+
+
+              <div class="report-score-grid">
+
+                <div>
+                  <span>근력</span>
+                  <strong id="reportStrength">-</strong>
+                </div>
+
+                <div>
+                  <span>파워</span>
+                  <strong id="reportPower">-</strong>
+                </div>
+
+                <div>
+                  <span>안정성</span>
+                  <strong id="reportStability">-</strong>
+                </div>
+
+                <div>
+                  <span>대칭성</span>
+                  <strong id="reportSymmetry">-</strong>
+                </div>
+
+                <div>
+                  <span>가동성</span>
+                  <strong id="reportMobility">-</strong>
+                </div>
+
+                <div>
+                  <span>기술</span>
+                  <strong id="reportTechnique">-</strong>
+                </div>
+
+              </div>
+
+            </section>
+
+
+
+            <!-- ANALYSIS FRAME -->
+
+            <section class="report-section">
+
+              <h3>
+                5. 자세 분석 장면
+              </h3>
+
+
+              <div
+                class="report-analysis-frame"
+                id="reportAnalysisFrame"
+              >
+
+                분석 영상의 대표 프레임이 표시됩니다.
+
+              </div>
+
+            </section>
+
+
+
+            <!-- RECOMMENDATIONS -->
+
+            <section class="report-section">
+
+              <h3>
+                6. 훈련 권장사항
+              </h3>
+
+
+              <div
+                id="reportRecommendations"
+                class="report-recommendations"
+              >
+
+                분석 결과가 없습니다.
+
+              </div>
+
+            </section>
+
+
+          </article>
+
+        </div>
+
+      </section>
+
+
+
+      <!-- =================================================
+           SETTINGS
+      ================================================== -->
+
+      <section
+        class="page"
+        id="page-settings"
+      >
+
+        <div class="page-heading">
+
+          <div>
+
+            <span class="eyebrow">
+              SYSTEM SETTINGS
+            </span>
+
+            <h2>
+              시스템 설정
+            </h2>
+
+            <p>
+              분석 시스템의 표시 및 저장 옵션을 관리합니다.
+            </p>
+
+          </div>
+
+        </div>
+
+
+
+        <div class="settings-grid">
+
+
+          <article class="panel">
+
+            <h3>
+              분석 표시
+            </h3>
+
+
+            <label class="toggle-row">
+
+              <span>
+                스켈레톤 표시
+              </span>
+
+              <input
+                id="settingSkeleton"
+                type="checkbox"
+                checked
+              />
+
+            </label>
+
+
+            <label class="toggle-row">
+
+              <span>
+                관절 각도 표시
+              </span>
+
+              <input
+                id="settingAngles"
+                type="checkbox"
+                checked
+              />
+
+            </label>
+
+
+            <label class="toggle-row">
+
+              <span>
+                기준선 표시
+              </span>
+
+              <input
+                id="settingReference"
+                type="checkbox"
+                checked
+              />
+
+            </label>
+
+
+            <label class="toggle-row">
+
+              <span>
+                바벨 궤적
+              </span>
+
+              <input
+                id="settingBarPath"
+                type="checkbox"
+                checked
+              />
+
+            </label>
+
+          </article>
+
+
+
+          <article class="panel">
+
+            <h3>
+              데이터 관리
+            </h3>
+
+
+            <button
+              class="secondary-button full"
+              id="backupDataBtn"
+            >
+              데이터 백업
+            </button>
+
+
+            <label
+              class="upload-button"
+              for="restoreDataInput"
+            >
+              데이터 복원
+            </label>
+
+
+            <input
+              id="restoreDataInput"
+              type="file"
+              accept=".json"
+              hidden
+            />
+
+
+            <button
+              class="danger-button full"
+              id="clearDataBtn"
+            >
+              모든 데이터 초기화
+            </button>
+
+          </article>
+
+
+          <article class="panel">
+
+            <span class="eyebrow">
+              SYSTEM
+            </span>
+
+            <h3>
+              시스템 정보
+            </h3>
+
+            <div class="system-info-list">
+
+              <div>
+                <span>System</span>
+                <strong>WEIGHT PERFORMANCE LAB</strong>
+              </div>
+
+              <div>
+                <span>Motion Engine</span>
+                <strong>READY</strong>
+              </div>
+
+              <div>
+                <span>2D Analysis</span>
+                <strong>SUPPORTED</strong>
+              </div>
+
+              <div>
+                <span>3D Estimation</span>
+                <strong>AI ESTIMATION</strong>
+              </div>
+
+              <div>
+                <span>Local Database</span>
+                <strong>ONLINE</strong>
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
+
+      </section>
+
+
+    </div>
+
+  </main>
+
+</div>
+
+
+
+<!-- =====================================================
+     EXERCISE DETAIL MODAL
+====================================================== -->
+
+<div
+  class="modal"
+  id="exerciseModal"
+>
+
+  <div class="modal-card">
+
+    <button
+      class="modal-close"
+      id="closeExerciseModal"
+    >
+      ×
+    </button>
+
+
+    <div
+      class="modal-pictogram"
+      id="modalExercisePictogram"
+    >
+      🏋
+    </div>
+
+
+    <span
+      class="eyebrow"
+      id="modalExerciseCategory"
+    >
+      EXERCISE
+    </span>
+
+
+    <h2 id="modalExerciseName">
+      운동
+    </h2>
+
+
+    <p id="modalExerciseDescription">
+      -
+    </p>
+
+
+    <div class="exercise-detail-grid">
+
+      <div>
+
+        <span>
+          주요 부위
+        </span>
+
+        <strong id="modalExerciseMuscles">
+          -
+        </strong>
+
+      </div>
+
+
+      <div>
+
+        <span>
+          장비
+        </span>
+
+        <strong id="modalExerciseEquipment">
+          -
+        </strong>
+
+      </div>
+
+
+      <div>
+
+        <span>
+          권장 촬영
+        </span>
+
+        <strong id="modalExerciseView">
+          -
+        </strong>
+
+      </div>
+
+
+      <div>
+
+        <span>
+          분석 항목
+        </span>
+
+        <strong id="modalExerciseMetrics">
+          -
+        </strong>
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="primary-button full"
+      id="analyzeSelectedExerciseBtn"
+    >
+      이 운동 분석하기
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     RECORD DETAIL MODAL
+====================================================== -->
+
+<div
+  class="modal"
+  id="recordModal"
+>
+
+  <div class="modal-card large">
+
+    <button
+      class="modal-close"
+      id="closeRecordModal"
+    >
+      ×
+    </button>
+
+
+    <span class="eyebrow">
+      ANALYSIS DETAIL
+    </span>
+
+    <h2>
+      분석 상세
+    </h2>
+
+
+    <div
+      id="recordDetailContent"
+      class="record-detail-content"
+    ></div>
+
+  </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     TOAST
+====================================================== -->
+
+<div
+  id="toast"
+  class="toast"
+></div>
+
+
+
+<!-- =====================================================
+     SCRIPTS
+
+     순서 중요
+====================================================== -->
+
+<script src="exercises.js"></script>
+<script src="analysis.js"></script>
+<script src="report.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
