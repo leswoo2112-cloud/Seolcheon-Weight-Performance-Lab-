@@ -1,95 +1,24 @@
 /* =========================================================
    설천고 WEIGHT PERFORMANCE LAB
    APP.JS
-   PART 1 / 2
 
-   CORE
-   - Navigation
-   - Athlete Database
-   - Camera
-   - MediaPipe Pose 33
-   - Joint Angles
-   - Rep Counter
-   - Timer
-   - Slow Motion
-   - Angle Graph
+   MAIN APPLICATION CONTROLLER
 ========================================================= */
 
 "use strict";
 
 
 /* =========================================================
-   01. STORAGE
+   STORAGE
 ========================================================= */
 
-const STORAGE = {
-  athletes: "weightLabAthletes",
-  records: "weightLabRecords",
-  programs: "weightLabPrograms",
-  settings: "weightLabSettings"
+const STORAGE_KEYS = {
+  athletes: "weight_lab_athletes",
+  analyses: "weight_lab_analyses",
+  programs: "weight_lab_programs",
+  settings: "weight_lab_settings"
 };
 
-function loadData(key, fallback = []) {
-
-  try {
-
-    const data =
-      JSON.parse(localStorage.getItem(key));
-
-    return data ?? fallback;
-
-  } catch (error) {
-
-    console.error(
-      "[STORAGE LOAD ERROR]",
-      key,
-      error
-    );
-
-    return fallback;
-  }
-}
-
-
-function saveData(key, data) {
-
-  try {
-
-    localStorage.setItem(
-      key,
-      JSON.stringify(data)
-    );
-
-    return true;
-
-  } catch (error) {
-
-    console.error(
-      "[STORAGE SAVE ERROR]",
-      key,
-      error
-    );
-
-    showToast("데이터 저장 실패");
-
-    return false;
-  }
-}
-
-
-let athletes =
-  loadData(STORAGE.athletes, []);
-
-let analysisRecords =
-  loadData(STORAGE.records, []);
-
-let trainingPrograms =
-  loadData(STORAGE.programs, []);
-
-
-/* =========================================================
-   02. GLOBAL STATE
-========================================================= */
 
 const APP_STATE = {
 
@@ -97,25 +26,27 @@ const APP_STATE = {
 
   selectedAthleteId: null,
 
-  analysisRunning: false,
+  selectedExerciseId: null,
 
-  cameraConnected: false,
-
-  cameraFacing: "environment",
+  currentCategory: "all",
 
   cameraStream: null,
 
-  pose: null,
-
-  poseBusy: false,
-
-  poseLoopId: null,
+  cameraFacingMode: "environment",
 
   sourceType: null,
 
+  analysisRunning: false,
+
+  analysisStartedAt: null,
+
+  analysisTimerInterval: null,
+
+  currentRepCount: 0,
+
   analysisMode: "2d",
 
-  analysisView: "front",
+  cameraView: "front",
 
   skeletonVisible: true,
 
@@ -123,41 +54,82 @@ const APP_STATE = {
 
   barPathVisible: true,
 
-  analysisStartTime: null,
+  programExercises: [],
 
-  timerInterval: null,
+  targetMode: "reps",
 
-  repCount: 0,
+  targetSets: 1,
 
-  repPhase: "up",
+  targetReps: 10,
 
-  lastRepTime: null,
-
-  repTimes: [],
-
-  latestLandmarks: null,
-
-  latestWorldLandmarks: null,
-
-  latestMetrics: null,
-
-  angleHistory: [],
-
-  maxHistory: 180,
-
-  barPath: [],
-
-  currentProgramExercises: []
+  completedSets: 0
 
 };
 
 
 /* =========================================================
-   03. DOM HELPER
+   HELPERS
 ========================================================= */
 
 function $(id) {
   return document.getElementById(id);
+}
+
+
+function query(selector) {
+  return document.querySelector(selector);
+}
+
+
+function queryAll(selector) {
+  return [...document.querySelectorAll(selector)];
+}
+
+
+function loadJSON(key, fallback = []) {
+
+  try {
+
+    const data = localStorage.getItem(key);
+
+    if (!data) {
+      return fallback;
+    }
+
+    return JSON.parse(data);
+
+  } catch (error) {
+
+    console.error(error);
+
+    return fallback;
+  }
+}
+
+
+function saveJSON(key, value) {
+
+  try {
+
+    localStorage.setItem(
+      key,
+      JSON.stringify(value)
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    showToast("데이터 저장 중 오류가 발생했습니다.");
+  }
+}
+
+
+function generateId(prefix = "id") {
+
+  return `${prefix}_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2, 9)}`;
 }
 
 
@@ -170,30 +142,60 @@ function clamp(value, min, max) {
 }
 
 
-function round(value, digits = 0) {
+function escapeHTML(value = "") {
 
-  const power =
-    Math.pow(10, digits);
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+function formatDateTime(dateValue) {
+
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleString("ko-KR");
+}
+
+
+function formatDuration(seconds) {
+
+  const safeSeconds =
+    Math.max(0, Math.floor(seconds));
+
+  const minutes =
+    Math.floor(safeSeconds / 60);
+
+  const remain =
+    safeSeconds % 60;
 
   return (
-    Math.round(value * power) /
-    power
+    String(minutes).padStart(2, "0") +
+    ":" +
+    String(remain).padStart(2, "0")
   );
 }
 
 
 /* =========================================================
-   04. TOAST
+   TOAST
 ========================================================= */
+
+let toastTimer = null;
+
 
 function showToast(message) {
 
   const toast = $("toast");
 
   if (!toast) {
-
-    console.log(message);
-
     return;
   }
 
@@ -201,522 +203,313 @@ function showToast(message) {
 
   toast.classList.add("show");
 
-  clearTimeout(
-    showToast.timeout
-  );
+  clearTimeout(toastTimer);
 
-  showToast.timeout =
-    setTimeout(() => {
+  toastTimer = setTimeout(() => {
 
-      toast.classList.remove("show");
+    toast.classList.remove("show");
 
-    }, 2500);
+  }, 2500);
 }
 
 
 /* =========================================================
-   05. PAGE NAVIGATION
+   PAGE NAVIGATION
 ========================================================= */
 
-function navigateToPage(pageName) {
+function openPage(pageName) {
 
-  APP_STATE.currentPage =
-    pageName;
-
-  document
-    .querySelectorAll(".page")
-    .forEach(page => {
-
-      page.classList.remove("active");
-
-    });
-
-
-  const target =
+  const page =
     $(`page-${pageName}`);
 
-  if (target) {
+  if (!page) {
+    return;
+  }
 
-    target.classList.add("active");
+
+  queryAll(".page").forEach(item => {
+
+    item.classList.remove("active");
+
+  });
+
+
+  page.classList.add("active");
+
+
+  queryAll(".nav-item").forEach(button => {
+
+    button.classList.toggle(
+      "active",
+      button.dataset.page === pageName
+    );
+
+  });
+
+
+  APP_STATE.currentPage = pageName;
+
+
+  const sidebar = $("sidebar");
+
+  if (sidebar) {
+    sidebar.classList.remove("mobile-open");
+  }
+
+
+  if (pageName === "dashboard") {
+
+    refreshDashboard();
 
   }
 
 
-  document
-    .querySelectorAll(".nav-item")
-    .forEach(button => {
+  if (pageName === "athletes") {
 
-      button.classList.toggle(
-        "active",
-        button.dataset.page === pageName
-      );
+    renderAthletes();
 
-    });
+  }
 
 
-  $("sidebar")
-    ?.classList.remove("mobile-open");
+  if (pageName === "exercises") {
+
+    renderExercises();
+
+  }
+
+
+  if (pageName === "analysis") {
+
+    refreshAnalysisSelectors();
+
+  }
+
+
+  if (pageName === "records") {
+
+    renderRecords();
+
+  }
+
+
+  if (pageName === "program") {
+
+    refreshProgramSelectors();
+    renderProgramExercises();
+
+  }
+
+
+  if (pageName === "report") {
+
+    refreshReportAthletes();
+
+  }
 
 
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
-
-
-  if (pageName === "dashboard") {
-    renderDashboard();
-  }
-
-  if (pageName === "athletes") {
-    renderAthleteList();
-  }
-
-  if (pageName === "records") {
-    renderRecords();
-  }
-
-  if (pageName === "program") {
-    renderProgramBuilder();
-  }
-
-  if (pageName === "report") {
-    populateAllAthleteSelects();
-  }
-}
-
-
-window.navigateToPage =
-  navigateToPage;
-
-
-/* =========================================================
-   06. NAVIGATION EVENTS
-========================================================= */
-
-function initializeNavigation() {
-
-  document
-    .querySelectorAll(".nav-item")
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          navigateToPage(
-            button.dataset.page
-          );
-
-        }
-      );
-
-    });
-
-
-  document
-    .querySelectorAll(
-      "[data-page-target]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          navigateToPage(
-            button.dataset.pageTarget
-          );
-
-        }
-      );
-
-    });
-
-
-  $("mobileMenuBtn")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        $("sidebar")
-          ?.classList.toggle(
-            "mobile-open"
-          );
-
-      }
-    );
 }
 
 
 /* =========================================================
-   07. CLOCK
+   CLOCK
 ========================================================= */
 
 function updateClock() {
 
   const now = new Date();
 
-  const date =
-    now.toLocaleDateString(
-      "ko-KR",
-      {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit"
-      }
-    );
-
-  const time =
-    now.toLocaleTimeString(
-      "ko-KR",
-      {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false
-      }
-    );
 
   if ($("headerDate")) {
-    $("headerDate").textContent = date;
+
+    $("headerDate").textContent =
+      now.toLocaleDateString(
+        "ko-KR",
+        {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        }
+      );
+
   }
 
+
   if ($("headerTime")) {
-    $("headerTime").textContent = time;
+
+    $("headerTime").textContent =
+      now.toLocaleTimeString(
+        "ko-KR",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }
+      );
+
   }
 }
 
 
 /* =========================================================
-   08. ATHLETE ID
+   ATHLETES
 ========================================================= */
 
-function createId(prefix = "id") {
+function getAthletes() {
 
-  return (
-    prefix +
-    "_" +
-    Date.now() +
-    "_" +
-    Math.random()
-      .toString(36)
-      .slice(2, 8)
+  return loadJSON(
+    STORAGE_KEYS.athletes,
+    []
   );
 }
 
 
-/* =========================================================
-   09. ATHLETE FORM
-========================================================= */
+function saveAthletes(athletes) {
 
-function initializeAthleteForm() {
-
-  $("athleteForm")
-    ?.addEventListener(
-      "submit",
-      event => {
-
-        event.preventDefault();
-
-        const name =
-          $("athleteName")?.value.trim();
-
-        if (!name) {
-
-          showToast(
-            "선수 이름을 입력하세요."
-          );
-
-          return;
-        }
-
-
-        const athlete = {
-
-          id: createId("athlete"),
-
-          name,
-
-          birth:
-            $("athleteBirth")?.value || "",
-
-          sport:
-            $("athleteSport")?.value.trim() || "",
-
-          height:
-            Number(
-              $("athleteHeight")?.value
-            ) || 0,
-
-          weight:
-            Number(
-              $("athleteWeight")?.value
-            ) || 0,
-
-          group:
-            $("athleteGroup")?.value.trim() || "",
-
-          memo:
-            $("athleteMemo")?.value.trim() || "",
-
-          createdAt:
-            new Date().toISOString()
-
-        };
-
-
-        athletes.push(athlete);
-
-        saveData(
-          STORAGE.athletes,
-          athletes
-        );
-
-
-        APP_STATE.selectedAthleteId =
-          athlete.id;
-
-
-        event.target.reset();
-
-
-        populateAllAthleteSelects();
-
-        renderAthleteList();
-
-        renderDashboard();
-
-
-        showToast(
-          `${athlete.name} 선수 등록 완료`
-        );
-
-      }
-    );
+  saveJSON(
+    STORAGE_KEYS.athletes,
+    athletes
+  );
 }
 
 
-/* =========================================================
-   10. ATHLETE LIST
-========================================================= */
+function getAthleteById(id) {
 
-function renderAthleteList() {
-
-  const container =
-    $("athleteList");
-
-  if (!container) return;
+  return getAthletes().find(
+    athlete => athlete.id === id
+  ) || null;
+}
 
 
-  const search =
-    $("athleteSearch")
-      ?.value
-      .trim()
-      .toLowerCase() || "";
+function createAthlete(event) {
+
+  event.preventDefault();
 
 
-  const filtered =
-    athletes.filter(athlete => {
-
-      return (
-        !search ||
-        athlete.name
-          .toLowerCase()
-          .includes(search) ||
-        athlete.sport
-          .toLowerCase()
-          .includes(search)
-      );
-
-    });
+  const name =
+    $("athleteName")?.value.trim();
 
 
-  if (!filtered.length) {
+  if (!name) {
 
-    container.innerHTML = `
-      <div class="empty-state">
-        등록된 선수가 없습니다.
-      </div>
-    `;
+    showToast("선수 이름을 입력하세요.");
 
     return;
   }
 
 
-  container.innerHTML =
-    filtered
-      .map(athlete => {
+  const athlete = {
 
-        const selected =
-          APP_STATE.selectedAthleteId ===
-          athlete.id;
+    id: generateId("athlete"),
 
-        return `
-          <div
-            class="athlete-list-card
-            ${selected ? "selected" : ""}"
-            data-athlete-id="${athlete.id}"
-          >
+    name,
 
-            <div class="athlete-avatar">
-              👤
-            </div>
+    birth:
+      $("athleteBirth")?.value || "",
 
-            <div class="athlete-list-info">
+    sport:
+      $("athleteSport")?.value.trim() || "",
 
-              <strong>
-                ${athlete.name}
-              </strong>
+    height:
+      Number(
+        $("athleteHeight")?.value || 0
+      ),
 
-              <span>
-                ${athlete.sport || "종목 미등록"}
-              </span>
+    weight:
+      Number(
+        $("athleteWeight")?.value || 0
+      ),
 
-              <small>
-                ${athlete.height || "-"} cm ·
-                ${athlete.weight || "-"} kg
-              </small>
+    group:
+      $("athleteGroup")?.value.trim() || "",
 
-            </div>
+    memo:
+      $("athleteMemo")?.value.trim() || "",
 
-            <div class="athlete-card-actions">
+    createdAt:
+      new Date().toISOString()
 
-              <button
-                type="button"
-                data-analyze-athlete="${athlete.id}"
-              >
-                분석
-              </button>
-
-              <button
-                type="button"
-                data-delete-athlete="${athlete.id}"
-              >
-                삭제
-              </button>
-
-            </div>
-
-          </div>
-        `;
-
-      })
-      .join("");
+  };
 
 
-  container
-    .querySelectorAll(
-      "[data-athlete-id]"
-    )
-    .forEach(card => {
-
-      card.addEventListener(
-        "click",
-        event => {
-
-          if (
-            event.target.closest("button")
-          ) {
-            return;
-          }
-
-          APP_STATE.selectedAthleteId =
-            card.dataset.athleteId;
-
-          renderAthleteList();
-
-          renderDashboard();
-
-        }
-      );
-
-    });
+  const athletes =
+    getAthletes();
 
 
-  container
-    .querySelectorAll(
-      "[data-analyze-athlete]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          const id =
-            button.dataset.analyzeAthlete;
-
-          APP_STATE.selectedAthleteId =
-            id;
-
-          populateAllAthleteSelects();
-
-          if ($("analysisAthlete")) {
-            $("analysisAthlete").value = id;
-          }
-
-          navigateToPage("analysis");
-
-        }
-      );
-
-    });
+  athletes.push(athlete);
 
 
-  container
-    .querySelectorAll(
-      "[data-delete-athlete]"
-    )
-    .forEach(button => {
+  saveAthletes(athletes);
 
-      button.addEventListener(
-        "click",
-        () => {
 
-          deleteAthlete(
-            button.dataset.deleteAthlete
-          );
+  APP_STATE.selectedAthleteId =
+    athlete.id;
 
-        }
-      );
 
-    });
+  event.target.reset();
+
+
+  renderAthletes();
+
+  refreshAllAthleteSelectors();
+
+  refreshDashboard();
+
+
+  showToast(
+    `${athlete.name} 선수 등록 완료`
+  );
 }
 
 
-/* =========================================================
-   11. DELETE ATHLETE
-========================================================= */
+function selectAthlete(id) {
+
+  APP_STATE.selectedAthleteId = id;
+
+  renderAthletes();
+
+  refreshDashboard();
+
+  refreshAnalysisSelectors();
+
+  refreshProgramSelectors();
+
+  refreshReportAthletes();
+}
+
 
 function deleteAthlete(id) {
 
   const athlete =
-    athletes.find(
-      item => item.id === id
-    );
-
-  if (!athlete) return;
+    getAthleteById(id);
 
 
-  if (
-    !confirm(
-      `${athlete.name} 선수를 삭제할까요?`
-    )
-  ) {
+  if (!athlete) {
     return;
   }
 
 
-  athletes =
-    athletes.filter(
+  const confirmed =
+    confirm(
+      `${athlete.name} 선수를 삭제할까요?`
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const athletes =
+    getAthletes().filter(
       item => item.id !== id
     );
 
 
-  saveData(
-    STORAGE.athletes,
-    athletes
-  );
+  saveAthletes(athletes);
 
 
   if (
@@ -729,171 +522,966 @@ function deleteAthlete(id) {
   }
 
 
-  populateAllAthleteSelects();
+  renderAthletes();
 
-  renderAthleteList();
+  refreshAllAthleteSelectors();
 
-  renderDashboard();
+  refreshDashboard();
 
-  showToast("선수를 삭제했습니다.");
+
+  showToast("선수 삭제 완료");
+}
+
+
+function renderAthletes() {
+
+  const container =
+    $("athleteList");
+
+
+  if (!container) {
+    return;
+  }
+
+
+  const keyword =
+    $("athleteSearch")
+      ?.value
+      .trim()
+      .toLowerCase() || "";
+
+
+  const athletes =
+    getAthletes().filter(athlete => {
+
+      const text =
+        [
+          athlete.name,
+          athlete.sport,
+          athlete.group
+        ]
+          .join(" ")
+          .toLowerCase();
+
+
+      return text.includes(keyword);
+    });
+
+
+  if (!athletes.length) {
+
+    container.innerHTML = `
+      <div class="empty-state">
+        등록된 선수가 없습니다.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  container.innerHTML =
+    athletes.map(athlete => {
+
+      const active =
+        athlete.id ===
+        APP_STATE.selectedAthleteId;
+
+
+      return `
+        <article
+          class="athlete-card ${active ? "active" : ""}"
+          data-athlete-id="${athlete.id}"
+        >
+
+          <div class="athlete-card-avatar">
+            👤
+          </div>
+
+          <div class="athlete-card-info">
+
+            <strong>
+              ${escapeHTML(athlete.name)}
+            </strong>
+
+            <span>
+              ${escapeHTML(athlete.sport || "종목 미등록")}
+            </span>
+
+            <small>
+              ${
+                athlete.height
+                  ? athlete.height + "cm"
+                  : "-"
+              }
+              ·
+              ${
+                athlete.weight
+                  ? athlete.weight + "kg"
+                  : "-"
+              }
+            </small>
+
+          </div>
+
+          <div class="athlete-card-actions">
+
+            <button
+              type="button"
+              data-athlete-select="${athlete.id}"
+            >
+              선택
+            </button>
+
+            <button
+              type="button"
+              data-athlete-analyze="${athlete.id}"
+            >
+              분석
+            </button>
+
+            <button
+              type="button"
+              data-athlete-delete="${athlete.id}"
+            >
+              삭제
+            </button>
+
+          </div>
+
+        </article>
+      `;
+
+    }).join("");
 }
 
 
 /* =========================================================
-   12. ATHLETE SEARCH
+   ATHLETE SELECTORS
 ========================================================= */
 
-function initializeAthleteSearch() {
+function populateAthleteSelect(
+  select,
+  selectedId = ""
+) {
 
-  $("athleteSearch")
-    ?.addEventListener(
-      "input",
-      renderAthleteList
-    );
-}
-
-
-/* =========================================================
-   13. POPULATE ATHLETE SELECTS
-========================================================= */
-
-function populateAllAthleteSelects() {
-
-  const ids = [
-    "analysisAthlete",
-    "programAthlete",
-    "reportAthlete"
-  ];
+  if (!select) {
+    return;
+  }
 
 
-  ids.forEach(id => {
-
-    const select = $(id);
-
-    if (!select) return;
+  const athletes =
+    getAthletes();
 
 
-    const oldValue =
-      select.value;
-
-
-    select.innerHTML = `
+  select.innerHTML =
+    `
       <option value="">
         선수 선택
       </option>
-
-      ${athletes
-        .map(athlete => `
-          <option value="${athlete.id}">
-            ${athlete.name}
-          </option>
-        `)
-        .join("")}
-    `;
-
-
-    if (
-      athletes.some(
-        athlete =>
-          athlete.id === oldValue
-      )
-    ) {
-
-      select.value = oldValue;
-
-    } else if (
-      APP_STATE.selectedAthleteId
-    ) {
-
-      select.value =
-        APP_STATE.selectedAthleteId;
-
-    }
-
-  });
-
-
-  const recordFilter =
-    $("recordAthleteFilter");
-
-  if (recordFilter) {
-
-    const oldValue =
-      recordFilter.value;
-
-    recordFilter.innerHTML = `
-      <option value="all">
-        전체 선수
+    ` +
+    athletes.map(athlete => `
+      <option
+        value="${athlete.id}"
+        ${
+          athlete.id === selectedId
+            ? "selected"
+            : ""
+        }
+      >
+        ${escapeHTML(athlete.name)}
       </option>
+    `).join("");
+}
 
-      ${athletes
-        .map(athlete => `
-          <option value="${athlete.id}">
-            ${athlete.name}
-          </option>
-        `)
-        .join("")}
+
+function refreshAllAthleteSelectors() {
+
+  populateAthleteSelect(
+    $("analysisAthlete"),
+    APP_STATE.selectedAthleteId
+  );
+
+
+  populateAthleteSelect(
+    $("programAthlete"),
+    APP_STATE.selectedAthleteId
+  );
+
+
+  populateAthleteSelect(
+    $("reportAthlete"),
+    APP_STATE.selectedAthleteId
+  );
+
+
+  populateRecordAthleteFilter();
+}
+
+
+/* =========================================================
+   EXERCISE LIBRARY
+========================================================= */
+
+function renderExercises() {
+
+  const container =
+    $("exerciseGrid");
+
+
+  if (!container) {
+    return;
+  }
+
+
+  const keyword =
+    $("exerciseSearch")?.value || "";
+
+
+  const equipment =
+    $("equipmentFilter")?.value || "all";
+
+
+  const exercises =
+    window.searchExercises
+      ? window.searchExercises(
+          keyword,
+          APP_STATE.currentCategory,
+          equipment
+        )
+      : [];
+
+
+  if ($("exerciseTotalCount")) {
+
+    $("exerciseTotalCount").textContent =
+      exercises.length;
+
+  }
+
+
+  if (!exercises.length) {
+
+    container.innerHTML = `
+      <div class="empty-state">
+        조건에 맞는 운동이 없습니다.
+      </div>
     `;
 
-    if (
-      oldValue &&
-      oldValue !== ""
-    ) {
-      recordFilter.value =
-        oldValue;
-    }
+    return;
+  }
+
+
+  container.innerHTML =
+    exercises.map(exercise => `
+
+      <article
+        class="exercise-card"
+        data-exercise-id="${exercise.id}"
+      >
+
+        <div class="exercise-pictogram">
+          ${exercise.pictogram}
+        </div>
+
+
+        <div class="exercise-card-content">
+
+          <span class="exercise-category">
+            ${
+              window.getExerciseCategoryLabel(
+                exercise.category
+              )
+            }
+          </span>
+
+          <h3>
+            ${escapeHTML(exercise.name)}
+          </h3>
+
+          <p>
+            ${escapeHTML(exercise.muscles)}
+          </p>
+
+          <small>
+            ${
+              window.getExerciseEquipmentLabel(
+                exercise.equipment
+              )
+            }
+          </small>
+
+        </div>
+
+
+        <div class="exercise-card-buttons">
+
+          <button
+            type="button"
+            class="secondary-button"
+            data-exercise-detail="${exercise.id}"
+          >
+            자세히
+          </button>
+
+          <button
+            type="button"
+            class="primary-button"
+            data-exercise-analyze="${exercise.id}"
+          >
+            자세 분석
+          </button>
+
+        </div>
+
+      </article>
+
+    `).join("");
+}
+
+
+/* =========================================================
+   EXERCISE MODAL
+========================================================= */
+
+function openExerciseModal(id) {
+
+  const exercise =
+    window.getExerciseById?.(id);
+
+
+  if (!exercise) {
+    return;
+  }
+
+
+  APP_STATE.selectedExerciseId =
+    exercise.id;
+
+
+  $("modalExercisePictogram").textContent =
+    exercise.pictogram;
+
+
+  $("modalExerciseCategory").textContent =
+    window.getExerciseCategoryLabel(
+      exercise.category
+    );
+
+
+  $("modalExerciseName").textContent =
+    exercise.name;
+
+
+  $("modalExerciseDescription").textContent =
+    exercise.description;
+
+
+  $("modalExerciseMuscles").textContent =
+    exercise.muscles;
+
+
+  $("modalExerciseEquipment").textContent =
+    window.getExerciseEquipmentLabel(
+      exercise.equipment
+    );
+
+
+  $("modalExerciseView").textContent =
+    getViewLabel(
+      exercise.recommendedView
+    );
+
+
+  $("modalExerciseMetrics").textContent =
+    exercise.metrics;
+
+
+  $("exerciseModal")
+    ?.classList.add("open");
+}
+
+
+function closeExerciseModal() {
+
+  $("exerciseModal")
+    ?.classList.remove("open");
+}
+
+
+/* =========================================================
+   ANALYZE EXERCISE
+========================================================= */
+
+function analyzeExercise(id) {
+
+  const exercise =
+    window.getExerciseById?.(id);
+
+
+  if (!exercise) {
+
+    showToast("운동 정보를 찾을 수 없습니다.");
+
+    return;
+  }
+
+
+  APP_STATE.selectedExerciseId =
+    id;
+
+
+  closeExerciseModal();
+
+
+  openPage("analysis");
+
+
+  refreshAnalysisSelectors();
+
+
+  if ($("analysisExercise")) {
+
+    $("analysisExercise").value = id;
+
+  }
+
+
+  applySelectedExercise();
+
+
+  showToast(
+    `${exercise.name} 분석 준비 완료`
+  );
+}
+
+
+/* =========================================================
+   EXERCISE SELECT
+========================================================= */
+
+function populateExerciseSelect(select) {
+
+  if (!select) {
+    return;
+  }
+
+
+  const exercises =
+    window.EXERCISES || [];
+
+
+  select.innerHTML =
+    `
+      <option value="">
+        운동 선택
+      </option>
+    ` +
+    exercises.map(exercise => `
+      <option value="${exercise.id}">
+        ${escapeHTML(exercise.name)}
+      </option>
+    `).join("");
+
+
+  if (APP_STATE.selectedExerciseId) {
+
+    select.value =
+      APP_STATE.selectedExerciseId;
+
   }
 }
 
 
 /* =========================================================
-   14. ANALYSIS ATHLETE CHANGE
+   ANALYSIS TARGET MODE
 ========================================================= */
 
-function initializeAnalysisAthlete() {
+function ensureAnalysisTargetControls() {
 
-  $("analysisAthlete")
+  const targetInput =
+    $("analysisTargetReps");
+
+
+  if (!targetInput) {
+    return;
+  }
+
+
+  const parent =
+    targetInput.closest(".form-field");
+
+
+  if (!parent) {
+    return;
+  }
+
+
+  if ($("analysisTargetMode")) {
+    return;
+  }
+
+
+  const wrapper =
+    document.createElement("div");
+
+
+  wrapper.className =
+    "analysis-target-config";
+
+
+  wrapper.innerHTML = `
+
+    <label class="form-field">
+
+      <span>
+        분석 종료 방식
+      </span>
+
+      <select id="analysisTargetMode">
+
+        <option value="free">
+          자유 분석
+        </option>
+
+        <option value="reps" selected>
+          반복 횟수
+        </option>
+
+        <option value="sets">
+          세트 × 반복
+        </option>
+
+      </select>
+
+    </label>
+
+
+    <div
+      class="form-row"
+      id="analysisSetConfig"
+      hidden
+    >
+
+      <label class="form-field">
+
+        <span>
+          목표 세트
+        </span>
+
+        <input
+          id="analysisTargetSets"
+          type="number"
+          value="3"
+          min="1"
+          max="20"
+        />
+
+      </label>
+
+
+      <label class="form-field">
+
+        <span>
+          세트당 반복
+        </span>
+
+        <input
+          id="analysisSetReps"
+          type="number"
+          value="10"
+          min="1"
+          max="100"
+        />
+
+      </label>
+
+    </div>
+
+  `;
+
+
+  parent.parentNode.insertBefore(
+    wrapper,
+    parent
+  );
+
+
+  const oldLabel =
+    parent.querySelector("span");
+
+
+  if (oldLabel) {
+
+    oldLabel.textContent =
+      "목표 반복 횟수";
+
+  }
+
+
+  $("analysisTargetMode")
     ?.addEventListener(
       "change",
-      event => {
-
-        APP_STATE.selectedAthleteId =
-          event.target.value || null;
-
-        renderDashboard();
-
-      }
+      updateAnalysisTargetUI
     );
+
+
+  $("analysisTargetSets")
+    ?.addEventListener(
+      "input",
+      syncAnalysisTarget
+    );
+
+
+  $("analysisSetReps")
+    ?.addEventListener(
+      "input",
+      syncAnalysisTarget
+    );
+
+
+  targetInput.addEventListener(
+    "input",
+    syncAnalysisTarget
+  );
+
+
+  updateAnalysisTargetUI();
 }
 
 
 /* =========================================================
-   15. CAMERA ELEMENTS
+   TARGET UI
 ========================================================= */
 
-function getActiveVideoElement() {
+function updateAnalysisTargetUI() {
 
-  if (
-    APP_STATE.sourceType === "upload-video"
-  ) {
+  const mode =
+    $("analysisTargetMode")?.value ||
+    "reps";
 
-    return $("uploadedVideo");
+
+  APP_STATE.targetMode = mode;
+
+
+  const normalRepField =
+    $("analysisTargetReps")
+      ?.closest(".form-field");
+
+
+  const setConfig =
+    $("analysisSetConfig");
+
+
+  if (mode === "free") {
+
+    if (normalRepField) {
+      normalRepField.hidden = true;
+    }
+
+    if (setConfig) {
+      setConfig.hidden = true;
+    }
 
   }
 
-  return $("cameraVideo");
+
+  if (mode === "reps") {
+
+    if (normalRepField) {
+      normalRepField.hidden = false;
+    }
+
+    if (setConfig) {
+      setConfig.hidden = true;
+    }
+
+  }
+
+
+  if (mode === "sets") {
+
+    if (normalRepField) {
+      normalRepField.hidden = true;
+    }
+
+    if (setConfig) {
+      setConfig.hidden = false;
+    }
+
+  }
+
+
+  syncAnalysisTarget();
 }
 
 
 /* =========================================================
-   16. CONNECT CAMERA
+   TARGET SYNC
+========================================================= */
+
+function syncAnalysisTarget() {
+
+  const mode =
+    $("analysisTargetMode")?.value ||
+    "reps";
+
+
+  APP_STATE.targetMode = mode;
+
+
+  if (mode === "free") {
+
+    APP_STATE.targetReps = 0;
+
+    APP_STATE.targetSets = 0;
+
+    if ($("targetRepCount")) {
+
+      $("targetRepCount").textContent =
+        "∞";
+
+    }
+
+    return;
+  }
+
+
+  if (mode === "reps") {
+
+    const reps =
+      Math.max(
+        1,
+        Number(
+          $("analysisTargetReps")?.value || 10
+        )
+      );
+
+
+    APP_STATE.targetReps = reps;
+
+    APP_STATE.targetSets = 1;
+
+
+    if ($("targetRepCount")) {
+
+      $("targetRepCount").textContent =
+        reps;
+
+    }
+
+    return;
+  }
+
+
+  const sets =
+    Math.max(
+      1,
+      Number(
+        $("analysisTargetSets")?.value || 3
+      )
+    );
+
+
+  const reps =
+    Math.max(
+      1,
+      Number(
+        $("analysisSetReps")?.value || 10
+      )
+    );
+
+
+  APP_STATE.targetSets = sets;
+
+  APP_STATE.targetReps = reps;
+
+
+  if ($("targetRepCount")) {
+
+    $("targetRepCount").textContent =
+      `${sets}×${reps}`;
+
+  }
+}
+
+
+/* =========================================================
+   ANALYSIS SELECTORS
+========================================================= */
+
+function refreshAnalysisSelectors() {
+
+  populateAthleteSelect(
+    $("analysisAthlete"),
+    APP_STATE.selectedAthleteId
+  );
+
+
+  populateExerciseSelect(
+    $("analysisExercise")
+  );
+
+
+  ensureAnalysisTargetControls();
+
+
+  if (
+    APP_STATE.selectedExerciseId &&
+    $("analysisExercise")
+  ) {
+
+    $("analysisExercise").value =
+      APP_STATE.selectedExerciseId;
+
+    applySelectedExercise();
+
+  }
+}
+
+
+/* =========================================================
+   SELECTED EXERCISE PROFILE
+========================================================= */
+
+function applySelectedExercise() {
+
+  const id =
+    $("analysisExercise")?.value;
+
+
+  if (!id) {
+    return;
+  }
+
+
+  APP_STATE.selectedExerciseId = id;
+
+
+  const exercise =
+    window.getExerciseById?.(id);
+
+
+  if (!exercise) {
+    return;
+  }
+
+
+  if ($("motionAnalysisTitle")) {
+
+    $("motionAnalysisTitle").textContent =
+      `${exercise.name} 자세 분석`;
+
+  }
+
+
+  const recommendedView =
+    exercise.recommendedView || "side";
+
+
+  APP_STATE.cameraView =
+    recommendedView;
+
+
+  queryAll(".view-button")
+    .forEach(button => {
+
+      button.classList.toggle(
+        "active",
+        button.dataset.view ===
+          recommendedView
+      );
+
+    });
+
+
+  renderExerciseCheckpoints(exercise);
+
+
+  showToast(
+    `추천 촬영 방향: ${getViewLabel(recommendedView)}`
+  );
+}
+
+
+/* =========================================================
+   VIEW LABEL
+========================================================= */
+
+function getViewLabel(view) {
+
+  const labels = {
+    front: "정면",
+    side: "측면",
+    rear: "후면",
+    top: "상단"
+  };
+
+
+  return labels[view] || view;
+}
+
+
+/* =========================================================
+   CHECKPOINTS
+========================================================= */
+
+function renderExerciseCheckpoints(exercise) {
+
+  const container =
+    $("checkpointList");
+
+
+  if (!container) {
+    return;
+  }
+
+
+  const points =
+    exercise.checkpoints || [];
+
+
+  if (!points.length) {
+
+    container.innerHTML = `
+      <div class="checkpoint-row">
+        <span>분석 기준 없음</span>
+        <strong>-</strong>
+      </div>
+    `;
+
+    return;
+  }
+
+
+  container.innerHTML =
+    points.map((point, index) => `
+
+      <div class="checkpoint-row">
+
+        <span>
+          ${escapeHTML(point)}
+        </span>
+
+        <strong id="checkpoint-${index}">
+          READY
+        </strong>
+
+      </div>
+
+    `).join("");
+}
+
+
+/* =========================================================
+   CAMERA
 ========================================================= */
 
 async function connectCamera() {
 
   try {
 
-    stopCameraStream();
+    stopCamera();
 
 
     const constraints = {
@@ -902,17 +1490,15 @@ async function connectCamera() {
 
       video: {
 
-        facingMode: {
-          ideal:
-            APP_STATE.cameraFacing
-        },
+        facingMode:
+          APP_STATE.cameraFacingMode,
 
         width: {
-          ideal: 1280
+          ideal: 1920
         },
 
         height: {
-          ideal: 720
+          ideal: 1080
         }
 
       }
@@ -922,16 +1508,12 @@ async function connectCamera() {
 
     const stream =
       await navigator.mediaDevices
-        .getUserMedia(
-          constraints
-        );
+        .getUserMedia(constraints);
 
 
     APP_STATE.cameraStream =
       stream;
 
-    APP_STATE.cameraConnected =
-      true;
 
     APP_STATE.sourceType =
       "camera";
@@ -941,41 +1523,45 @@ async function connectCamera() {
       $("cameraVideo");
 
 
-    video.srcObject =
-      stream;
+    if (video) {
 
-    video.hidden = false;
+      video.hidden = false;
+
+      video.srcObject = stream;
+
+      await video.play();
+
+    }
 
 
     if ($("uploadedVideo")) {
+
       $("uploadedVideo").hidden = true;
+
     }
+
 
     if ($("uploadedImage")) {
+
       $("uploadedImage").hidden = true;
-    }
 
-    if ($("viewerPlaceholder")) {
-      $("viewerPlaceholder").hidden = true;
     }
 
 
-    await video.play();
+    hideViewerPlaceholder();
 
 
-    resizePoseCanvas();
+    showToast("카메라 연결 완료");
 
 
-    showToast(
-      "카메라 연결 완료"
-    );
+    if (
+      typeof window.initializePoseEngine ===
+      "function"
+    ) {
 
+      window.initializePoseEngine();
 
-    $("analysisEngineStatus").textContent =
-      "CAMERA READY";
-
-
-    await initializePoseEngine();
+    }
 
 
   } catch (error) {
@@ -983,55 +1569,35 @@ async function connectCamera() {
     console.error(error);
 
     showToast(
-      "카메라를 연결할 수 없습니다."
+      "카메라 연결에 실패했습니다. 브라우저 권한을 확인하세요."
     );
-
-
-    if ($("analysisEngineStatus")) {
-
-      $("analysisEngineStatus")
-        .textContent =
-        "CAMERA ERROR";
-
-    }
   }
 }
 
 
 /* =========================================================
-   17. STOP CAMERA STREAM
+   STOP CAMERA
 ========================================================= */
 
-function stopCameraStream() {
+function stopCamera() {
 
-  if (
-    APP_STATE.cameraStream
-  ) {
+  if (APP_STATE.cameraStream) {
 
     APP_STATE.cameraStream
       .getTracks()
-      .forEach(track => {
-
-        track.stop();
-
-      });
+      .forEach(track => track.stop());
 
   }
 
 
-  APP_STATE.cameraStream =
-    null;
-
-  APP_STATE.cameraConnected =
-    false;
+  APP_STATE.cameraStream = null;
 
 
   const video =
     $("cameraVideo");
 
-  if (video) {
 
-    video.pause();
+  if (video) {
 
     video.srcObject = null;
 
@@ -1040,13 +1606,13 @@ function stopCameraStream() {
 
 
 /* =========================================================
-   18. SWITCH CAMERA
+   SWITCH CAMERA
 ========================================================= */
 
 async function switchCamera() {
 
-  APP_STATE.cameraFacing =
-    APP_STATE.cameraFacing ===
+  APP_STATE.cameraFacingMode =
+    APP_STATE.cameraFacingMode ===
     "environment"
       ? "user"
       : "environment";
@@ -1057,649 +1623,142 @@ async function switchCamera() {
 
 
 /* =========================================================
-   19. VIDEO UPLOAD
+   VIDEO UPLOAD
 ========================================================= */
 
-function initializeVideoUpload() {
+function handleVideoUpload(event) {
 
-  $("analysisVideoUpload")
-    ?.addEventListener(
-      "change",
-      event => {
-
-        const file =
-          event.target.files?.[0];
-
-        if (!file) return;
+  const file =
+    event.target.files?.[0];
 
 
-        stopCameraStream();
-
-
-        const url =
-          URL.createObjectURL(file);
-
-
-        const video =
-          $("uploadedVideo");
-
-
-        video.src = url;
-
-        video.hidden = false;
-
-
-        $("cameraVideo").hidden = true;
-
-        $("uploadedImage").hidden = true;
-
-        $("viewerPlaceholder").hidden =
-          true;
-
-
-        APP_STATE.sourceType =
-          "upload-video";
-
-
-        video.onloadedmetadata =
-          () => {
-
-            resizePoseCanvas();
-
-            initializePoseEngine();
-
-          };
-
-
-        showToast(
-          "분석 영상을 불러왔습니다."
-        );
-
-      }
-    );
-}
-
-
-/* =========================================================
-   20. IMAGE UPLOAD
-========================================================= */
-
-function initializeImageUpload() {
-
-  $("analysisImageUpload")
-    ?.addEventListener(
-      "change",
-      event => {
-
-        const file =
-          event.target.files?.[0];
-
-        if (!file) return;
-
-
-        stopCameraStream();
-
-
-        const url =
-          URL.createObjectURL(file);
-
-
-        const image =
-          $("uploadedImage");
-
-
-        image.src = url;
-
-        image.hidden = false;
-
-
-        $("cameraVideo").hidden = true;
-
-        $("uploadedVideo").hidden = true;
-
-        $("viewerPlaceholder").hidden =
-          true;
-
-
-        APP_STATE.sourceType =
-          "upload-image";
-
-
-        image.onload =
-          async () => {
-
-            resizePoseCanvas();
-
-            await initializePoseEngine();
-
-            await analyzeImageFrame();
-
-          };
-
-
-        showToast(
-          "분석 사진을 불러왔습니다."
-        );
-
-      }
-    );
-}
-
-
-/* =========================================================
-   21. MEDIAPIPE POSE 33
-========================================================= */
-
-async function initializePoseEngine() {
-
-  if (APP_STATE.pose) {
+  if (!file) {
     return;
   }
 
 
-  if (
-    typeof Pose === "undefined"
-  ) {
+  stopCamera();
 
-    console.error(
-      "MediaPipe Pose not loaded"
-    );
 
-    showToast(
-      "모션 분석 엔진을 불러오지 못했습니다."
-    );
+  APP_STATE.sourceType =
+    "video";
 
+
+  const url =
+    URL.createObjectURL(file);
+
+
+  const video =
+    $("uploadedVideo");
+
+
+  if (!video) {
     return;
   }
 
 
-  APP_STATE.pose =
-    new Pose({
+  video.src = url;
 
-      locateFile: file =>
+  video.hidden = false;
 
-        `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
 
-    });
+  $("cameraVideo").hidden = true;
 
+  $("uploadedImage").hidden = true;
 
-  APP_STATE.pose.setOptions({
 
-    modelComplexity: 2,
+  hideViewerPlaceholder();
 
-    smoothLandmarks: true,
 
-    enableSegmentation: false,
-
-    smoothSegmentation: false,
-
-    minDetectionConfidence: 0.55,
-
-    minTrackingConfidence: 0.55
-
-  });
-
-
-  APP_STATE.pose.onResults(
-    handlePoseResults
-  );
-
-
-  if ($("analysisEngineStatus")) {
-
-    $("analysisEngineStatus")
-      .textContent =
-      "POSE 33 READY";
-
-  }
-}
-
-
-/* =========================================================
-   22. START ANALYSIS
-========================================================= */
-
-async function startAnalysis() {
-
-  if (
-    APP_STATE.analysisRunning
-  ) {
-    return;
-  }
-
-
-  const athleteId =
-    $("analysisAthlete")?.value;
-
-  const exerciseId =
-    $("analysisExercise")?.value;
-
-
-  if (!athleteId) {
-
-    showToast(
-      "측정 선수를 선택하세요."
-    );
-
-    return;
-  }
-
-
-  if (!exerciseId) {
-
-    showToast(
-      "분석 운동을 선택하세요."
-    );
-
-    return;
-  }
-
-
-  if (!APP_STATE.sourceType) {
-
-    showToast(
-      "카메라 또는 영상을 먼저 연결하세요."
-    );
-
-    return;
-  }
-
-
-  await initializePoseEngine();
-
-
-  resetAnalysisSession();
-
-
-  APP_STATE.analysisRunning =
-    true;
-
-  APP_STATE.analysisStartTime =
-    Date.now();
-
-
-  if ($("liveStatusBadge")) {
-
-    $("liveStatusBadge")
-      .textContent =
-      "● LIVE";
-
-    $("liveStatusBadge")
-      .classList.remove(
-        "standby"
-      );
-
-  }
-
-
-  if ($("analysisEngineStatus")) {
-
-    $("analysisEngineStatus")
-      .textContent =
-      "ANALYZING";
-
-  }
-
-
-  startAnalysisTimer();
-
-
-  if (
-    APP_STATE.sourceType ===
-    "upload-video"
-  ) {
-
-    const video =
-      $("uploadedVideo");
-
-    try {
-      await video.play();
-    } catch {}
-
-  }
-
-
-  startPoseLoop();
-
-
-  showToast(
-    "자세 분석을 시작했습니다."
-  );
-}
-
-
-/* =========================================================
-   23. STOP ANALYSIS
-
-   ★ 기존에 안 되던 분석 종료 수정
-========================================================= */
-
-function stopAnalysis() {
-
-  if (
-    !APP_STATE.analysisRunning
-  ) {
-
-    showToast(
-      "진행 중인 분석이 없습니다."
-    );
-
-    return;
-  }
-
-
-  APP_STATE.analysisRunning =
-    false;
-
-
-  stopPoseLoop();
-
-  stopAnalysisTimer();
-
-
-  if (
-    APP_STATE.sourceType ===
-    "upload-video"
-  ) {
-
-    $("uploadedVideo")
-      ?.pause();
-
-  }
-
-
-  if ($("liveStatusBadge")) {
-
-    $("liveStatusBadge")
-      .textContent =
-      "● COMPLETE";
-
-    $("liveStatusBadge")
-      .classList.add(
-        "standby"
-      );
-
-  }
-
-
-  if ($("analysisEngineStatus")) {
-
-    $("analysisEngineStatus")
-      .textContent =
-      "ANALYSIS COMPLETE";
-
-  }
-
-
-  saveCurrentAnalysis();
-
-
-  showToast(
-    `분석 완료 · ${APP_STATE.repCount}회`
-  );
-
-
-  renderDashboard();
-
-  renderRecords();
-}
-
-
-/* =========================================================
-   24. RESET ANALYSIS SESSION
-========================================================= */
-
-function resetAnalysisSession() {
-
-  APP_STATE.repCount = 0;
-
-  APP_STATE.repPhase = "up";
-
-  APP_STATE.lastRepTime = null;
-
-  APP_STATE.repTimes = [];
-
-  APP_STATE.angleHistory = [];
-
-  APP_STATE.barPath = [];
-
-  APP_STATE.latestMetrics = null;
-
-
-  if ($("currentRepCount")) {
-
-    $("currentRepCount")
-      .textContent = "0";
-
-  }
-
-
-  const target =
+  video.playbackRate =
     Number(
-      $("analysisTargetReps")?.value
-    ) || 10;
+      $("playbackSpeed")?.value || 1
+    );
 
 
-  if ($("targetRepCount")) {
-
-    $("targetRepCount")
-      .textContent =
-      target;
-
-  }
-
-
-  if ($("currentPoseScore")) {
-
-    $("currentPoseScore")
-      .textContent =
-      "--";
-
-  }
-
-
-  if ($("analysisTimer")) {
-
-    $("analysisTimer")
-      .textContent =
-      "00:00";
-
-  }
-
-
-  if ($("analysisTempo")) {
-
-    $("analysisTempo")
-      .textContent =
-      "--";
-
-  }
-
-
-  clearAngleChart();
-
-  clearBarPath();
+  showToast("분석 영상 업로드 완료");
 }
 
 
 /* =========================================================
-   25. ANALYSIS TIMER
+   IMAGE UPLOAD
 ========================================================= */
 
-function startAnalysisTimer() {
+function handleImageUpload(event) {
 
-  stopAnalysisTimer();
-
-
-  APP_STATE.timerInterval =
-    setInterval(() => {
-
-      if (
-        !APP_STATE.analysisStartTime
-      ) return;
+  const file =
+    event.target.files?.[0];
 
 
-      const elapsed =
-        Date.now() -
-        APP_STATE.analysisStartTime;
-
-
-      const seconds =
-        Math.floor(
-          elapsed / 1000
-        );
-
-
-      const minutes =
-        Math.floor(
-          seconds / 60
-        );
-
-
-      const remain =
-        seconds % 60;
-
-
-      if ($("analysisTimer")) {
-
-        $("analysisTimer")
-          .textContent =
-          `${String(minutes).padStart(2, "0")}:${String(remain).padStart(2, "0")}`;
-
-      }
-
-    }, 250);
-}
-
-
-function stopAnalysisTimer() {
-
-  if (
-    APP_STATE.timerInterval
-  ) {
-
-    clearInterval(
-      APP_STATE.timerInterval
-    );
-
+  if (!file) {
+    return;
   }
 
-  APP_STATE.timerInterval =
-    null;
+
+  stopCamera();
+
+
+  APP_STATE.sourceType =
+    "image";
+
+
+  const url =
+    URL.createObjectURL(file);
+
+
+  const image =
+    $("uploadedImage");
+
+
+  if (!image) {
+    return;
+  }
+
+
+  image.src = url;
+
+  image.hidden = false;
+
+
+  $("cameraVideo").hidden = true;
+
+  $("uploadedVideo").hidden = true;
+
+
+  hideViewerPlaceholder();
+
+
+  showToast("분석 사진 업로드 완료");
 }
 
 
 /* =========================================================
-   26. POSE LOOP
+   VIEWER PLACEHOLDER
 ========================================================= */
 
-function startPoseLoop() {
+function hideViewerPlaceholder() {
 
-  stopPoseLoop();
-
-
-  const loop =
-    async () => {
-
-      if (
-        !APP_STATE.analysisRunning
-      ) {
-        return;
-      }
+  const placeholder =
+    $("viewerPlaceholder");
 
 
-      if (
-        !APP_STATE.poseBusy
-      ) {
+  if (placeholder) {
 
-        const source =
-          getPoseSource();
-
-
-        if (
-          source &&
-          sourceReady(source)
-        ) {
-
-          APP_STATE.poseBusy =
-            true;
-
-          try {
-
-            await APP_STATE.pose.send({
-              image: source
-            });
-
-          } catch (error) {
-
-            console.error(
-              "[POSE SEND]",
-              error
-            );
-
-          } finally {
-
-            APP_STATE.poseBusy =
-              false;
-
-          }
-
-        }
-
-      }
-
-
-      APP_STATE.poseLoopId =
-        requestAnimationFrame(
-          loop
-        );
-
-    };
-
-
-  APP_STATE.poseLoopId =
-    requestAnimationFrame(
-      loop
-    );
-}
-
-
-function stopPoseLoop() {
-
-  if (
-    APP_STATE.poseLoopId
-  ) {
-
-    cancelAnimationFrame(
-      APP_STATE.poseLoopId
-    );
+    placeholder.style.display =
+      "none";
 
   }
-
-  APP_STATE.poseLoopId =
-    null;
 }
 
 
 /* =========================================================
-   27. POSE SOURCE
+   PLAYBACK
 ========================================================= */
 
-function getPoseSource() {
+function getActiveVideo() {
 
   if (
-    APP_STATE.sourceType ===
-    "camera"
-  ) {
-
-    return $("cameraVideo");
-
-  }
-
-
-  if (
-    APP_STATE.sourceType ===
-    "upload-video"
+    APP_STATE.sourceType === "video"
   ) {
 
     return $("uploadedVideo");
@@ -1708,11 +1767,10 @@ function getPoseSource() {
 
 
   if (
-    APP_STATE.sourceType ===
-    "upload-image"
+    APP_STATE.sourceType === "camera"
   ) {
 
-    return $("uploadedImage");
+    return $("cameraVideo");
 
   }
 
@@ -1721,1597 +1779,34 @@ function getPoseSource() {
 }
 
 
-function sourceReady(source) {
+function togglePlayPause() {
+
+  const video =
+    getActiveVideo();
+
 
   if (
-    source instanceof HTMLVideoElement
+    !video ||
+    APP_STATE.sourceType !== "video"
   ) {
-
-    return (
-      source.readyState >= 2 &&
-      source.videoWidth > 0 &&
-      source.videoHeight > 0
-    );
-
-  }
-
-
-  if (
-    source instanceof HTMLImageElement
-  ) {
-
-    return (
-      source.complete &&
-      source.naturalWidth > 0
-    );
-
-  }
-
-
-  return false;
-}
-
-
-/* =========================================================
-   28. ANALYZE IMAGE
-========================================================= */
-
-async function analyzeImageFrame() {
-
-  if (
-    !APP_STATE.pose
-  ) return;
-
-
-  const image =
-    $("uploadedImage");
-
-
-  if (!sourceReady(image)) {
-    return;
-  }
-
-
-  APP_STATE.poseBusy = true;
-
-
-  try {
-
-    await APP_STATE.pose.send({
-      image
-    });
-
-  } finally {
-
-    APP_STATE.poseBusy = false;
-
-  }
-}
-
-
-/* =========================================================
-   29. POSE RESULT
-
-   MediaPipe Pose = 33 landmarks
-========================================================= */
-
-function handlePoseResults(results) {
-
-  const landmarks =
-    results.poseLandmarks;
-
-  const world =
-    results.poseWorldLandmarks;
-
-
-  if (
-    !landmarks ||
-    landmarks.length < 33
-  ) {
-
-    clearPoseCanvas();
 
     return;
   }
 
 
-  APP_STATE.latestLandmarks =
-    landmarks;
+  if (video.paused) {
 
-  APP_STATE.latestWorldLandmarks =
-    world || null;
+    video.play();
 
+  } else {
 
-  drawPoseSkeleton(
-    landmarks
-  );
-
-
-  const metrics =
-    calculateBiomechanics(
-      landmarks
-    );
-
-
-  APP_STATE.latestMetrics =
-    metrics;
-
-
-  updateLiveMetrics(
-    metrics
-  );
-
-
-  if (
-    APP_STATE.analysisRunning
-  ) {
-
-    updateRepCounter(
-      landmarks,
-      metrics
-    );
-
-    pushAngleHistory(
-      metrics
-    );
-
-    updateBarPath(
-      landmarks
-    );
+    video.pause();
 
   }
 }
 
 
-/* =========================================================
-   30. POSE CANVAS
-========================================================= */
-
-function resizePoseCanvas() {
-
-  const viewer =
-    document.querySelector(
-      ".motion-viewer"
-    );
-
-  const canvas =
-    $("poseCanvas");
-
-  const pathCanvas =
-    $("barPathCanvas");
-
-
-  if (
-    !viewer ||
-    !canvas
-  ) return;
-
-
-  const rect =
-    viewer.getBoundingClientRect();
-
-
-  const width =
-    Math.max(
-      1,
-      Math.floor(rect.width)
-    );
-
-
-  const height =
-    Math.max(
-      1,
-      Math.floor(rect.height)
-    );
-
-
-  if (
-    canvas.width !== width ||
-    canvas.height !== height
-  ) {
-
-    canvas.width = width;
-
-    canvas.height = height;
-
-  }
-
-
-  if (pathCanvas) {
-
-    if (
-      pathCanvas.width !== width ||
-      pathCanvas.height !== height
-    ) {
-
-      pathCanvas.width = width;
-
-      pathCanvas.height = height;
-
-    }
-
-  }
-}
-
-
-/* =========================================================
-   31. DRAW 33 LANDMARK SKELETON
-========================================================= */
-
-function drawPoseSkeleton(
-  landmarks
-) {
-
-  const canvas =
-    $("poseCanvas");
-
-  if (!canvas) return;
-
-
-  resizePoseCanvas();
-
-
-  const ctx =
-    canvas.getContext("2d");
-
-
-  ctx.clearRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  if (
-    !APP_STATE.skeletonVisible
-  ) {
-    return;
-  }
-
-
-  if (
-    typeof drawConnectors !==
-      "undefined" &&
-    typeof POSE_CONNECTIONS !==
-      "undefined"
-  ) {
-
-    drawConnectors(
-      ctx,
-      landmarks,
-      POSE_CONNECTIONS,
-      {
-        lineWidth: 4
-      }
-    );
-
-  }
-
-
-  if (
-    typeof drawLandmarks !==
-    "undefined"
-  ) {
-
-    drawLandmarks(
-      ctx,
-      landmarks,
-      {
-        lineWidth: 2,
-        radius: 4
-      }
-    );
-
-  }
-}
-
-
-/* =========================================================
-   32. CLEAR POSE
-========================================================= */
-
-function clearPoseCanvas() {
-
-  const canvas =
-    $("poseCanvas");
-
-  if (!canvas) return;
-
-
-  const ctx =
-    canvas.getContext("2d");
-
-
-  ctx.clearRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-}
-
-
-/* =========================================================
-   33. LANDMARK INDEX
-
-   MediaPipe Pose 33
-========================================================= */
-
-const LM = {
-
-  nose: 0,
-
-  leftShoulder: 11,
-  rightShoulder: 12,
-
-  leftElbow: 13,
-  rightElbow: 14,
-
-  leftWrist: 15,
-  rightWrist: 16,
-
-  leftHip: 23,
-  rightHip: 24,
-
-  leftKnee: 25,
-  rightKnee: 26,
-
-  leftAnkle: 27,
-  rightAnkle: 28,
-
-  leftHeel: 29,
-  rightHeel: 30,
-
-  leftFoot: 31,
-  rightFoot: 32
-
-};
-
-
-/* =========================================================
-   34. VISIBILITY
-========================================================= */
-
-function landmarkVisible(
-  landmark,
-  minimum = 0.45
-) {
-
-  if (!landmark) return false;
-
-  if (
-    landmark.visibility ===
-    undefined
-  ) {
-    return true;
-  }
-
-  return (
-    landmark.visibility >=
-    minimum
-  );
-}
-
-
-/* =========================================================
-   35. ANGLE CALCULATION
-========================================================= */
-
-function calculateAngle(
-  a,
-  b,
-  c
-) {
-
-  if (
-    !a ||
-    !b ||
-    !c
-  ) return null;
-
-
-  const radians =
-    Math.atan2(
-      c.y - b.y,
-      c.x - b.x
-    ) -
-    Math.atan2(
-      a.y - b.y,
-      a.x - b.x
-    );
-
-
-  let angle =
-    Math.abs(
-      radians *
-      180 /
-      Math.PI
-    );
-
-
-  if (angle > 180) {
-
-    angle =
-      360 - angle;
-
-  }
-
-
-  return angle;
-}
-
-
-/* =========================================================
-   36. AVERAGE VALID VALUES
-========================================================= */
-
-function averageValid(
-  values
-) {
-
-  const valid =
-    values.filter(
-      value =>
-        Number.isFinite(value)
-    );
-
-
-  if (!valid.length) {
-    return null;
-  }
-
-
-  return (
-    valid.reduce(
-      (sum, value) =>
-        sum + value,
-      0
-    ) /
-    valid.length
-  );
-}
-
-
-/* =========================================================
-   37. BIOMECHANICS
-========================================================= */
-
-function calculateBiomechanics(
-  lm
-) {
-
-  const leftKnee =
-    calculateAngle(
-      lm[LM.leftHip],
-      lm[LM.leftKnee],
-      lm[LM.leftAnkle]
-    );
-
-
-  const rightKnee =
-    calculateAngle(
-      lm[LM.rightHip],
-      lm[LM.rightKnee],
-      lm[LM.rightAnkle]
-    );
-
-
-  const leftHip =
-    calculateAngle(
-      lm[LM.leftShoulder],
-      lm[LM.leftHip],
-      lm[LM.leftKnee]
-    );
-
-
-  const rightHip =
-    calculateAngle(
-      lm[LM.rightShoulder],
-      lm[LM.rightHip],
-      lm[LM.rightKnee]
-    );
-
-
-  const leftAnkle =
-    calculateAngle(
-      lm[LM.leftKnee],
-      lm[LM.leftAnkle],
-      lm[LM.leftFoot]
-    );
-
-
-  const rightAnkle =
-    calculateAngle(
-      lm[LM.rightKnee],
-      lm[LM.rightAnkle],
-      lm[LM.rightFoot]
-    );
-
-
-  const leftElbow =
-    calculateAngle(
-      lm[LM.leftShoulder],
-      lm[LM.leftElbow],
-      lm[LM.leftWrist]
-    );
-
-
-  const rightElbow =
-    calculateAngle(
-      lm[LM.rightShoulder],
-      lm[LM.rightElbow],
-      lm[LM.rightWrist]
-    );
-
-
-  const shoulderMid = {
-
-    x:
-      (
-        lm[LM.leftShoulder].x +
-        lm[LM.rightShoulder].x
-      ) / 2,
-
-    y:
-      (
-        lm[LM.leftShoulder].y +
-        lm[LM.rightShoulder].y
-      ) / 2
-
-  };
-
-
-  const hipMid = {
-
-    x:
-      (
-        lm[LM.leftHip].x +
-        lm[LM.rightHip].x
-      ) / 2,
-
-    y:
-      (
-        lm[LM.leftHip].y +
-        lm[LM.rightHip].y
-      ) / 2
-
-  };
-
-
-  const dx =
-    shoulderMid.x -
-    hipMid.x;
-
-  const dy =
-    hipMid.y -
-    shoulderMid.y;
-
-
-  const trunk =
-    Math.abs(
-      Math.atan2(
-        dx,
-        dy
-      ) *
-      180 /
-      Math.PI
-    );
-
-
-  const knee =
-    averageValid([
-      leftKnee,
-      rightKnee
-    ]);
-
-
-  const hip =
-    averageValid([
-      leftHip,
-      rightHip
-    ]);
-
-
-  const ankle =
-    averageValid([
-      leftAnkle,
-      rightAnkle
-    ]);
-
-
-  const elbow =
-    averageValid([
-      leftElbow,
-      rightElbow
-    ]);
-
-
-  const kneeDifference =
-    (
-      Number.isFinite(leftKnee) &&
-      Number.isFinite(rightKnee)
-    )
-      ? Math.abs(
-          leftKnee -
-          rightKnee
-        )
-      : 0;
-
-
-  const hipDifference =
-    (
-      Number.isFinite(leftHip) &&
-      Number.isFinite(rightHip)
-    )
-      ? Math.abs(
-          leftHip -
-          rightHip
-        )
-      : 0;
-
-
-  const symmetry =
-    clamp(
-      100 -
-      (
-        kneeDifference * 1.3 +
-        hipDifference * 0.7
-      ),
-      0,
-      100
-    );
-
-
-  const stability =
-    clamp(
-      100 -
-      trunk * 0.8 -
-      kneeDifference,
-      0,
-      100
-    );
-
-
-  const mobility =
-    knee
-      ? clamp(
-          180 - knee,
-          0,
-          100
-        )
-      : 0;
-
-
-  const technique =
-    clamp(
-      symmetry * 0.45 +
-      stability * 0.35 +
-      clamp(
-        100 - trunk,
-        0,
-        100
-      ) * 0.20,
-      0,
-      100
-    );
-
-
-  const score =
-    clamp(
-      symmetry * 0.35 +
-      stability * 0.30 +
-      technique * 0.35,
-      0,
-      100
-    );
-
-
-  return {
-
-    knee,
-    leftKnee,
-    rightKnee,
-
-    hip,
-    leftHip,
-    rightHip,
-
-    ankle,
-    leftAnkle,
-    rightAnkle,
-
-    elbow,
-    leftElbow,
-    rightElbow,
-
-    trunk,
-
-    symmetry,
-    stability,
-    mobility,
-    technique,
-    score
-
-  };
-}
-
-
-/* =========================================================
-   38. LIVE METRICS
-========================================================= */
-
-function updateLiveMetrics(
-  metrics
-) {
-
-  setAngleText(
-    "kneeAngle",
-    metrics.knee
-  );
-
-  setAngleText(
-    "hipAngle",
-    metrics.hip
-  );
-
-  setAngleText(
-    "trunkAngle",
-    metrics.trunk
-  );
-
-  setAngleText(
-    "ankleAngle",
-    metrics.ankle
-  );
-
-
-  setAngleText(
-    "liveKnee",
-    metrics.knee
-  );
-
-  setAngleText(
-    "liveHip",
-    metrics.hip
-  );
-
-  setAngleText(
-    "liveTrunk",
-    metrics.trunk
-  );
-
-  setAngleText(
-    "liveAnkle",
-    metrics.ankle
-  );
-
-
-  if ($("liveSymmetry")) {
-
-    $("liveSymmetry")
-      .textContent =
-      Math.round(
-        metrics.symmetry
-      );
-
-  }
-
-
-  if ($("liveROM")) {
-
-    $("liveROM")
-      .textContent =
-      metrics.knee
-        ? `${Math.round(180 - metrics.knee)}°`
-        : "--";
-
-  }
-
-
-  if ($("liveStability")) {
-
-    $("liveStability")
-      .textContent =
-      Math.round(
-        metrics.stability
-      );
-
-  }
-
-
-  if ($("liveTechnique")) {
-
-    $("liveTechnique")
-      .textContent =
-      Math.round(
-        metrics.technique
-      );
-
-  }
-
-
-  if ($("currentPoseScore")) {
-
-    $("currentPoseScore")
-      .textContent =
-      Math.round(
-        metrics.score
-      );
-
-  }
-}
-
-
-function setAngleText(
-  id,
-  value
-) {
-
-  const element = $(id);
-
-  if (!element) return;
-
-
-  element.textContent =
-    Number.isFinite(value)
-      ? `${Math.round(value)}°`
-      : "-°";
-}
-
-
-/* =========================================================
-   39. REP COUNTER
-
-   운동별 counter 설정 사용
-========================================================= */
-
-function updateRepCounter(
-  landmarks,
-  metrics
-) {
-
-  const exercise =
-    typeof getCurrentExerciseAnalysisConfig ===
-    "function"
-      ? getCurrentExerciseAnalysisConfig()
-      : null;
-
-
-  if (!exercise) return;
-
-
-  let counter =
-    exercise.counter;
-
-
-  if (!counter) {
-
-    if (
-      [
-        "lower",
-        "olympic",
-        "power",
-        "plyometric"
-      ].includes(
-        exercise.category
-      )
-    ) {
-
-      counter = {
-        joint: "knee",
-        downAngle: 110,
-        upAngle: 155
-      };
-
-    } else if (
-      [
-        "chest",
-        "back",
-        "shoulder",
-        "arms"
-      ].includes(
-        exercise.category
-      )
-    ) {
-
-      counter = {
-        joint: "elbow",
-        downAngle: 100,
-        upAngle: 150
-      };
-
-    } else {
-
-      return;
-    }
-
-  }
-
-
-  let angle = null;
-
-
-  switch (
-    counter.joint
-  ) {
-
-    case "knee":
-      angle = metrics.knee;
-      break;
-
-    case "hip":
-      angle = metrics.hip;
-      break;
-
-    case "elbow":
-      angle = metrics.elbow;
-      break;
-
-    default:
-      angle = metrics.knee;
-
-  }
-
-
-  if (
-    !Number.isFinite(angle)
-  ) {
-    return;
-  }
-
-
-  if (
-    APP_STATE.repPhase ===
-      "up" &&
-    angle <=
-      counter.downAngle
-  ) {
-
-    APP_STATE.repPhase =
-      "down";
-
-  }
-
-
-  if (
-    APP_STATE.repPhase ===
-      "down" &&
-    angle >=
-      counter.upAngle
-  ) {
-
-    APP_STATE.repPhase =
-      "up";
-
-
-    registerRep();
-
-  }
-}
-
-
-/* =========================================================
-   40. REGISTER REP
-========================================================= */
-
-function registerRep() {
-
-  const now =
-    Date.now();
-
-
-  if (
-    APP_STATE.lastRepTime
-  ) {
-
-    const duration =
-      (
-        now -
-        APP_STATE.lastRepTime
-      ) / 1000;
-
-
-    if (
-      duration > 0.25 &&
-      duration < 30
-    ) {
-
-      APP_STATE.repTimes.push(
-        duration
-      );
-
-    }
-
-  }
-
-
-  APP_STATE.lastRepTime =
-    now;
-
-
-  APP_STATE.repCount += 1;
-
-
-  if ($("currentRepCount")) {
-
-    $("currentRepCount")
-      .textContent =
-      APP_STATE.repCount;
-
-  }
-
-
-  updateTempo();
-
-
-  const target =
-    Number(
-      $("analysisTargetReps")?.value
-    ) || 10;
-
-
-  if (
-    APP_STATE.repCount >=
-      target &&
-    APP_STATE.analysisRunning
-  ) {
-
-    showToast(
-      "목표 반복 횟수 달성"
-    );
-
-  }
-}
-
-
-/* =========================================================
-   41. TEMPO
-========================================================= */
-
-function updateTempo() {
-
-  if (
-    !APP_STATE.repTimes.length
-  ) {
-
-    $("analysisTempo").textContent =
-      "--";
-
-    return;
-  }
-
-
-  const recent =
-    APP_STATE.repTimes
-      .slice(-3);
-
-
-  const average =
-    recent.reduce(
-      (sum, value) =>
-        sum + value,
-      0
-    ) /
-    recent.length;
-
-
-  $("analysisTempo")
-    .textContent =
-    `${average.toFixed(1)}s`;
-}
-
-
-/* =========================================================
-   42. ANGLE CHART
-========================================================= */
-
-let angleChart = null;
-
-
-function initializeAngleChart() {
-
-  const canvas =
-    $("angleChart");
-
-  if (
-    !canvas ||
-    typeof Chart === "undefined"
-  ) {
-    return;
-  }
-
-
-  angleChart =
-    new Chart(
-      canvas,
-      {
-
-        type: "line",
-
-        data: {
-
-          labels: [],
-
-          datasets: [
-
-            {
-              label: "무릎",
-              data: [],
-              borderWidth: 2,
-              pointRadius: 0,
-              tension: 0.25
-            },
-
-            {
-              label: "고관절",
-              data: [],
-              borderWidth: 2,
-              pointRadius: 0,
-              tension: 0.25
-            },
-
-            {
-              label: "몸통",
-              data: [],
-              borderWidth: 2,
-              pointRadius: 0,
-              tension: 0.25
-            },
-
-            {
-              label: "발목",
-              data: [],
-              borderWidth: 2,
-              pointRadius: 0,
-              tension: 0.25
-            }
-
-          ]
-
-        },
-
-        options: {
-
-          responsive: true,
-
-          maintainAspectRatio: false,
-
-          animation: false,
-
-          interaction: {
-            intersect: false,
-            mode: "index"
-          },
-
-          scales: {
-
-            y: {
-
-              suggestedMin: 0,
-
-              suggestedMax: 180,
-
-              title: {
-                display: true,
-                text: "ANGLE °"
-              }
-
-            },
-
-            x: {
-
-              display: false
-
-            }
-
-          },
-
-          plugins: {
-
-            legend: {
-              display: true
-            }
-
-          }
-
-        }
-
-      }
-    );
-}
-
-
-/* =========================================================
-   43. PUSH ANGLE HISTORY
-========================================================= */
-
-function pushAngleHistory(
-  metrics
-) {
-
-  const item = {
-
-    time:
-      (
-        Date.now() -
-        APP_STATE.analysisStartTime
-      ) / 1000,
-
-    knee:
-      metrics.knee,
-
-    hip:
-      metrics.hip,
-
-    trunk:
-      metrics.trunk,
-
-    ankle:
-      metrics.ankle
-
-  };
-
-
-  APP_STATE.angleHistory.push(
-    item
-  );
-
-
-  if (
-    APP_STATE.angleHistory.length >
-    APP_STATE.maxHistory
-  ) {
-
-    APP_STATE.angleHistory.shift();
-
-  }
-
-
-  updateAngleChart();
-}
-
-
-/* =========================================================
-   44. UPDATE ANGLE CHART
-========================================================= */
-
-function updateAngleChart() {
-
-  if (!angleChart) return;
-
-
-  const history =
-    APP_STATE.angleHistory;
-
-
-  angleChart.data.labels =
-    history.map(
-      item =>
-        item.time.toFixed(1)
-    );
-
-
-  angleChart
-    .data
-    .datasets[0]
-    .data =
-    history.map(
-      item => item.knee
-    );
-
-
-  angleChart
-    .data
-    .datasets[1]
-    .data =
-    history.map(
-      item => item.hip
-    );
-
-
-  angleChart
-    .data
-    .datasets[2]
-    .data =
-    history.map(
-      item => item.trunk
-    );
-
-
-  angleChart
-    .data
-    .datasets[3]
-    .data =
-    history.map(
-      item => item.ankle
-    );
-
-
-  angleChart.update("none");
-}
-
-
-/* =========================================================
-   45. CLEAR ANGLE CHART
-========================================================= */
-
-function clearAngleChart() {
-
-  if (!angleChart) return;
-
-
-  angleChart.data.labels = [];
-
-
-  angleChart
-    .data
-    .datasets
-    .forEach(dataset => {
-
-      dataset.data = [];
-
-    });
-
-
-  angleChart.update("none");
-}
-
-
-/* =========================================================
-   46. BAR PATH
-
-   영상에서 손목 중앙 궤적을 표시
-========================================================= */
-
-function updateBarPath(
-  landmarks
-) {
-
-  if (
-    !APP_STATE.barPathVisible
-  ) return;
-
-
-  const left =
-    landmarks[
-      LM.leftWrist
-    ];
-
-  const right =
-    landmarks[
-      LM.rightWrist
-    ];
-
-
-  if (
-    !landmarkVisible(left) ||
-    !landmarkVisible(right)
-  ) {
-    return;
-  }
-
-
-  const point = {
-
-    x:
-      (
-        left.x +
-        right.x
-      ) / 2,
-
-    y:
-      (
-        left.y +
-        right.y
-      ) / 2
-
-  };
-
-
-  APP_STATE.barPath.push(
-    point
-  );
-
-
-  if (
-    APP_STATE.barPath.length >
-    150
-  ) {
-
-    APP_STATE.barPath.shift();
-
-  }
-
-
-  drawBarPath();
-}
-
-
-/* =========================================================
-   47. DRAW BAR PATH
-========================================================= */
-
-function drawBarPath() {
-
-  const canvas =
-    $("barPathCanvas");
-
-  if (!canvas) return;
-
-
-  resizePoseCanvas();
-
-
-  const ctx =
-    canvas.getContext("2d");
-
-
-  ctx.clearRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  if (
-    !APP_STATE.barPathVisible ||
-    APP_STATE.barPath.length <
-      2
-  ) {
-    return;
-  }
-
-
-  ctx.lineWidth = 4;
-
-  ctx.beginPath();
-
-
-  APP_STATE.barPath.forEach(
-    (point, index) => {
-
-      const x =
-        point.x *
-        canvas.width;
-
-      const y =
-        point.y *
-        canvas.height;
-
-
-      if (index === 0) {
-
-        ctx.moveTo(x, y);
-
-      } else {
-
-        ctx.lineTo(x, y);
-
-      }
-
-    }
-  );
-
-
-  ctx.stroke();
-}
-
-
-/* =========================================================
-   48. CLEAR BAR PATH
-========================================================= */
-
-function clearBarPath() {
-
-  APP_STATE.barPath = [];
-
-
-  const canvas =
-    $("barPathCanvas");
-
-  if (!canvas) return;
-
-
-  canvas
-    .getContext("2d")
-    .clearRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-}
-
-
-/* =========================================================
-   49. PLAYBACK SPEED
-========================================================= */
-
-function initializePlayback() {
-
-  $("playbackSpeed")
-    ?.addEventListener(
-      "change",
-      event => {
-
-        const video =
-          $("uploadedVideo");
-
-        if (!video) return;
-
-
-        video.playbackRate =
-          Number(
-            event.target.value
-          ) || 1;
-
-      }
-    );
-
-
-  $("playPauseBtn")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        const video =
-          $("uploadedVideo");
-
-
-        if (
-          !video ||
-          video.hidden
-        ) {
-          return;
-        }
-
-
-        if (video.paused) {
-
-          video.play();
-
-        } else {
-
-          video.pause();
-
-        }
-
-      }
-    );
-
-
-  $("frameBackBtn")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        stepVideoFrame(-1);
-
-      }
-    );
-
-
-  $("frameForwardBtn")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        stepVideoFrame(1);
-
-      }
-    );
-}
-
-
-/* =========================================================
-   50. FRAME STEP
-========================================================= */
-
-function stepVideoFrame(
-  direction
-) {
+function moveFrame(direction) {
 
   const video =
     $("uploadedVideo");
@@ -3319,8 +1814,9 @@ function stepVideoFrame(
 
   if (
     !video ||
-    video.hidden
+    APP_STATE.sourceType !== "video"
   ) {
+
     return;
   }
 
@@ -3328,1908 +1824,836 @@ function stepVideoFrame(
   video.pause();
 
 
-  /*
-    일반 영상 기준 30fps 가정.
-    실제 영상 fps 메타데이터는
-    브라우저 video 요소에서 직접 제공하지 않음.
-  */
+  const fps = 30;
 
   const frameDuration =
-    1 / 30;
+    1 / fps;
 
 
   video.currentTime =
     clamp(
       video.currentTime +
-      direction *
-      frameDuration,
+        frameDuration * direction,
       0,
-      video.duration || 0
+      video.duration || Infinity
     );
-
-
-  setTimeout(
-    analyzeCurrentVideoFrame,
-    40
-  );
 }
 
 
-async function analyzeCurrentVideoFrame() {
-
-  if (!APP_STATE.pose) {
-    await initializePoseEngine();
-  }
-
+function changePlaybackSpeed() {
 
   const video =
     $("uploadedVideo");
 
 
-  if (!sourceReady(video)) {
+  if (!video) {
+    return;
+  }
+
+
+  video.playbackRate =
+    Number(
+      $("playbackSpeed")?.value || 1
+    );
+}
+
+
+/* =========================================================
+   DISPLAY TOGGLES
+========================================================= */
+
+function toggleSkeleton() {
+
+  APP_STATE.skeletonVisible =
+    !APP_STATE.skeletonVisible;
+
+
+  const canvas =
+    $("poseCanvas");
+
+
+  if (canvas) {
+
+    canvas.style.display =
+      APP_STATE.skeletonVisible
+        ? ""
+        : "none";
+
+  }
+
+
+  if ($("settingSkeleton")) {
+
+    $("settingSkeleton").checked =
+      APP_STATE.skeletonVisible;
+
+  }
+}
+
+
+function toggleReference() {
+
+  APP_STATE.referenceVisible =
+    !APP_STATE.referenceVisible;
+
+
+  [
+    $("referenceVertical"),
+    $("referenceHorizontal")
+  ].forEach(element => {
+
+    if (element) {
+
+      element.style.display =
+        APP_STATE.referenceVisible
+          ? ""
+          : "none";
+
+    }
+
+  });
+
+
+  if ($("settingReference")) {
+
+    $("settingReference").checked =
+      APP_STATE.referenceVisible;
+
+  }
+}
+
+
+function toggleBarPath() {
+
+  APP_STATE.barPathVisible =
+    !APP_STATE.barPathVisible;
+
+
+  const canvas =
+    $("barPathCanvas");
+
+
+  if (canvas) {
+
+    canvas.style.display =
+      APP_STATE.barPathVisible
+        ? ""
+        : "none";
+
+  }
+
+
+  if ($("settingBarPath")) {
+
+    $("settingBarPath").checked =
+      APP_STATE.barPathVisible;
+
+  }
+}
+
+
+/* =========================================================
+   ANALYSIS
+========================================================= */
+
+function startAnalysis() {
+
+  if (APP_STATE.analysisRunning) {
+
+    showToast("이미 분석 중입니다.");
+
+    return;
+  }
+
+
+  const athleteId =
+    $("analysisAthlete")?.value;
+
+
+  const exerciseId =
+    $("analysisExercise")?.value;
+
+
+  if (!athleteId) {
+
+    showToast("측정 선수를 선택하세요.");
+
+    return;
+  }
+
+
+  if (!exerciseId) {
+
+    showToast("분석 운동을 선택하세요.");
+
+    return;
+  }
+
+
+  if (!APP_STATE.sourceType) {
+
+    showToast(
+      "카메라를 연결하거나 영상을 업로드하세요."
+    );
+
+    return;
+  }
+
+
+  APP_STATE.selectedAthleteId =
+    athleteId;
+
+
+  APP_STATE.selectedExerciseId =
+    exerciseId;
+
+
+  APP_STATE.currentRepCount = 0;
+
+  APP_STATE.completedSets = 0;
+
+  APP_STATE.analysisRunning = true;
+
+  APP_STATE.analysisStartedAt =
+    Date.now();
+
+
+  syncAnalysisTarget();
+
+
+  if ($("currentRepCount")) {
+
+    $("currentRepCount").textContent =
+      "0";
+
+  }
+
+
+  if ($("analysisTimer")) {
+
+    $("analysisTimer").textContent =
+      "00:00";
+
+  }
+
+
+  const badge =
+    $("liveStatusBadge");
+
+
+  if (badge) {
+
+    badge.textContent =
+      "● ANALYZING";
+
+    badge.classList.remove(
+      "standby"
+    );
+
+  }
+
+
+  if ($("analysisEngineStatus")) {
+
+    $("analysisEngineStatus").textContent =
+      "ANALYSIS RUNNING";
+
+  }
+
+
+  clearInterval(
+    APP_STATE.analysisTimerInterval
+  );
+
+
+  APP_STATE.analysisTimerInterval =
+    setInterval(() => {
+
+      if (!APP_STATE.analysisRunning) {
+        return;
+      }
+
+
+      const seconds =
+        (
+          Date.now() -
+          APP_STATE.analysisStartedAt
+        ) / 1000;
+
+
+      if ($("analysisTimer")) {
+
+        $("analysisTimer").textContent =
+          formatDuration(seconds);
+
+      }
+
+    }, 250);
+
+
+  if (
+    typeof window.startPoseAnalysis ===
+    "function"
+  ) {
+
+    window.startPoseAnalysis({
+      athleteId,
+      exerciseId,
+      targetMode:
+        APP_STATE.targetMode,
+      targetSets:
+        APP_STATE.targetSets,
+      targetReps:
+        APP_STATE.targetReps
+    });
+
+  }
+
+
+  showToast("자세 분석을 시작합니다.");
+}
+
+
+/* =========================================================
+   REP UPDATE
+
+   analysis engine에서 호출 가능
+========================================================= */
+
+function registerRep(repData = {}) {
+
+  if (!APP_STATE.analysisRunning) {
+    return;
+  }
+
+
+  APP_STATE.currentRepCount += 1;
+
+
+  if ($("currentRepCount")) {
+
+    $("currentRepCount").textContent =
+      APP_STATE.currentRepCount;
+
+  }
+
+
+  if (
+    typeof repData.score ===
+    "number" &&
+    $("currentPoseScore")
+  ) {
+
+    $("currentPoseScore").textContent =
+      Math.round(repData.score);
+
+  }
+
+
+  if (
+    typeof repData.tempo ===
+    "number" &&
+    $("analysisTempo")
+  ) {
+
+    $("analysisTempo").textContent =
+      `${repData.tempo.toFixed(2)}s`;
+
+  }
+
+
+  checkAutomaticAnalysisFinish();
+}
+
+
+/* =========================================================
+   AUTO FINISH
+========================================================= */
+
+function checkAutomaticAnalysisFinish() {
+
+  if (
+    APP_STATE.targetMode === "free"
+  ) {
+
     return;
   }
 
 
   if (
-    APP_STATE.poseBusy
-  ) return;
-
-
-  APP_STATE.poseBusy = true;
-
-
-  try {
-
-    await APP_STATE.pose.send({
-      image: video
-    });
-
-  } finally {
-
-    APP_STATE.poseBusy =
-      false;
-
-  }
-}
-
-
-/* =========================================================
-   51. VIEW SELECTOR
-========================================================= */
-
-function initializeViewSelector() {
-
-  document
-    .querySelectorAll(
-      ".view-button"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          document
-            .querySelectorAll(
-              ".view-button"
-            )
-            .forEach(item => {
-
-              item.classList.remove(
-                "active"
-              );
-
-            });
-
-
-          button.classList.add(
-            "active"
-          );
-
-
-          APP_STATE.analysisView =
-            button.dataset.view;
-
-        }
-      );
-
-    });
-}
-
-
-window.setAnalysisView =
-  function(view) {
-
-    APP_STATE.analysisView =
-      view;
-
-  };
-
-
-/* =========================================================
-   52. 2D / 3D MODE
-========================================================= */
-
-function initializeAnalysisMode() {
-
-  document
-    .querySelectorAll(
-      ".mode-button"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          document
-            .querySelectorAll(
-              ".mode-button"
-            )
-            .forEach(item => {
-
-              item.classList.remove(
-                "active"
-              );
-
-            });
-
-
-          button.classList.add(
-            "active"
-          );
-
-
-          APP_STATE.analysisMode =
-            button.dataset.analysisMode;
-
-
-          if (
-            APP_STATE.analysisMode ===
-            "3d"
-          ) {
-
-            showToast(
-              "3D AI 좌표 추정 모드"
-            );
-
-          }
-
-        }
-      );
-
-    });
-}
-
-
-/* =========================================================
-   53. DISPLAY TOGGLES
-========================================================= */
-
-function initializeDisplayToggles() {
-
-  $("toggleSkeletonBtn")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        APP_STATE.skeletonVisible =
-          !APP_STATE.skeletonVisible;
-
-
-        if (
-          APP_STATE.latestLandmarks
-        ) {
-
-          drawPoseSkeleton(
-            APP_STATE.latestLandmarks
-          );
-
-        }
-
-      }
-    );
-
-
-  $("toggleReferenceBtn")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        APP_STATE.referenceVisible =
-          !APP_STATE.referenceVisible;
-
-
-        updateReferenceLines();
-
-      }
-    );
-
-
-  $("toggleBarPathBtn")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        APP_STATE.barPathVisible =
-          !APP_STATE.barPathVisible;
-
-
-        if (
-          APP_STATE.barPathVisible
-        ) {
-
-          drawBarPath();
-
-        } else {
-
-          const canvas =
-            $("barPathCanvas");
-
-          canvas
-            ?.getContext("2d")
-            .clearRect(
-              0,
-              0,
-              canvas.width,
-              canvas.height
-            );
-
-        }
-
-      }
-    );
-}
-
-
-/* =========================================================
-   54. REFERENCE LINES
-========================================================= */
-
-function updateReferenceLines() {
-
-  const vertical =
-    $("referenceVertical");
-
-  const horizontal =
-    $("referenceHorizontal");
-
-
-  if (vertical) {
-
-    vertical.style.display =
-      APP_STATE.referenceVisible
-        ? ""
-        : "none";
-
-  }
-
-
-  if (horizontal) {
-
-    horizontal.style.display =
-      APP_STATE.referenceVisible
-        ? ""
-        : "none";
-
-  }
-}
-
-
-/* =========================================================
-   55. ANALYSIS BUTTON EVENTS
-========================================================= */
-
-function initializeAnalysisButtons() {
-
-  $("connectCameraBtn")
-    ?.addEventListener(
-      "click",
-      connectCamera
-    );
-
-
-  $("switchCameraBtn")
-    ?.addEventListener(
-      "click",
-      switchCamera
-    );
-
-
-  $("startAnalysisBtn")
-    ?.addEventListener(
-      "click",
-      startAnalysis
-    );
-
-
-  /*
-    ★ 분석 종료 버튼 직접 연결
-  */
-
-  $("stopAnalysisBtn")
-    ?.addEventListener(
-      "click",
-      stopAnalysis
-    );
-}
-/* =========================================================
-   APP.JS
-   PART 2 / 2
-
-   - Save Analysis
-   - Dashboard
-   - Records
-   - Training Program
-   - Recommendations
-   - Report
-   - CSV Export
-   - Backup / Restore
-   - Settings
-   - Final Initialization
-========================================================= */
-
-
-/* =========================================================
-   56. CURRENT EXERCISE
-========================================================= */
-
-function getCurrentExercise() {
-
-  const id =
-    $("analysisExercise")?.value;
-
-  if (!id) return null;
-
-
-  if (
-    typeof EXERCISES !== "undefined"
+    APP_STATE.targetMode === "reps"
   ) {
 
-    return EXERCISES.find(
-      exercise =>
-        String(exercise.id) === String(id)
-    ) || null;
+    if (
+      APP_STATE.currentRepCount >=
+      APP_STATE.targetReps
+    ) {
 
+      finishAnalysis({
+        auto: true
+      });
+
+    }
+
+    return;
   }
 
 
   if (
-    typeof exercises !== "undefined"
+    APP_STATE.targetMode === "sets"
   ) {
 
-    return exercises.find(
-      exercise =>
-        String(exercise.id) === String(id)
-    ) || null;
+    const totalTarget =
+      APP_STATE.targetSets *
+      APP_STATE.targetReps;
+
+
+    if (
+      APP_STATE.currentRepCount >=
+      totalTarget
+    ) {
+
+      finishAnalysis({
+        auto: true
+      });
+
+    }
 
   }
-
-
-  return null;
 }
 
 
 /* =========================================================
-   57. CURRENT ATHLETE
+   FINISH ANALYSIS
 ========================================================= */
 
-function getCurrentAthlete() {
+function finishAnalysis(options = {}) {
 
-  const id =
-    $("analysisAthlete")?.value ||
-    APP_STATE.selectedAthleteId;
+  if (!APP_STATE.analysisRunning) {
 
+    showToast("현재 진행 중인 분석이 없습니다.");
 
-  return athletes.find(
-    athlete =>
-      athlete.id === id
-  ) || null;
-}
-
-
-/* =========================================================
-   58. ANALYSIS DURATION
-========================================================= */
-
-function getAnalysisDuration() {
-
-  if (
-    !APP_STATE.analysisStartTime
-  ) {
-    return 0;
+    return;
   }
 
 
-  return round(
-    (
-      Date.now() -
-      APP_STATE.analysisStartTime
-    ) / 1000,
-    1
+  APP_STATE.analysisRunning = false;
+
+
+  clearInterval(
+    APP_STATE.analysisTimerInterval
   );
+
+
+  APP_STATE.analysisTimerInterval =
+    null;
+
+
+  if (
+    typeof window.stopPoseAnalysis ===
+    "function"
+  ) {
+
+    window.stopPoseAnalysis();
+
+  }
+
+
+  const elapsedSeconds =
+    APP_STATE.analysisStartedAt
+      ? (
+          Date.now() -
+          APP_STATE.analysisStartedAt
+        ) / 1000
+      : 0;
+
+
+  const engineResult =
+    typeof window.getCurrentAnalysisResult ===
+    "function"
+      ? window.getCurrentAnalysisResult()
+      : {};
+
+
+  const record =
+    createAnalysisRecord(
+      engineResult,
+      elapsedSeconds
+    );
+
+
+  saveAnalysisRecord(record);
+
+
+  updateAnalysisUIAfterFinish(record);
+
+
+  const exercise =
+    window.getExerciseById?.(
+      record.exerciseId
+    );
+
+
+  showTrainingRecommendations(
+    record
+  );
+
+
+  if (options.auto) {
+
+    showToast(
+      `${exercise?.name || "운동"} 목표 완료`
+    );
+
+  } else {
+
+    showToast(
+      `분석 종료 · ${record.reps}회 저장`
+    );
+
+  }
+
+
+  setTimeout(() => {
+
+    const goReport =
+      confirm(
+        "분석이 저장되었습니다.\n바로 선수 리포트로 이동할까요?"
+      );
+
+
+    if (goReport) {
+
+      APP_STATE.selectedAthleteId =
+        record.athleteId;
+
+
+      openPage("report");
+
+
+      if ($("reportAthlete")) {
+
+        $("reportAthlete").value =
+          record.athleteId;
+
+      }
+
+
+      if (
+        typeof window.generateAthleteReport ===
+        "function"
+      ) {
+
+        window.generateAthleteReport(
+          record.athleteId
+        );
+
+      }
+
+    }
+
+  }, 150);
 }
 
 
 /* =========================================================
-   59. ANALYSIS AVERAGE METRICS
+   ANALYSIS RECORD CREATOR
 ========================================================= */
 
-function calculateSessionAverage() {
+function createAnalysisRecord(
+  engineResult = {},
+  elapsedSeconds = 0
+) {
 
-  const history =
-    APP_STATE.angleHistory;
-
-
-  const latest =
-    APP_STATE.latestMetrics;
-
-
-  if (!latest) {
-
-    return {
-
-      knee: 0,
-      hip: 0,
-      trunk: 0,
-      ankle: 0,
-
-      symmetry: 0,
-      stability: 0,
-      mobility: 0,
-      technique: 0,
-      score: 0
-
-    };
-  }
-
-
-  if (!history.length) {
-
-    return {
-
-      knee:
-        latest.knee || 0,
-
-      hip:
-        latest.hip || 0,
-
-      trunk:
-        latest.trunk || 0,
-
-      ankle:
-        latest.ankle || 0,
-
-      symmetry:
-        latest.symmetry || 0,
-
-      stability:
-        latest.stability || 0,
-
-      mobility:
-        latest.mobility || 0,
-
-      technique:
-        latest.technique || 0,
-
-      score:
-        latest.score || 0
-
-    };
-  }
-
-
-  const average =
-    key => {
-
-      const values =
-        history
-          .map(item => item[key])
-          .filter(
-            value =>
-              Number.isFinite(value)
-          );
-
-
-      if (!values.length) {
-        return 0;
-      }
-
-
-      return (
-        values.reduce(
-          (sum, value) =>
-            sum + value,
-          0
-        ) /
-        values.length
-      );
-    };
+  const score =
+    clamp(
+      Number(
+        engineResult.score ??
+        engineResult.technique ??
+        80
+      ),
+      0,
+      100
+    );
 
 
   return {
 
-    knee:
-      average("knee"),
-
-    hip:
-      average("hip"),
-
-    trunk:
-      average("trunk"),
-
-    ankle:
-      average("ankle"),
-
-    symmetry:
-      latest.symmetry || 0,
-
-    stability:
-      latest.stability || 0,
-
-    mobility:
-      latest.mobility || 0,
-
-    technique:
-      latest.technique || 0,
-
-    score:
-      latest.score || 0
-
-  };
-}
-
-
-/* =========================================================
-   60. ANALYSIS SNAPSHOT
-
-   리포트 대표 장면용
-========================================================= */
-
-function captureAnalysisSnapshot() {
-
-  const viewer =
-    document.querySelector(
-      ".motion-viewer"
-    );
-
-
-  const source =
-    getPoseSource();
-
-
-  if (
-    !viewer ||
-    !source ||
-    !sourceReady(source)
-  ) {
-    return "";
-  }
-
-
-  try {
-
-    const canvas =
-      document.createElement(
-        "canvas"
-      );
-
-
-    const width = 960;
-
-    const height = 540;
-
-
-    canvas.width = width;
-
-    canvas.height = height;
-
-
-    const ctx =
-      canvas.getContext("2d");
-
-
-    ctx.drawImage(
-      source,
-      0,
-      0,
-      width,
-      height
-    );
-
-
-    /*
-      현재 스켈레톤 캔버스도
-      대표 프레임에 합성
-    */
-
-    const poseCanvas =
-      $("poseCanvas");
-
-
-    if (poseCanvas) {
-
-      ctx.drawImage(
-        poseCanvas,
-        0,
-        0,
-        width,
-        height
-      );
-
-    }
-
-
-    return canvas.toDataURL(
-      "image/jpeg",
-      0.72
-    );
-
-
-  } catch (error) {
-
-    console.warn(
-      "[SNAPSHOT]",
-      error
-    );
-
-    return "";
-  }
-}
-
-
-/* =========================================================
-   61. SAVE CURRENT ANALYSIS
-========================================================= */
-
-function saveCurrentAnalysis() {
-
-  const athlete =
-    getCurrentAthlete();
-
-
-  const exercise =
-    getCurrentExercise();
-
-
-  if (
-    !athlete ||
-    !exercise
-  ) {
-
-    console.warn(
-      "분석 저장 조건 부족"
-    );
-
-    return;
-  }
-
-
-  const metrics =
-    calculateSessionAverage();
-
-
-  const duration =
-    getAnalysisDuration();
-
-
-  const averageRepTime =
-    APP_STATE.repTimes.length
-
-      ? APP_STATE.repTimes.reduce(
-          (sum, value) =>
-            sum + value,
-          0
-        ) /
-        APP_STATE.repTimes.length
-
-      : 0;
-
-
-  const previousRecords =
-    analysisRecords.filter(
-      record =>
-        record.athleteId ===
-          athlete.id &&
-        record.exerciseId ===
-          exercise.id
-    );
-
-
-  const previousBest =
-    previousRecords.length
-
-      ? Math.max(
-          ...previousRecords.map(
-            record =>
-              Number(
-                record.score
-              ) || 0
-          )
-        )
-
-      : 0;
-
-
-  const score =
-    Math.round(
-      metrics.score
-    );
-
-
-  const isPR =
-    previousRecords.length > 0 &&
-    score > previousBest;
-
-
-  const record = {
-
     id:
-      createId("analysis"),
+      generateId("analysis"),
 
     createdAt:
       new Date().toISOString(),
 
     athleteId:
-      athlete.id,
-
-    athleteName:
-      athlete.name,
+      APP_STATE.selectedAthleteId,
 
     exerciseId:
-      exercise.id,
-
-    exerciseName:
-      exercise.name,
-
-    category:
-      exercise.category || "",
-
-    equipment:
-      exercise.equipment || "",
-
-    pictogram:
-      exercise.pictogram || "🏋",
-
-    view:
-      APP_STATE.analysisView,
-
-    mode:
-      APP_STATE.analysisMode,
-
-    source:
-      APP_STATE.sourceType,
+      APP_STATE.selectedExerciseId,
 
     reps:
-      APP_STATE.repCount,
-
-    targetReps:
       Number(
-        $("analysisTargetReps")?.value
-      ) || 0,
-
-    duration,
-
-    averageRepTime:
-      round(
-        averageRepTime,
-        2
+        engineResult.reps ??
+        APP_STATE.currentRepCount
       ),
 
-    score,
+    duration:
+      Math.round(elapsedSeconds),
 
-    knee:
-      round(
-        metrics.knee,
-        1
-      ),
+    score:
+      Math.round(score),
 
-    hip:
-      round(
-        metrics.hip,
-        1
-      ),
-
-    trunk:
-      round(
-        metrics.trunk,
-        1
-      ),
-
-    ankle:
-      round(
-        metrics.ankle,
-        1
-      ),
-
-    symmetry:
+    strength:
       Math.round(
-        metrics.symmetry
+        clamp(
+          Number(
+            engineResult.strength ??
+            score
+          ),
+          0,
+          100
+        )
+      ),
+
+    power:
+      Math.round(
+        clamp(
+          Number(
+            engineResult.power ??
+            score
+          ),
+          0,
+          100
+        )
       ),
 
     stability:
       Math.round(
-        metrics.stability
+        clamp(
+          Number(
+            engineResult.stability ??
+            score
+          ),
+          0,
+          100
+        )
+      ),
+
+    symmetry:
+      Math.round(
+        clamp(
+          Number(
+            engineResult.symmetry ??
+            score
+          ),
+          0,
+          100
+        )
       ),
 
     mobility:
       Math.round(
-        metrics.mobility
+        clamp(
+          Number(
+            engineResult.mobility ??
+            score
+          ),
+          0,
+          100
+        )
       ),
 
     technique:
       Math.round(
-        metrics.technique
+        clamp(
+          Number(
+            engineResult.technique ??
+            score
+          ),
+          0,
+          100
+        )
       ),
 
-    /*
-      간단한 파워/근력 추정 지표.
-      실제 force plate 측정값 아님.
-    */
-
-    strength:
-      calculateStrengthScore(
-        exercise,
-        metrics
+    rom:
+      Math.round(
+        clamp(
+          Number(
+            engineResult.rom ??
+            80
+          ),
+          0,
+          100
+        )
       ),
 
-    power:
-      calculatePowerScore(
-        exercise,
-        metrics
-      ),
+    kneeAngle:
+      engineResult.kneeAngle ?? null,
 
-    recommendations:
-      generateTrainingRecommendations(
-        exercise,
-        metrics
-      ),
+    hipAngle:
+      engineResult.hipAngle ?? null,
 
-    snapshot:
-      captureAnalysisSnapshot(),
+    trunkAngle:
+      engineResult.trunkAngle ?? null,
 
-    isPR,
+    ankleAngle:
+      engineResult.ankleAngle ?? null,
 
-    angleHistory:
-      APP_STATE.angleHistory
-        .slice(-120)
+    targetMode:
+      APP_STATE.targetMode,
+
+    targetSets:
+      APP_STATE.targetSets,
+
+    targetReps:
+      APP_STATE.targetReps,
+
+    cameraView:
+      APP_STATE.cameraView,
+
+    analysisMode:
+      APP_STATE.analysisMode
 
   };
+}
 
 
-  analysisRecords.unshift(
-    record
+/* =========================================================
+   SAVE ANALYSIS
+========================================================= */
+
+function getAnalysisRecords() {
+
+  return loadJSON(
+    STORAGE_KEYS.analyses,
+    []
+  );
+}
+
+
+function saveAnalysisRecord(record) {
+
+  const records =
+    getAnalysisRecords();
+
+
+  records.unshift(record);
+
+
+  saveJSON(
+    STORAGE_KEYS.analyses,
+    records
   );
 
 
-  /*
-    localStorage 용량 때문에
-    분석 기록 최대 100개 유지
-  */
+  refreshDashboard();
 
-  if (
-    analysisRecords.length >
-    100
-  ) {
+  renderRecords();
+}
 
-    analysisRecords =
-      analysisRecords.slice(
-        0,
-        100
-      );
+
+/* =========================================================
+   ANALYSIS FINISH UI
+========================================================= */
+
+function updateAnalysisUIAfterFinish(record) {
+
+  const badge =
+    $("liveStatusBadge");
+
+
+  if (badge) {
+
+    badge.textContent =
+      "● COMPLETE";
+
+    badge.classList.add(
+      "standby"
+    );
 
   }
 
 
-  saveData(
-    STORAGE.records,
-    analysisRecords
-  );
+  if ($("analysisEngineStatus")) {
+
+    $("analysisEngineStatus").textContent =
+      "ANALYSIS COMPLETE";
+
+  }
 
 
-  renderTrainingRecommendations(
-    record.recommendations
-  );
+  if ($("currentPoseScore")) {
+
+    $("currentPoseScore").textContent =
+      record.score;
+
+  }
 
 
-  if (isPR) {
+  if ($("liveSymmetry")) {
 
-    showToast(
-      `🏆 새로운 PR · ${score}점`
-    );
+    $("liveSymmetry").textContent =
+      record.symmetry;
+
+  }
+
+
+  if ($("liveROM")) {
+
+    $("liveROM").textContent =
+      record.rom;
+
+  }
+
+
+  if ($("liveStability")) {
+
+    $("liveStability").textContent =
+      record.stability;
+
+  }
+
+
+  if ($("liveTechnique")) {
+
+    $("liveTechnique").textContent =
+      record.technique;
 
   }
 }
 
 
 /* =========================================================
-   62. STRENGTH SCORE
+   TRAINING RECOMMENDATIONS
 ========================================================= */
 
-function calculateStrengthScore(
-  exercise,
-  metrics
-) {
-
-  let base =
-    metrics.technique * 0.55 +
-    metrics.stability * 0.45;
-
-
-  if (
-    [
-      "lower",
-      "chest",
-      "back",
-      "olympic"
-    ].includes(
-      exercise.category
-    )
-  ) {
-
-    base += 4;
-
-  }
-
-
-  return Math.round(
-    clamp(
-      base,
-      0,
-      100
-    )
-  );
-}
-
-
-/* =========================================================
-   63. POWER SCORE
-========================================================= */
-
-function calculatePowerScore(
-  exercise,
-  metrics
-) {
-
-  let base =
-    metrics.technique * 0.45 +
-    metrics.mobility * 0.25 +
-    metrics.stability * 0.30;
-
-
-  if (
-    [
-      "power",
-      "plyometric",
-      "olympic"
-    ].includes(
-      exercise.category
-    )
-  ) {
-
-    base += 8;
-
-  }
-
-
-  return Math.round(
-    clamp(
-      base,
-      0,
-      100
-    )
-  );
-}
-
-
-/* =========================================================
-   64. TRAINING RECOMMENDATION ENGINE
-========================================================= */
-
-function generateTrainingRecommendations(
-  exercise,
-  metrics
-) {
-
-  const recommendations = [];
-
-
-  const add = (
-    name,
-    reason,
-    category = "보강"
-  ) => {
-
-    if (
-      recommendations.some(
-        item =>
-          item.name === name
-      )
-    ) {
-      return;
-    }
-
-
-    recommendations.push({
-
-      name,
-      reason,
-      category
-
-    });
-
-  };
-
-
-  /*
-    무릎 ROM 부족
-  */
-
-  if (
-    metrics.knee > 115
-  ) {
-
-    add(
-      "고블릿 스쿼트",
-      "스쿼트 깊이와 하체 가동범위 향상",
-      "하체"
-    );
-
-    add(
-      "템포 스쿼트",
-      "하강 구간 제어와 자세 안정성 향상",
-      "하체"
-    );
-
-    add(
-      "발목 가동성 드릴",
-      "발목 배측굴곡과 스쿼트 깊이 개선",
-      "가동성"
-    );
-
-    add(
-      "힐 엘리베이티드 스쿼트",
-      "무릎 전방 이동과 대퇴사두근 사용 연습",
-      "하체"
-    );
-  }
-
-
-  /*
-    좌우 비대칭
-  */
-
-  if (
-    metrics.symmetry < 88
-  ) {
-
-    add(
-      "불가리안 스플릿 스쿼트",
-      "좌우 하체 근력 차이 보완",
-      "하체"
-    );
-
-    add(
-      "리버스 런지",
-      "편측 안정성과 하체 제어 향상",
-      "하체"
-    );
-
-    add(
-      "싱글 레그 RDL",
-      "편측 고관절 안정성과 균형 향상",
-      "하체"
-    );
-
-    add(
-      "스텝업",
-      "좌우 독립적인 힘 발휘 능력 향상",
-      "하체"
-    );
-
-    add(
-      "싱글 레그 스쿼트 보조",
-      "좌우 움직임 패턴 비교 및 교정",
-      "맨몸"
-    );
-  }
-
-
-  /*
-    몸통 안정성
-  */
-
-  if (
-    metrics.stability < 88 ||
-    metrics.trunk > 35
-  ) {
-
-    add(
-      "데드버그",
-      "몸통 고정과 골반 제어 향상",
-      "코어"
-    );
-
-    add(
-      "버드독",
-      "척추 안정성과 교차 패턴 제어",
-      "코어"
-    );
-
-    add(
-      "팔로프 프레스",
-      "회전 저항 능력 향상",
-      "코어"
-    );
-
-    add(
-      "플랭크",
-      "기본 몸통 안정성 강화",
-      "코어"
-    );
-
-    add(
-      "사이드 플랭크",
-      "측면 코어와 골반 안정성 강화",
-      "코어"
-    );
-
-    add(
-      "프론트 랙 캐리",
-      "몸통 강성과 자세 유지 능력 강화",
-      "기능성"
-    );
-  }
-
-
-  /*
-    가동성
-  */
-
-  if (
-    metrics.mobility < 70
-  ) {
-
-    add(
-      "90/90 힙 모빌리티",
-      "고관절 회전 가동성 향상",
-      "가동성"
-    );
-
-    add(
-      "딥 스쿼트 홀드",
-      "하체 복합 가동범위 향상",
-      "가동성"
-    );
-
-    add(
-      "월 앵클 드릴",
-      "발목 가동범위 향상",
-      "가동성"
-    );
-
-    add(
-      "코사크 스쿼트",
-      "고관절 측면 가동성과 내전근 제어",
-      "가동성"
-    );
-  }
-
-
-  /*
-    파워 계열
-  */
-
-  if (
-    [
-      "power",
-      "olympic",
-      "plyometric"
-    ].includes(
-      exercise.category
-    )
-  ) {
-
-    add(
-      "박스 점프",
-      "폭발적인 하체 신전 능력 향상",
-      "파워"
-    );
-
-    add(
-      "스쿼트 점프",
-      "수직 파워 발달",
-      "파워"
-    );
-
-    add(
-      "메디신볼 스로우",
-      "전신 폭발력과 힘 전달 연습",
-      "파워"
-    );
-
-    add(
-      "점프 슈러그",
-      "폭발적인 고관절 신전 패턴 강화",
-      "올림픽 리프팅"
-    );
-  }
-
-
-  /*
-    상체 계열
-  */
-
-  if (
-    [
-      "chest",
-      "back",
-      "shoulder",
-      "arms"
-    ].includes(
-      exercise.category
-    )
-  ) {
-
-    add(
-      "스캐풀라 푸시업",
-      "견갑골 움직임과 상체 안정성 향상",
-      "상체"
-    );
-
-    add(
-      "밴드 페이스풀",
-      "후면 어깨와 견갑 안정성 강화",
-      "상체"
-    );
-
-    add(
-      "밴드 외회전",
-      "회전근개 제어 능력 강화",
-      "보강"
-    );
-
-    add(
-      "푸시업",
-      "상체 기본 밀기 패턴 강화",
-      "맨몸"
-    );
-  }
-
-
-  /*
-    일반 하체
-  */
-
-  if (
-    exercise.category ===
-      "lower"
-  ) {
-
-    add(
-      "맨몸 스쿼트",
-      "기본 스쿼트 패턴 반복 학습",
-      "맨몸"
-    );
-
-    add(
-      "워킹 런지",
-      "하체 근력과 동적 안정성 향상",
-      "하체"
-    );
-
-    add(
-      "글루트 브리지",
-      "둔근 활성과 고관절 신전 강화",
-      "하체"
-    );
-
-    add(
-      "카프 레이즈",
-      "발목과 종아리 지지 능력 강화",
-      "하체"
-    );
-  }
-
-
-  /*
-    결과가 좋아도 발전용 추천
-  */
-
-  if (
-    recommendations.length < 5
-  ) {
-
-    add(
-      "템포 트레이닝",
-      "동작 속도 제어와 기술 일관성 향상",
-      "기술"
-    );
-
-    add(
-      "아이소메트릭 홀드",
-      "특정 관절 각도에서의 안정성 강화",
-      "기술"
-    );
-
-    add(
-      "저중량 기술 세트",
-      "피로가 적은 상태에서 정확한 동작 반복",
-      "기술"
-    );
-
-    add(
-      "코어 브레이싱 드릴",
-      "전신 힘 전달을 위한 몸통 고정 능력 향상",
-      "코어"
-    );
-
-    add(
-      "편측 보강 운동",
-      "좌우 균형과 움직임 안정성 유지",
-      "보강"
-    );
-  }
-
-
-  return recommendations.slice(
-    0,
-    12
-  );
-}
-
-
-/* =========================================================
-   65. RENDER RECOMMENDATIONS
-========================================================= */
-
-function renderTrainingRecommendations(
-  recommendations = []
+function showTrainingRecommendations(
+  record
 ) {
 
   const container =
     $("trainingRecommendations");
 
 
-  if (!container) return;
-
-
-  if (
-    !recommendations.length
-  ) {
-
-    container.innerHTML = `
-      <div class="empty-state">
-        분석 완료 후 추천 훈련이 표시됩니다.
-      </div>
-    `;
-
+  if (!container) {
     return;
   }
 
 
-  container.innerHTML =
-    recommendations
-      .map(
-        (item, index) => `
-          <article class="recommendation-card">
-
-            <div class="recommendation-number">
-              ${String(index + 1).padStart(2, "0")}
-            </div>
-
-            <div>
-
-              <span class="recommendation-category">
-                ${item.category}
-              </span>
-
-              <h4>
-                ${item.name}
-              </h4>
-
-              <p>
-                ${item.reason}
-              </p>
-
-            </div>
-
-          </article>
-        `
-      )
-      .join("");
-}
-
-
-/* =========================================================
-   66. DASHBOARD CHARTS
-========================================================= */
-
-let performanceRadarChart = null;
-
-let performanceTrendChart = null;
-
-
-/* =========================================================
-   67. INITIALIZE DASHBOARD RADAR
-========================================================= */
-
-function initializePerformanceRadar() {
-
-  const canvas =
-    $("performanceRadar");
-
-
-  if (
-    !canvas ||
-    typeof Chart ===
-      "undefined"
-  ) {
-    return;
-  }
-
-
-  performanceRadarChart =
-    new Chart(
-      canvas,
-      {
-
-        type: "radar",
-
-        data: {
-
-          labels: [
-            "근력",
-            "파워",
-            "안정성",
-            "대칭성",
-            "가동성",
-            "기술"
-          ],
-
-          datasets: [
-            {
-
-              label:
-                "Performance",
-
-              data: [
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-
-              borderWidth: 2,
-
-              pointRadius: 3
-
-            }
-          ]
-
-        },
-
-        options: {
-
-          responsive: true,
-
-          maintainAspectRatio: false,
-
-          scales: {
-
-            r: {
-
-              min: 0,
-
-              max: 100,
-
-              ticks: {
-                display: false
-              },
-
-              pointLabels: {
-                font: {
-                  size: 12
-                }
-              }
-
-            }
-
-          },
-
-          plugins: {
-
-            legend: {
-              display: false
-            }
-
-          }
-
-        }
-
-      }
-    );
-}
-
-
-/* =========================================================
-   68. PERFORMANCE TREND
-========================================================= */
-
-function initializePerformanceTrend() {
-
-  const canvas =
-    $("performanceTrendChart");
-
-
-  if (
-    !canvas ||
-    typeof Chart ===
-      "undefined"
-  ) {
-    return;
-  }
-
-
-  performanceTrendChart =
-    new Chart(
-      canvas,
-      {
-
-        type: "line",
-
-        data: {
-
-          labels: [],
-
-          datasets: [
-
-            {
-              label: "기술 점수",
-              data: [],
-              borderWidth: 3,
-              pointRadius: 3,
-              tension: 0.3
-            },
-
-            {
-              label: "대칭성",
-              data: [],
-              borderWidth: 2,
-              pointRadius: 2,
-              tension: 0.3
-            }
-
-          ]
-
-        },
-
-        options: {
-
-          responsive: true,
-
-          maintainAspectRatio: false,
-
-          scales: {
-
-            y: {
-
-              min: 0,
-
-              max: 100
-
-            }
-
-          }
-
-        }
-
-      }
-    );
-}
-
-
-/* =========================================================
-   69. RENDER DASHBOARD
-========================================================= */
-
-function renderDashboard() {
-
-  if ($("dashboardAthleteCount")) {
-
-    $("dashboardAthleteCount")
-      .textContent =
-      athletes.length;
-
-  }
-
-
-  if ($("dashboardAnalysisCount")) {
-
-    $("dashboardAnalysisCount")
-      .textContent =
-      analysisRecords.length;
-
-  }
-
-
-  const averageScore =
-    analysisRecords.length
-
-      ? analysisRecords.reduce(
-          (sum, record) =>
-            sum +
-            (
-              Number(
-                record.score
-              ) || 0
-            ),
-          0
-        ) /
-        analysisRecords.length
-
-      : 0;
-
-
-  if ($("dashboardAverageScore")) {
-
-    $("dashboardAverageScore")
-      .textContent =
-      analysisRecords.length
-        ? Math.round(
-            averageScore
-          )
-        : "--";
-
-  }
-
-
-  const prRecords =
-    analysisRecords.filter(
-      record =>
-        record.isPR
-    );
-
-
-  if ($("dashboardPRCount")) {
-
-    $("dashboardPRCount")
-      .textContent =
-      prRecords.length;
-
-  }
-
-
-  let athlete =
-    athletes.find(
-      item =>
-        item.id ===
-        APP_STATE.selectedAthleteId
-    );
-
-
-  if (
-    !athlete &&
-    athletes.length
-  ) {
-
-    athlete =
-      athletes[0];
-
-    APP_STATE.selectedAthleteId =
-      athlete.id;
-
-  }
-
-
-  if (!athlete) {
-
-    if ($("dashboardAthleteName")) {
-      $("dashboardAthleteName")
-        .textContent =
-        "선수 미선택";
-    }
-
-    if ($("dashboardAthleteSport")) {
-      $("dashboardAthleteSport")
-        .textContent = "-";
-    }
-
-    if ($("dashboardHeight")) {
-      $("dashboardHeight")
-        .textContent = "-";
-    }
-
-    if ($("dashboardWeight")) {
-      $("dashboardWeight")
-        .textContent = "-";
-    }
-
-    if ($("dashboardLatestScore")) {
-      $("dashboardLatestScore")
-        .textContent = "-";
-    }
-
-
-    updateDashboardRadar(null);
-
-    renderDashboardRecent();
-
-    renderDashboardPR();
-
-    updatePerformanceTrend();
-
-    return;
-  }
-
-
-  $("dashboardAthleteName")
-    .textContent =
-    athlete.name;
-
-
-  $("dashboardAthleteSport")
-    .textContent =
-    athlete.sport || "-";
-
-
-  $("dashboardHeight")
-    .textContent =
-    athlete.height
-      ? `${athlete.height} cm`
-      : "-";
-
-
-  $("dashboardWeight")
-    .textContent =
-    athlete.weight
-      ? `${athlete.weight} kg`
-      : "-";
-
-
-  const records =
-    analysisRecords.filter(
-      record =>
-        record.athleteId ===
-        athlete.id
-    );
-
-
-  const latest =
-    records[0];
-
-
-  $("dashboardLatestScore")
-    .textContent =
-    latest
-      ? `${latest.score}/100`
-      : "-";
-
-
-  updateDashboardRadar(
-    latest
-  );
-
-  renderDashboardRecent();
-
-  renderDashboardPR();
-
-  updatePerformanceTrend();
-}
-
-
-/* =========================================================
-   70. DASHBOARD RADAR
-========================================================= */
-
-function updateDashboardRadar(
-  record
-) {
-
-  const values =
-    record
-
-      ? [
-          record.strength || 0,
-          record.power || 0,
-          record.stability || 0,
-          record.symmetry || 0,
-          record.mobility || 0,
-          record.technique || 0
-        ]
-
-      : [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ];
-
-
-  if (
-    performanceRadarChart
-  ) {
-
-    performanceRadarChart
-      .data
-      .datasets[0]
-      .data =
-      values;
-
-
-    performanceRadarChart.update();
-
-  }
-
-
-  const ids = [
-    "radarStrength",
-    "radarPower",
-    "radarStability",
-    "radarSymmetry",
-    "radarMobility",
-    "radarTechnique"
-  ];
-
-
-  ids.forEach(
-    (id, index) => {
-
-      if ($(id)) {
-
-        $(id).textContent =
-          Math.round(
-            values[index]
-          );
-
-      }
-
-    }
-  );
-}
-
-
-/* =========================================================
-   71. DASHBOARD RECENT
-========================================================= */
-
-function renderDashboardRecent() {
-
-  const container =
-    $("dashboardRecentList");
-
-  if (!container) return;
-
-
-  const records =
-    APP_STATE.selectedAthleteId
-
-      ? analysisRecords.filter(
-          record =>
-            record.athleteId ===
-            APP_STATE.selectedAthleteId
+  const recommendations =
+    window.getExerciseRecommendations
+      ? window.getExerciseRecommendations(
+          record.exerciseId,
+          record
         )
-
-      : analysisRecords;
-
-
-  const recent =
-    records.slice(
-      0,
-      5
-    );
+      : [];
 
 
-  if (!recent.length) {
+  if (!recommendations.length) {
 
     container.innerHTML = `
       <div class="empty-state">
-        아직 분석 기록이 없습니다.
+        현재 추가 권장사항이 없습니다.
       </div>
     `;
 
@@ -5238,376 +2662,192 @@ function renderDashboardRecent() {
 
 
   container.innerHTML =
-    recent
-      .map(
-        record => `
-          <div class="recent-analysis-row">
+    recommendations.map(item => `
 
-            <div class="recent-icon">
-              ${record.pictogram || "🏋"}
-            </div>
+      <article class="recommendation-card">
 
-            <div>
+        <strong>
+          ${escapeHTML(item.title)}
+        </strong>
 
-              <strong>
-                ${record.exerciseName}
-              </strong>
+        <p>
+          ${escapeHTML(item.description)}
+        </p>
 
-              <span>
-                ${formatDate(record.createdAt)}
-              </span>
+      </article>
 
-            </div>
-
-            <strong class="recent-score">
-              ${record.score}
-            </strong>
-
-          </div>
-        `
-      )
-      .join("");
+    `).join("");
 }
 
 
 /* =========================================================
-   72. DASHBOARD PR
+   RECORDS
 ========================================================= */
 
-function renderDashboardPR() {
+function populateRecordAthleteFilter() {
 
-  const container =
-    $("dashboardPRList");
-
-  if (!container) return;
+  const select =
+    $("recordAthleteFilter");
 
 
-  let records =
-    analysisRecords.filter(
-      record =>
-        record.isPR
-    );
-
-
-  if (
-    APP_STATE.selectedAthleteId
-  ) {
-
-    records =
-      records.filter(
-        record =>
-          record.athleteId ===
-          APP_STATE.selectedAthleteId
-      );
-
-  }
-
-
-  records =
-    records.slice(
-      0,
-      5
-    );
-
-
-  if (!records.length) {
-
-    container.innerHTML = `
-      <div class="empty-state">
-        기록된 PR이 없습니다.
-      </div>
-    `;
-
+  if (!select) {
     return;
   }
 
 
-  container.innerHTML =
-    records
-      .map(
-        record => `
-          <div class="pr-row">
+  const current =
+    select.value || "all";
 
-            <span>
-              🏆
-            </span>
 
-            <div>
+  const athletes =
+    getAthletes();
 
-              <strong>
-                ${record.exerciseName}
-              </strong>
 
-              <small>
-                ${formatDate(record.createdAt)}
-              </small>
+  select.innerHTML =
+    `
+      <option value="all">
+        전체 선수
+      </option>
+    ` +
+    athletes.map(athlete => `
+      <option value="${athlete.id}">
+        ${escapeHTML(athlete.name)}
+      </option>
+    `).join("");
 
-            </div>
 
-            <strong>
-              ${record.score}
-            </strong>
-
-          </div>
-        `
-      )
-      .join("");
+  select.value =
+    athletes.some(
+      athlete => athlete.id === current
+    )
+      ? current
+      : "all";
 }
 
-
-/* =========================================================
-   73. PERFORMANCE TREND UPDATE
-========================================================= */
-
-function updatePerformanceTrend() {
-
-  if (
-    !performanceTrendChart
-  ) return;
-
-
-  const period =
-    Number(
-      $("dashboardPeriod")?.value
-    ) || 7;
-
-
-  let records =
-    analysisRecords;
-
-
-  if (
-    APP_STATE.selectedAthleteId
-  ) {
-
-    records =
-      records.filter(
-        record =>
-          record.athleteId ===
-          APP_STATE.selectedAthleteId
-      );
-
-  }
-
-
-  records =
-    records
-      .slice(
-        0,
-        period
-      )
-      .reverse();
-
-
-  performanceTrendChart
-    .data
-    .labels =
-    records.map(
-      record =>
-        shortDate(
-          record.createdAt
-        )
-    );
-
-
-  performanceTrendChart
-    .data
-    .datasets[0]
-    .data =
-    records.map(
-      record =>
-        record.score
-    );
-
-
-  performanceTrendChart
-    .data
-    .datasets[1]
-    .data =
-    records.map(
-      record =>
-        record.symmetry
-    );
-
-
-  performanceTrendChart.update();
-}
-
-
-/* =========================================================
-   74. DASHBOARD PERIOD
-========================================================= */
-
-function initializeDashboardPeriod() {
-
-  $("dashboardPeriod")
-    ?.addEventListener(
-      "change",
-      updatePerformanceTrend
-    );
-}
-
-
-/* =========================================================
-   75. DATE FORMAT
-========================================================= */
-
-function formatDate(value) {
-
-  if (!value) return "-";
-
-
-  return new Date(value)
-    .toLocaleString(
-      "ko-KR",
-      {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
-      }
-    );
-}
-
-
-function shortDate(value) {
-
-  const date =
-    new Date(value);
-
-
-  return (
-    `${date.getMonth() + 1}/${date.getDate()}`
-  );
-}
-
-
-/* =========================================================
-   76. RECORD FILTER EXERCISES
-========================================================= */
 
 function populateRecordExerciseFilter() {
 
   const select =
     $("recordExerciseFilter");
 
-  if (!select) return;
 
-
-  const names =
-    [
-      ...new Set(
-        analysisRecords.map(
-          record =>
-            record.exerciseName
-        )
-      )
-    ]
-      .filter(Boolean)
-      .sort();
-
-
-  const old =
-    select.value;
-
-
-  select.innerHTML = `
-    <option value="all">
-      전체 운동
-    </option>
-
-    ${names
-      .map(
-        name => `
-          <option value="${name}">
-            ${name}
-          </option>
-        `
-      )
-      .join("")}
-  `;
-
-
-  if (
-    names.includes(old)
-  ) {
-    select.value = old;
+  if (!select) {
+    return;
   }
+
+
+  const current =
+    select.value || "all";
+
+
+  select.innerHTML =
+    `
+      <option value="all">
+        전체 운동
+      </option>
+    ` +
+    (window.EXERCISES || [])
+      .map(exercise => `
+        <option value="${exercise.id}">
+          ${escapeHTML(exercise.name)}
+        </option>
+      `)
+      .join("");
+
+
+  select.value =
+    current;
 }
 
 
-/* =========================================================
-   77. RENDER RECORDS
-========================================================= */
-
 function renderRecords() {
 
-  const body =
+  const tbody =
     $("recordsTableBody");
 
-  if (!body) return;
 
+  if (!tbody) {
+    return;
+  }
+
+
+  populateRecordAthleteFilter();
 
   populateRecordExerciseFilter();
 
 
   const athleteFilter =
-    $("recordAthleteFilter")
-      ?.value || "all";
+    $("recordAthleteFilter")?.value ||
+    "all";
 
 
   const exerciseFilter =
-    $("recordExerciseFilter")
-      ?.value || "all";
+    $("recordExerciseFilter")?.value ||
+    "all";
 
 
-  const search =
+  const keyword =
     $("recordSearch")
       ?.value
       .trim()
       .toLowerCase() || "";
 
 
-  const filtered =
-    analysisRecords.filter(
-      record => {
+  const records =
+    getAnalysisRecords()
+      .filter(record => {
 
-        const athleteOK =
-          athleteFilter === "all" ||
-          record.athleteId ===
-            athleteFilter;
+        if (
+          athleteFilter !== "all" &&
+          record.athleteId !== athleteFilter
+        ) {
 
+          return false;
 
-        const exerciseOK =
-          exerciseFilter === "all" ||
-          record.exerciseName ===
-            exerciseFilter;
+        }
 
 
-        const searchOK =
-          !search ||
-          record.athleteName
-            ?.toLowerCase()
-            .includes(search) ||
-          record.exerciseName
-            ?.toLowerCase()
-            .includes(search);
+        if (
+          exerciseFilter !== "all" &&
+          record.exerciseId !== exerciseFilter
+        ) {
+
+          return false;
+
+        }
 
 
-        return (
-          athleteOK &&
-          exerciseOK &&
-          searchOK
+        const athlete =
+          getAthleteById(
+            record.athleteId
+          );
+
+
+        const exercise =
+          window.getExerciseById?.(
+            record.exerciseId
+          );
+
+
+        const searchText =
+          [
+            athlete?.name,
+            exercise?.name
+          ]
+            .join(" ")
+            .toLowerCase();
+
+
+        return searchText.includes(
+          keyword
         );
 
-      }
-    );
+      });
 
 
-  if (!filtered.length) {
+  if (!records.length) {
 
-    body.innerHTML = `
+    tbody.innerHTML = `
       <tr>
         <td
           colspan="8"
@@ -5622,169 +2862,127 @@ function renderRecords() {
   }
 
 
-  body.innerHTML =
-    filtered
-      .map(
-        record => `
-          <tr>
+  tbody.innerHTML =
+    records.map(record => {
 
-            <td>
-              ${formatDate(record.createdAt)}
-            </td>
-
-            <td>
-              ${record.athleteName}
-            </td>
-
-            <td>
-              ${record.pictogram || "🏋"}
-              ${record.exerciseName}
-            </td>
-
-            <td>
-              ${record.reps}
-            </td>
-
-            <td>
-              <strong>
-                ${record.score}
-              </strong>
-            </td>
-
-            <td>
-              ${record.symmetry}%
-            </td>
-
-            <td>
-              ${record.mobility}
-            </td>
-
-            <td>
-
-              <button
-                class="table-action-button"
-                data-record-detail="${record.id}"
-              >
-                상세
-              </button>
-
-            </td>
-
-          </tr>
-        `
-      )
-      .join("");
-
-
-  body
-    .querySelectorAll(
-      "[data-record-detail]"
-    )
-    .forEach(
-      button => {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            openRecordDetail(
-              button.dataset.recordDetail
-            );
-
-          }
+      const athlete =
+        getAthleteById(
+          record.athleteId
         );
 
-      }
-    );
+
+      const exercise =
+        window.getExerciseById?.(
+          record.exerciseId
+        );
+
+
+      return `
+        <tr>
+
+          <td>
+            ${formatDateTime(record.createdAt)}
+          </td>
+
+          <td>
+            ${escapeHTML(athlete?.name || "-")}
+          </td>
+
+          <td>
+            ${escapeHTML(exercise?.name || "-")}
+          </td>
+
+          <td>
+            ${record.reps}
+          </td>
+
+          <td>
+            <strong>
+              ${record.score}
+            </strong>
+          </td>
+
+          <td>
+            ${record.symmetry}%
+          </td>
+
+          <td>
+            ${record.rom}
+          </td>
+
+          <td>
+
+            <button
+              type="button"
+              data-record-open="${record.id}"
+            >
+              보기
+            </button>
+
+          </td>
+
+        </tr>
+      `;
+
+    }).join("");
 }
 
 
 /* =========================================================
-   78. RECORD FILTER EVENTS
+   RECORD DETAIL
 ========================================================= */
 
-function initializeRecordFilters() {
-
-  [
-    "recordAthleteFilter",
-    "recordExerciseFilter"
-  ]
-    .forEach(id => {
-
-      $(id)
-        ?.addEventListener(
-          "change",
-          renderRecords
-        );
-
-    });
-
-
-  $("recordSearch")
-    ?.addEventListener(
-      "input",
-      renderRecords
-    );
-}
-
-
-/* =========================================================
-   79. RECORD DETAIL
-========================================================= */
-
-function openRecordDetail(
-  id
-) {
+function openRecordDetail(id) {
 
   const record =
-    analysisRecords.find(
-      item =>
-        item.id === id
+    getAnalysisRecords().find(
+      item => item.id === id
     );
 
 
-  if (!record) return;
+  if (!record) {
+    return;
+  }
+
+
+  const athlete =
+    getAthleteById(
+      record.athleteId
+    );
+
+
+  const exercise =
+    window.getExerciseById?.(
+      record.exerciseId
+    );
 
 
   const container =
     $("recordDetailContent");
 
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
 
   container.innerHTML = `
 
-    <div class="record-detail-header">
+    <div class="report-info-grid">
 
-      <div class="record-detail-icon">
-        ${record.pictogram || "🏋"}
+      <div>
+        <span>선수</span>
+        <strong>
+          ${escapeHTML(athlete?.name || "-")}
+        </strong>
       </div>
 
       <div>
-
-        <span class="eyebrow">
-          ${record.athleteName}
-        </span>
-
-        <h3>
-          ${record.exerciseName}
-        </h3>
-
-        <p>
-          ${formatDate(record.createdAt)}
-        </p>
-
+        <span>운동</span>
+        <strong>
+          ${escapeHTML(exercise?.name || "-")}
+        </strong>
       </div>
-
-      <div class="record-detail-score">
-        ${record.score}
-      </div>
-
-    </div>
-
-
-    <div class="record-detail-grid">
 
       <div>
         <span>반복</span>
@@ -5792,8 +2990,8 @@ function openRecordDetail(
       </div>
 
       <div>
-        <span>측정 시간</span>
-        <strong>${record.duration}s</strong>
+        <span>점수</span>
+        <strong>${record.score}</strong>
       </div>
 
       <div>
@@ -5816,85 +3014,1598 @@ function openRecordDetail(
         <strong>${record.technique}</strong>
       </div>
 
-      <div>
-        <span>무릎</span>
-        <strong>${record.knee}°</strong>
-      </div>
-
-      <div>
-        <span>고관절</span>
-        <strong>${record.hip}°</strong>
-      </div>
-
-      <div>
-        <span>몸통</span>
-        <strong>${record.trunk}°</strong>
-      </div>
-
-      <div>
-        <span>발목</span>
-        <strong>${record.ankle}°</strong>
-      </div>
-
     </div>
 
-
-    ${
-      record.snapshot
-        ? `
-          <img
-            class="record-snapshot"
-            src="${record.snapshot}"
-            alt="분석 장면"
-          />
-        `
-        : ""
-    }
-
-
-    <h3>
-      추천 훈련
-    </h3>
-
-    <div class="record-recommendation-list">
-
-      ${
-        (
-          record.recommendations ||
-          []
-        )
-          .map(
-            item => `
-              <div>
-                <strong>
-                  ${item.name}
-                </strong>
-
-                <span>
-                  ${item.reason}
-                </span>
-              </div>
-            `
-          )
-          .join("")
-      }
-
-    </div>
   `;
 
 
   $("recordModal")
-    ?.classList.add(
-      "open"
-    );
+    ?.classList.add("open");
 }
 
 
 /* =========================================================
-   80. MODALS
+   PROGRAM
 ========================================================= */
 
-function initializeModals() {
+function refreshProgramSelectors() {
+
+  populateAthleteSelect(
+    $("programAthlete"),
+    APP_STATE.selectedAthleteId
+  );
+
+
+  populateExerciseSelect(
+    $("programExercise")
+  );
+}
+
+
+function addProgramExercise() {
+
+  const exerciseId =
+    $("programExercise")?.value;
+
+
+  if (!exerciseId) {
+
+    showToast("운동을 선택하세요.");
+
+    return;
+  }
+
+
+  const exercise =
+    window.getExerciseById?.(
+      exerciseId
+    );
+
+
+  if (!exercise) {
+    return;
+  }
+
+
+  const item = {
+
+    id:
+      generateId("programExercise"),
+
+    exerciseId,
+
+    sets:
+      Math.max(
+        1,
+        Number(
+          $("programSets")?.value || 1
+        )
+      ),
+
+    reps:
+      Math.max(
+        1,
+        Number(
+          $("programReps")?.value || 1
+        )
+      ),
+
+    weight:
+      Math.max(
+        0,
+        Number(
+          $("programWeight")?.value || 0
+        )
+      ),
+
+    rest:
+      Math.max(
+        0,
+        Number(
+          $("programRest")?.value || 0
+        )
+      )
+
+  };
+
+
+  APP_STATE.programExercises.push(
+    item
+  );
+
+
+  renderProgramExercises();
+
+
+  showToast(
+    `${exercise.name} 추가 완료`
+  );
+}
+
+
+/* =========================================================
+   PROGRAM RENDER
+========================================================= */
+
+function renderProgramExercises() {
+
+  const container =
+    $("programExerciseList");
+
+
+  if (!container) {
+    return;
+  }
+
+
+  if (
+    !APP_STATE.programExercises.length
+  ) {
+
+    container.innerHTML = `
+      <div class="empty-state">
+        추가된 운동이 없습니다.
+      </div>
+    `;
+
+  } else {
+
+    container.innerHTML =
+      APP_STATE.programExercises
+        .map((item, index) => {
+
+          const exercise =
+            window.getExerciseById?.(
+              item.exerciseId
+            );
+
+
+          const volume =
+            item.sets *
+            item.reps *
+            item.weight;
+
+
+          return `
+
+            <article class="program-exercise-card">
+
+              <div class="program-order">
+                ${index + 1}
+              </div>
+
+              <div>
+
+                <strong>
+                  ${exercise?.pictogram || "🏋"}
+                  ${escapeHTML(exercise?.name || "-")}
+                </strong>
+
+                <span>
+                  ${item.sets}세트 ×
+                  ${item.reps}회 ·
+                  ${item.weight}kg
+                </span>
+
+                <small>
+                  휴식 ${item.rest}초 ·
+                  볼륨 ${volume.toLocaleString()}kg
+                </small>
+
+              </div>
+
+              <button
+                type="button"
+                data-program-delete="${item.id}"
+              >
+                삭제
+              </button>
+
+            </article>
+
+          `;
+
+        }).join("");
+
+  }
+
+
+  updateProgramSummary();
+}
+
+
+/* =========================================================
+   PROGRAM SUMMARY
+========================================================= */
+
+function updateProgramSummary() {
+
+  const items =
+    APP_STATE.programExercises;
+
+
+  const totalSets =
+    items.reduce(
+      (sum, item) =>
+        sum + item.sets,
+      0
+    );
+
+
+  const totalVolume =
+    items.reduce(
+      (sum, item) =>
+        sum +
+        (
+          item.sets *
+          item.reps *
+          item.weight
+        ),
+      0
+    );
+
+
+  if ($("programExerciseCount")) {
+
+    $("programExerciseCount").textContent =
+      items.length;
+
+  }
+
+
+  if ($("programTotalSets")) {
+
+    $("programTotalSets").textContent =
+      totalSets;
+
+  }
+
+
+  if ($("programTotalVolume")) {
+
+    $("programTotalVolume").textContent =
+      `${totalVolume.toLocaleString()} kg`;
+
+  }
+}
+
+
+/* =========================================================
+   DELETE PROGRAM ITEM
+========================================================= */
+
+function deleteProgramExercise(id) {
+
+  APP_STATE.programExercises =
+    APP_STATE.programExercises.filter(
+      item => item.id !== id
+    );
+
+
+  renderProgramExercises();
+}
+
+
+/* =========================================================
+   SAVE PROGRAM
+========================================================= */
+
+function saveProgram() {
+
+  const athleteId =
+    $("programAthlete")?.value;
+
+
+  const name =
+    $("programName")?.value.trim();
+
+
+  if (!athleteId) {
+
+    showToast("선수를 선택하세요.");
+
+    return;
+  }
+
+
+  if (!name) {
+
+    showToast("프로그램 이름을 입력하세요.");
+
+    return;
+  }
+
+
+  if (
+    !APP_STATE.programExercises.length
+  ) {
+
+    showToast(
+      "프로그램에 운동을 추가하세요."
+    );
+
+    return;
+  }
+
+
+  const programs =
+    loadJSON(
+      STORAGE_KEYS.programs,
+      []
+    );
+
+
+  programs.unshift({
+
+    id:
+      generateId("program"),
+
+    athleteId,
+
+    name,
+
+    createdAt:
+      new Date().toISOString(),
+
+    exercises:
+      APP_STATE.programExercises
+        .map(item => ({
+          ...item
+        }))
+
+  });
+
+
+  saveJSON(
+    STORAGE_KEYS.programs,
+    programs
+  );
+
+
+  APP_STATE.programExercises = [];
+
+
+  if ($("programName")) {
+
+    $("programName").value = "";
+
+  }
+
+
+  renderProgramExercises();
+
+
+  showToast("훈련 프로그램 저장 완료");
+}
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+function refreshDashboard() {
+
+  const athletes =
+    getAthletes();
+
+
+  const records =
+    getAnalysisRecords();
+
+
+  if ($("dashboardAthleteCount")) {
+
+    $("dashboardAthleteCount").textContent =
+      athletes.length;
+
+  }
+
+
+  if ($("dashboardAnalysisCount")) {
+
+    $("dashboardAnalysisCount").textContent =
+      records.length;
+
+  }
+
+
+  const averageScore =
+    records.length
+      ? Math.round(
+          records.reduce(
+            (sum, record) =>
+              sum + Number(record.score || 0),
+            0
+          ) / records.length
+        )
+      : null;
+
+
+  if ($("dashboardAverageScore")) {
+
+    $("dashboardAverageScore").textContent =
+      averageScore ?? "--";
+
+  }
+
+
+  if ($("dashboardPRCount")) {
+
+    $("dashboardPRCount").textContent =
+      calculatePRCount(records);
+
+  }
+
+
+  let athlete =
+    getAthleteById(
+      APP_STATE.selectedAthleteId
+    );
+
+
+  if (!athlete && athletes.length) {
+
+    athlete = athletes[0];
+
+    APP_STATE.selectedAthleteId =
+      athlete.id;
+
+  }
+
+
+  renderDashboardAthlete(
+    athlete,
+    records
+  );
+
+
+  renderDashboardRecent(records);
+
+  renderDashboardPR(records);
+
+
+  if (
+    typeof window.updateDashboardCharts ===
+    "function"
+  ) {
+
+    window.updateDashboardCharts(
+      athlete,
+      records
+    );
+
+  }
+}
+
+
+/* =========================================================
+   DASHBOARD ATHLETE
+========================================================= */
+
+function renderDashboardAthlete(
+  athlete,
+  records
+) {
+
+  if (!athlete) {
+
+    $("dashboardAthleteName").textContent =
+      "선수 미선택";
+
+    $("dashboardAthleteSport").textContent =
+      "-";
+
+    $("dashboardHeight").textContent =
+      "-";
+
+    $("dashboardWeight").textContent =
+      "-";
+
+    $("dashboardLatestScore").textContent =
+      "-";
+
+    return;
+  }
+
+
+  const athleteRecords =
+    records.filter(
+      record =>
+        record.athleteId === athlete.id
+    );
+
+
+  const latest =
+    athleteRecords[0];
+
+
+  $("dashboardAthleteName").textContent =
+    athlete.name;
+
+
+  $("dashboardAthleteSport").textContent =
+    athlete.sport || "-";
+
+
+  $("dashboardHeight").textContent =
+    athlete.height
+      ? `${athlete.height} cm`
+      : "-";
+
+
+  $("dashboardWeight").textContent =
+    athlete.weight
+      ? `${athlete.weight} kg`
+      : "-";
+
+
+  $("dashboardLatestScore").textContent =
+    latest
+      ? latest.score
+      : "-";
+
+
+  const metrics =
+    latest || {};
+
+
+  setText(
+    "radarStrength",
+    metrics.strength || 0
+  );
+
+  setText(
+    "radarPower",
+    metrics.power || 0
+  );
+
+  setText(
+    "radarStability",
+    metrics.stability || 0
+  );
+
+  setText(
+    "radarSymmetry",
+    metrics.symmetry || 0
+  );
+
+  setText(
+    "radarMobility",
+    metrics.mobility || 0
+  );
+
+  setText(
+    "radarTechnique",
+    metrics.technique || 0
+  );
+}
+
+
+/* =========================================================
+   DASHBOARD RECENT
+========================================================= */
+
+function renderDashboardRecent(records) {
+
+  const container =
+    $("dashboardRecentList");
+
+
+  if (!container) {
+    return;
+  }
+
+
+  const recent =
+    records.slice(0, 5);
+
+
+  if (!recent.length) {
+
+    container.innerHTML = `
+      <div class="empty-state">
+        아직 분석 기록이 없습니다.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  container.innerHTML =
+    recent.map(record => {
+
+      const athlete =
+        getAthleteById(
+          record.athleteId
+        );
+
+
+      const exercise =
+        window.getExerciseById?.(
+          record.exerciseId
+        );
+
+
+      return `
+
+        <div class="recent-item">
+
+          <div>
+
+            <strong>
+              ${escapeHTML(exercise?.name || "-")}
+            </strong>
+
+            <span>
+              ${escapeHTML(athlete?.name || "-")}
+            </span>
+
+          </div>
+
+          <strong>
+            ${record.score}
+          </strong>
+
+        </div>
+
+      `;
+
+    }).join("");
+}
+
+
+/* =========================================================
+   PR
+========================================================= */
+
+function calculatePRCount(records) {
+
+  const best = new Map();
+
+
+  records.forEach(record => {
+
+    const key =
+      `${record.athleteId}_${record.exerciseId}`;
+
+
+    const previous =
+      best.get(key);
+
+
+    if (
+      !previous ||
+      record.score > previous
+    ) {
+
+      best.set(
+        key,
+        record.score
+      );
+
+    }
+
+  });
+
+
+  return best.size;
+}
+
+
+function renderDashboardPR(records) {
+
+  const container =
+    $("dashboardPRList");
+
+
+  if (!container) {
+    return;
+  }
+
+
+  const sorted =
+    [...records]
+      .sort(
+        (a, b) =>
+          b.score - a.score
+      )
+      .slice(0, 5);
+
+
+  if (!sorted.length) {
+
+    container.innerHTML = `
+      <div class="empty-state">
+        기록된 PR이 없습니다.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  container.innerHTML =
+    sorted.map(record => {
+
+      const exercise =
+        window.getExerciseById?.(
+          record.exerciseId
+        );
+
+
+      return `
+
+        <div class="recent-item">
+
+          <span>
+            ${escapeHTML(exercise?.name || "-")}
+          </span>
+
+          <strong>
+            ${record.score}
+          </strong>
+
+        </div>
+
+      `;
+
+    }).join("");
+}
+
+
+/* =========================================================
+   REPORT
+========================================================= */
+
+function refreshReportAthletes() {
+
+  populateAthleteSelect(
+    $("reportAthlete"),
+    APP_STATE.selectedAthleteId
+  );
+}
+
+
+/* =========================================================
+   CSV
+========================================================= */
+
+function exportCSV() {
+
+  const records =
+    getAnalysisRecords();
+
+
+  if (!records.length) {
+
+    showToast("저장할 기록이 없습니다.");
+
+    return;
+  }
+
+
+  const rows = [
+
+    [
+      "측정일",
+      "선수",
+      "운동",
+      "반복",
+      "점수",
+      "대칭성",
+      "ROM",
+      "안정성",
+      "기술"
+    ],
+
+    ...records.map(record => {
+
+      const athlete =
+        getAthleteById(
+          record.athleteId
+        );
+
+
+      const exercise =
+        window.getExerciseById?.(
+          record.exerciseId
+        );
+
+
+      return [
+
+        record.createdAt,
+
+        athlete?.name || "",
+
+        exercise?.name || "",
+
+        record.reps,
+
+        record.score,
+
+        record.symmetry,
+
+        record.rom,
+
+        record.stability,
+
+        record.technique
+
+      ];
+
+    })
+
+  ];
+
+
+  const csv =
+    "\uFEFF" +
+    rows
+      .map(row =>
+        row.map(value =>
+          `"${String(value)
+            .replaceAll('"', '""')}"`
+        ).join(",")
+      )
+      .join("\n");
+
+
+  const blob =
+    new Blob(
+      [csv],
+      {
+        type:
+          "text/csv;charset=utf-8;"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(blob);
+
+
+  const anchor =
+    document.createElement("a");
+
+
+  anchor.href = url;
+
+  anchor.download =
+    `weight-analysis-${Date.now()}.csv`;
+
+
+  anchor.click();
+
+
+  URL.revokeObjectURL(url);
+}
+
+
+/* =========================================================
+   BACKUP
+========================================================= */
+
+function backupData() {
+
+  const backup = {
+
+    version: "2.0",
+
+    exportedAt:
+      new Date().toISOString(),
+
+    athletes:
+      getAthletes(),
+
+    analyses:
+      getAnalysisRecords(),
+
+    programs:
+      loadJSON(
+        STORAGE_KEYS.programs,
+        []
+      ),
+
+    settings:
+      loadJSON(
+        STORAGE_KEYS.settings,
+        {}
+      )
+
+  };
+
+
+  const blob =
+    new Blob(
+      [
+        JSON.stringify(
+          backup,
+          null,
+          2
+        )
+      ],
+      {
+        type: "application/json"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(blob);
+
+
+  const anchor =
+    document.createElement("a");
+
+
+  anchor.href = url;
+
+  anchor.download =
+    `weight-lab-backup-${Date.now()}.json`;
+
+
+  anchor.click();
+
+
+  URL.revokeObjectURL(url);
+
+
+  showToast("데이터 백업 완료");
+}
+
+
+/* =========================================================
+   RESTORE
+========================================================= */
+
+function restoreData(event) {
+
+  const file =
+    event.target.files?.[0];
+
+
+  if (!file) {
+    return;
+  }
+
+
+  const reader =
+    new FileReader();
+
+
+  reader.onload = () => {
+
+    try {
+
+      const data =
+        JSON.parse(reader.result);
+
+
+      if (
+        Array.isArray(data.athletes)
+      ) {
+
+        saveJSON(
+          STORAGE_KEYS.athletes,
+          data.athletes
+        );
+
+      }
+
+
+      if (
+        Array.isArray(data.analyses)
+      ) {
+
+        saveJSON(
+          STORAGE_KEYS.analyses,
+          data.analyses
+        );
+
+      }
+
+
+      if (
+        Array.isArray(data.programs)
+      ) {
+
+        saveJSON(
+          STORAGE_KEYS.programs,
+          data.programs
+        );
+
+      }
+
+
+      if (data.settings) {
+
+        saveJSON(
+          STORAGE_KEYS.settings,
+          data.settings
+        );
+
+      }
+
+
+      refreshAll();
+
+
+      showToast("데이터 복원 완료");
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      showToast(
+        "올바른 백업 파일이 아닙니다."
+      );
+
+    }
+
+  };
+
+
+  reader.readAsText(file);
+}
+
+
+/* =========================================================
+   CLEAR
+========================================================= */
+
+function clearAllData() {
+
+  const confirmed =
+    confirm(
+      "선수, 분석 기록, 프로그램을 모두 삭제할까요?"
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  Object.values(STORAGE_KEYS)
+    .forEach(key => {
+
+      localStorage.removeItem(key);
+
+    });
+
+
+  APP_STATE.selectedAthleteId = null;
+
+  APP_STATE.selectedExerciseId = null;
+
+  APP_STATE.programExercises = [];
+
+
+  refreshAll();
+
+
+  showToast("모든 데이터가 초기화되었습니다.");
+}
+
+
+/* =========================================================
+   SET TEXT
+========================================================= */
+
+function setText(id, value) {
+
+  const element = $(id);
+
+  if (element) {
+
+    element.textContent = value;
+
+  }
+}
+
+
+/* =========================================================
+   REFRESH ALL
+========================================================= */
+
+function refreshAll() {
+
+  refreshAllAthleteSelectors();
+
+  renderAthletes();
+
+  renderExercises();
+
+  renderRecords();
+
+  renderProgramExercises();
+
+  refreshDashboard();
+}
+
+
+/* =========================================================
+   GLOBAL CLICK HANDLER
+========================================================= */
+
+document.addEventListener(
+  "click",
+  event => {
+
+    const nav =
+      event.target.closest(
+        "[data-page]"
+      );
+
+
+    if (nav) {
+
+      openPage(
+        nav.dataset.page
+      );
+
+      return;
+    }
+
+
+    const pageTarget =
+      event.target.closest(
+        "[data-page-target]"
+      );
+
+
+    if (pageTarget) {
+
+      openPage(
+        pageTarget.dataset.pageTarget
+      );
+
+      return;
+    }
+
+
+    const detail =
+      event.target.closest(
+        "[data-exercise-detail]"
+      );
+
+
+    if (detail) {
+
+      openExerciseModal(
+        detail.dataset.exerciseDetail
+      );
+
+      return;
+    }
+
+
+    const analyze =
+      event.target.closest(
+        "[data-exercise-analyze]"
+      );
+
+
+    if (analyze) {
+
+      analyzeExercise(
+        analyze.dataset.exerciseAnalyze
+      );
+
+      return;
+    }
+
+
+    const athleteSelect =
+      event.target.closest(
+        "[data-athlete-select]"
+      );
+
+
+    if (athleteSelect) {
+
+      selectAthlete(
+        athleteSelect.dataset.athleteSelect
+      );
+
+      return;
+    }
+
+
+    const athleteAnalyze =
+      event.target.closest(
+        "[data-athlete-analyze]"
+      );
+
+
+    if (athleteAnalyze) {
+
+      selectAthlete(
+        athleteAnalyze.dataset.athleteAnalyze
+      );
+
+      openPage("analysis");
+
+      return;
+    }
+
+
+    const athleteDelete =
+      event.target.closest(
+        "[data-athlete-delete]"
+      );
+
+
+    if (athleteDelete) {
+
+      deleteAthlete(
+        athleteDelete.dataset.athleteDelete
+      );
+
+      return;
+    }
+
+
+    const programDelete =
+      event.target.closest(
+        "[data-program-delete]"
+      );
+
+
+    if (programDelete) {
+
+      deleteProgramExercise(
+        programDelete.dataset.programDelete
+      );
+
+      return;
+    }
+
+
+    const recordOpen =
+      event.target.closest(
+        "[data-record-open]"
+      );
+
+
+    if (recordOpen) {
+
+      openRecordDetail(
+        recordOpen.dataset.recordOpen
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   INITIAL EVENT LISTENERS
+========================================================= */
+
+function bindEvents() {
+
+  /* MOBILE */
+
+  $("mobileMenuBtn")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        $("sidebar")
+          ?.classList.toggle(
+            "mobile-open"
+          );
+
+      }
+    );
+
+
+  /* ATHLETE */
+
+  $("athleteForm")
+    ?.addEventListener(
+      "submit",
+      createAthlete
+    );
+
+
+  $("athleteSearch")
+    ?.addEventListener(
+      "input",
+      renderAthletes
+    );
+
+
+  /* EXERCISE */
+
+  $("exerciseSearch")
+    ?.addEventListener(
+      "input",
+      renderExercises
+    );
+
+
+  $("equipmentFilter")
+    ?.addEventListener(
+      "change",
+      renderExercises
+    );
+
+
+  queryAll(".category-tab")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          APP_STATE.currentCategory =
+            button.dataset.category;
+
+
+          queryAll(".category-tab")
+            .forEach(item => {
+
+              item.classList.remove(
+                "active"
+              );
+
+            });
+
+
+          button.classList.add(
+            "active"
+          );
+
+
+          renderExercises();
+
+        }
+      );
+
+    });
+
+
+  $("closeExerciseModal")
+    ?.addEventListener(
+      "click",
+      closeExerciseModal
+    );
+
+
+  $("analyzeSelectedExerciseBtn")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        if (
+          APP_STATE.selectedExerciseId
+        ) {
+
+          analyzeExercise(
+            APP_STATE.selectedExerciseId
+          );
+
+        }
+
+      }
+    );
+
+
+  /* ANALYSIS */
+
+  $("analysisAthlete")
+    ?.addEventListener(
+      "change",
+      event => {
+
+        APP_STATE.selectedAthleteId =
+          event.target.value || null;
+
+      }
+    );
+
+
+  $("analysisExercise")
+    ?.addEventListener(
+      "change",
+      applySelectedExercise
+    );
+
+
+  queryAll(".view-button")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          APP_STATE.cameraView =
+            button.dataset.view;
+
+
+          queryAll(".view-button")
+            .forEach(item => {
+
+              item.classList.remove(
+                "active"
+              );
+
+            });
+
+
+          button.classList.add(
+            "active"
+          );
+
+        }
+      );
+
+    });
+
+
+  queryAll(".mode-button")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          APP_STATE.analysisMode =
+            button.dataset.analysisMode;
+
+
+          queryAll(".mode-button")
+            .forEach(item => {
+
+              item.classList.remove(
+                "active"
+              );
+
+            });
+
+
+          button.classList.add(
+            "active"
+          );
+
+        }
+      );
+
+    });
+
+
+  $("connectCameraBtn")
+    ?.addEventListener(
+      "click",
+      connectCamera
+    );
+
+
+  $("switchCameraBtn")
+    ?.addEventListener(
+      "click",
+      switchCamera
+    );
+
+
+  $("analysisVideoUpload")
+    ?.addEventListener(
+      "change",
+      handleVideoUpload
+    );
+
+
+  $("analysisImageUpload")
+    ?.addEventListener(
+      "change",
+      handleImageUpload
+    );
+
+
+  $("startAnalysisBtn")
+    ?.addEventListener(
+      "click",
+      startAnalysis
+    );
+
+
+  $("stopAnalysisBtn")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        finishAnalysis({
+          auto: false
+        });
+
+      }
+    );
+
+
+  $("playPauseBtn")
+    ?.addEventListener(
+      "click",
+      togglePlayPause
+    );
+
+
+  $("frameBackBtn")
+    ?.addEventListener(
+      "click",
+      () => moveFrame(-1)
+    );
+
+
+  $("frameForwardBtn")
+    ?.addEventListener(
+      "click",
+      () => moveFrame(1)
+    );
+
+
+  $("playbackSpeed")
+    ?.addEventListener(
+      "change",
+      changePlaybackSpeed
+    );
+
+
+  $("toggleSkeletonBtn")
+    ?.addEventListener(
+      "click",
+      toggleSkeleton
+    );
+
+
+  $("toggleReferenceBtn")
+    ?.addEventListener(
+      "click",
+      toggleReference
+    );
+
+
+  $("toggleBarPathBtn")
+    ?.addEventListener(
+      "click",
+      toggleBarPath
+    );
+
+
+  /* RECORD */
+
+  $("recordAthleteFilter")
+    ?.addEventListener(
+      "change",
+      renderRecords
+    );
+
+
+  $("recordExerciseFilter")
+    ?.addEventListener(
+      "change",
+      renderRecords
+    );
+
+
+  $("recordSearch")
+    ?.addEventListener(
+      "input",
+      renderRecords
+    );
+
+
+  $("exportCSVBtn")
+    ?.addEventListener(
+      "click",
+      exportCSV
+    );
+
 
   $("closeRecordModal")
     ?.addEventListener(
@@ -5902,32 +4613,185 @@ function initializeModals() {
       () => {
 
         $("recordModal")
-          ?.classList.remove(
-            "open"
-          );
+          ?.classList.remove("open");
 
       }
     );
 
 
-  $("closeExerciseModal")
+  /* PROGRAM */
+
+  $("addProgramExerciseBtn")
+    ?.addEventListener(
+      "click",
+      addProgramExercise
+    );
+
+
+  $("saveProgramBtn")
+    ?.addEventListener(
+      "click",
+      saveProgram
+    );
+
+
+  /* REPORT */
+
+  $("generateReportBtn")
     ?.addEventListener(
       "click",
       () => {
 
-        $("exerciseModal")
-          ?.classList.remove(
-            "open"
+        const athleteId =
+          $("reportAthlete")?.value;
+
+
+        if (!athleteId) {
+
+          showToast(
+            "선수를 선택하세요."
           );
+
+          return;
+        }
+
+
+        APP_STATE.selectedAthleteId =
+          athleteId;
+
+
+        if (
+          typeof window.generateAthleteReport ===
+          "function"
+        ) {
+
+          window.generateAthleteReport(
+            athleteId
+          );
+
+        } else {
+
+          showToast(
+            "리포트 엔진 연결 대기"
+          );
+
+        }
 
       }
     );
 
 
-  document
-    .querySelectorAll(
-      ".modal"
-    )
+  $("printReportBtn")
+    ?.addEventListener(
+      "click",
+      () => window.print()
+    );
+
+
+  /* SETTINGS */
+
+  $("backupDataBtn")
+    ?.addEventListener(
+      "click",
+      backupData
+    );
+
+
+  $("restoreDataInput")
+    ?.addEventListener(
+      "change",
+      restoreData
+    );
+
+
+  $("clearDataBtn")
+    ?.addEventListener(
+      "click",
+      clearAllData
+    );
+
+
+  $("settingSkeleton")
+    ?.addEventListener(
+      "change",
+      event => {
+
+        APP_STATE.skeletonVisible =
+          event.target.checked;
+
+
+        const canvas =
+          $("poseCanvas");
+
+
+        if (canvas) {
+
+          canvas.style.display =
+            APP_STATE.skeletonVisible
+              ? ""
+              : "none";
+
+        }
+
+      }
+    );
+
+
+  $("settingReference")
+    ?.addEventListener(
+      "change",
+      event => {
+
+        APP_STATE.referenceVisible =
+          event.target.checked;
+
+
+        [
+          $("referenceVertical"),
+          $("referenceHorizontal")
+        ].forEach(element => {
+
+          if (element) {
+
+            element.style.display =
+              APP_STATE.referenceVisible
+                ? ""
+                : "none";
+
+          }
+
+        });
+
+      }
+    );
+
+
+  $("settingBarPath")
+    ?.addEventListener(
+      "change",
+      event => {
+
+        APP_STATE.barPathVisible =
+          event.target.checked;
+
+
+        if ($("barPathCanvas")) {
+
+          $("barPathCanvas")
+            .style.display =
+            APP_STATE.barPathVisible
+              ? ""
+              : "none";
+
+        }
+
+      }
+    );
+
+
+  /* MODAL BACKGROUND */
+
+  queryAll(".modal")
     .forEach(modal => {
 
       modal.addEventListener(
@@ -5948,2061 +4812,54 @@ function initializeModals() {
       );
 
     });
+
 }
 
 
 /* =========================================================
-   81. TRAINING PROGRAM EXERCISE SELECT
+   EXPOSE TO ANALYSIS ENGINE
 ========================================================= */
 
-function populateProgramExerciseSelect() {
-
-  const select =
-    $("programExercise");
-
-  if (!select) return;
+window.registerRep =
+  registerRep;
 
 
-  const list =
-    typeof EXERCISES !==
-      "undefined"
-
-      ? EXERCISES
-
-      : (
-          typeof exercises !==
-            "undefined"
-            ? exercises
-            : []
-        );
+window.finishAnalysis =
+  finishAnalysis;
 
 
-  select.innerHTML = `
-    <option value="">
-      운동 선택
-    </option>
+window.getWeightLabState =
+  () => APP_STATE;
 
-    ${list
-      .map(
-        exercise => `
-          <option value="${exercise.id}">
-            ${exercise.name}
-          </option>
-        `
-      )
-      .join("")}
-  `;
-}
+
+window.getWeightLabAthletes =
+  getAthletes;
+
+
+window.getWeightLabAnalysisRecords =
+  getAnalysisRecords;
+
+
+window.openWeightLabPage =
+  openPage;
 
 
 /* =========================================================
-   82. PROGRAM BUILDER
+   INITIALIZE
 ========================================================= */
 
-function renderProgramBuilder() {
-
-  populateProgramExerciseSelect();
-
-  renderCurrentProgram();
-}
-
-
-/* =========================================================
-   83. ADD PROGRAM EXERCISE
-
-   ★ 기존 훈련 프로그램 안 되던 부분 수정
-========================================================= */
-
-function addProgramExercise() {
-
-  const exerciseId =
-    $("programExercise")?.value;
-
-
-  if (!exerciseId) {
-
-    showToast(
-      "운동을 선택하세요."
-    );
-
-    return;
-  }
-
-
-  const list =
-    typeof EXERCISES !==
-      "undefined"
-
-      ? EXERCISES
-
-      : (
-          typeof exercises !==
-            "undefined"
-            ? exercises
-            : []
-        );
-
-
-  const exercise =
-    list.find(
-      item =>
-        String(item.id) ===
-        String(exerciseId)
-    );
-
-
-  if (!exercise) {
-
-    showToast(
-      "운동 정보를 찾지 못했습니다."
-    );
-
-    return;
-  }
-
-
-  const sets =
-    Math.max(
-      1,
-      Number(
-        $("programSets")?.value
-      ) || 1
-    );
-
-
-  const reps =
-    Math.max(
-      1,
-      Number(
-        $("programReps")?.value
-      ) || 1
-    );
-
-
-  const weight =
-    Math.max(
-      0,
-      Number(
-        $("programWeight")?.value
-      ) || 0
-    );
-
-
-  const rest =
-    Math.max(
-      0,
-      Number(
-        $("programRest")?.value
-      ) || 0
-    );
-
-
-  APP_STATE
-    .currentProgramExercises
-    .push({
-
-      id:
-        createId("programExercise"),
-
-      exerciseId:
-        exercise.id,
-
-      name:
-        exercise.name,
-
-      pictogram:
-        exercise.pictogram || "🏋",
-
-      category:
-        exercise.category || "",
-
-      sets,
-
-      reps,
-
-      weight,
-
-      rest
-
-    });
-
-
-  renderCurrentProgram();
-
-
-  showToast(
-    `${exercise.name} 추가`
-  );
-}
-
-
-/* =========================================================
-   84. RENDER CURRENT PROGRAM
-========================================================= */
-
-function renderCurrentProgram() {
-
-  const container =
-    $("programExerciseList");
-
-
-  if (!container) return;
-
-
-  const list =
-    APP_STATE
-      .currentProgramExercises;
-
-
-  if (!list.length) {
-
-    container.innerHTML = `
-      <div class="empty-state">
-        추가된 운동이 없습니다.
-      </div>
-    `;
-
-  } else {
-
-    container.innerHTML =
-      list
-        .map(
-          (item, index) => {
-
-            const volume =
-              item.sets *
-              item.reps *
-              item.weight;
-
-
-            return `
-              <div class="program-row">
-
-                <div class="program-order">
-                  ${index + 1}
-                </div>
-
-                <div class="program-icon">
-                  ${item.pictogram}
-                </div>
-
-                <div class="program-info">
-
-                  <strong>
-                    ${item.name}
-                  </strong>
-
-                  <span>
-                    ${item.sets}세트 ×
-                    ${item.reps}회 ·
-                    ${item.weight}kg
-                  </span>
-
-                  <small>
-                    휴식 ${item.rest}초 ·
-                    볼륨 ${volume.toLocaleString()}kg
-                  </small>
-
-                </div>
-
-                <button
-                  type="button"
-                  class="program-delete"
-                  data-program-delete="${item.id}"
-                >
-                  ×
-                </button>
-
-              </div>
-            `;
-
-          }
-        )
-        .join("");
-
-
-    container
-      .querySelectorAll(
-        "[data-program-delete]"
-      )
-      .forEach(
-        button => {
-
-          button.addEventListener(
-            "click",
-            () => {
-
-              removeProgramExercise(
-                button.dataset.programDelete
-              );
-
-            }
-          );
-
-        }
-      );
-  }
-
-
-  updateProgramSummary();
-}
-
-
-/* =========================================================
-   85. REMOVE PROGRAM EXERCISE
-========================================================= */
-
-function removeProgramExercise(
-  id
-) {
-
-  APP_STATE.currentProgramExercises =
-    APP_STATE
-      .currentProgramExercises
-      .filter(
-        item =>
-          item.id !== id
-      );
-
-
-  renderCurrentProgram();
-}
-
-
-/* =========================================================
-   86. PROGRAM SUMMARY
-========================================================= */
-
-function updateProgramSummary() {
-
-  const list =
-    APP_STATE
-      .currentProgramExercises;
-
-
-  const exerciseCount =
-    list.length;
-
-
-  const totalSets =
-    list.reduce(
-      (sum, item) =>
-        sum + item.sets,
-      0
-    );
-
-
-  const totalVolume =
-    list.reduce(
-      (sum, item) =>
-        sum +
-        (
-          item.sets *
-          item.reps *
-          item.weight
-        ),
-      0
-    );
-
-
-  if ($("programExerciseCount")) {
-
-    $("programExerciseCount")
-      .textContent =
-      exerciseCount;
-
-  }
-
-
-  if ($("programTotalSets")) {
-
-    $("programTotalSets")
-      .textContent =
-      totalSets;
-
-  }
-
-
-  if ($("programTotalVolume")) {
-
-    $("programTotalVolume")
-      .textContent =
-      `${totalVolume.toLocaleString()} kg`;
-
-  }
-}
-
-
-/* =========================================================
-   87. SAVE TRAINING PROGRAM
-========================================================= */
-
-function saveTrainingProgram() {
-
-  const athleteId =
-    $("programAthlete")?.value;
-
-
-  if (!athleteId) {
-
-    showToast(
-      "선수를 선택하세요."
-    );
-
-    return;
-  }
-
-
-  if (
-    !APP_STATE
-      .currentProgramExercises
-      .length
-  ) {
-
-    showToast(
-      "운동을 1개 이상 추가하세요."
-    );
-
-    return;
-  }
-
-
-  const athlete =
-    athletes.find(
-      item =>
-        item.id === athleteId
-    );
-
-
-  if (!athlete) return;
-
-
-  const name =
-    $("programName")
-      ?.value
-      .trim() ||
-    `${athlete.name} 웨이트 프로그램`;
-
-
-  const program = {
-
-    id:
-      createId("program"),
-
-    athleteId,
-
-    athleteName:
-      athlete.name,
-
-    name,
-
-    createdAt:
-      new Date().toISOString(),
-
-    exercises:
-      APP_STATE
-        .currentProgramExercises
-        .map(
-          item => ({
-            ...item
-          })
-        )
-
-  };
-
-
-  trainingPrograms.unshift(
-    program
-  );
-
-
-  saveData(
-    STORAGE.programs,
-    trainingPrograms
-  );
-
-
-  APP_STATE.currentProgramExercises =
-    [];
-
-
-  if ($("programName")) {
-    $("programName").value = "";
-  }
-
-
-  renderCurrentProgram();
-
-
-  showToast(
-    "훈련 프로그램 저장 완료"
-  );
-}
-
-
-/* =========================================================
-   88. PROGRAM EVENTS
-========================================================= */
-
-function initializeProgramEvents() {
-
-  $("addProgramExerciseBtn")
-    ?.addEventListener(
-      "click",
-      addProgramExercise
-    );
-
-
-  $("saveProgramBtn")
-    ?.addEventListener(
-      "click",
-      saveTrainingProgram
-    );
-}
-
-
-/* =========================================================
-   89. CSV EXPORT
-========================================================= */
-
-function exportRecordsCSV() {
-
-  if (
-    !analysisRecords.length
-  ) {
-
-    showToast(
-      "저장할 분석 기록이 없습니다."
-    );
-
-    return;
-  }
-
-
-  const rows = [
-
-    [
-      "측정일",
-      "선수",
-      "운동",
-      "반복",
-      "점수",
-      "대칭성",
-      "안정성",
-      "가동성",
-      "기술",
-      "무릎각도",
-      "고관절각도",
-      "몸통각도",
-      "발목각도"
-    ],
-
-    ...analysisRecords.map(
-      record => [
-
-        formatDate(
-          record.createdAt
-        ),
-
-        record.athleteName,
-
-        record.exerciseName,
-
-        record.reps,
-
-        record.score,
-
-        record.symmetry,
-
-        record.stability,
-
-        record.mobility,
-
-        record.technique,
-
-        record.knee,
-
-        record.hip,
-
-        record.trunk,
-
-        record.ankle
-
-      ]
-    )
-
-  ];
-
-
-  const csv =
-    rows
-      .map(
-        row =>
-          row
-            .map(
-              value =>
-                `"${String(value ?? "")
-                  .replaceAll(
-                    '"',
-                    '""'
-                  )}"`
-            )
-            .join(",")
-      )
-      .join("\n");
-
-
-  downloadTextFile(
-    "\uFEFF" + csv,
-    "seolcheon_weight_analysis.csv",
-    "text/csv;charset=utf-8"
-  );
-
-
-  showToast(
-    "CSV 저장 완료"
-  );
-}
-
-
-/* =========================================================
-   90. DOWNLOAD TEXT FILE
-========================================================= */
-
-function downloadTextFile(
-  content,
-  filename,
-  type
-) {
-
-  const blob =
-    new Blob(
-      [content],
-      {
-        type
-      }
-    );
-
-
-  const url =
-    URL.createObjectURL(
-      blob
-    );
-
-
-  const link =
-    document.createElement(
-      "a"
-    );
-
-
-  link.href = url;
-
-  link.download = filename;
-
-
-  document.body.appendChild(
-    link
-  );
-
-
-  link.click();
-
-  link.remove();
-
-
-  setTimeout(
-    () =>
-      URL.revokeObjectURL(
-        url
-      ),
-    1000
-  );
-}
-
-
-/* =========================================================
-   91. DATA BACKUP
-========================================================= */
-
-function backupData() {
-
-  const backup = {
-
-    version: "2.0",
-
-    generatedAt:
-      new Date().toISOString(),
-
-    athletes,
-
-    analysisRecords,
-
-    trainingPrograms,
-
-    settings:
-      loadData(
-        STORAGE.settings,
-        {}
-      )
-
-  };
-
-
-  downloadTextFile(
-
-    JSON.stringify(
-      backup,
-      null,
-      2
-    ),
-
-    "seolcheon_weight_lab_backup.json",
-
-    "application/json"
-
-  );
-
-
-  showToast(
-    "데이터 백업 완료"
-  );
-}
-
-
-/* =========================================================
-   92. RESTORE DATA
-========================================================= */
-
-function initializeRestoreData() {
-
-  $("restoreDataInput")
-    ?.addEventListener(
-      "change",
-      event => {
-
-        const file =
-          event.target.files?.[0];
-
-
-        if (!file) return;
-
-
-        const reader =
-          new FileReader();
-
-
-        reader.onload =
-          () => {
-
-            try {
-
-              const data =
-                JSON.parse(
-                  reader.result
-                );
-
-
-              if (
-                !Array.isArray(
-                  data.athletes
-                )
-              ) {
-
-                throw new Error(
-                  "invalid backup"
-                );
-              }
-
-
-              athletes =
-                data.athletes ||
-                [];
-
-
-              analysisRecords =
-                data.analysisRecords ||
-                [];
-
-
-              trainingPrograms =
-                data.trainingPrograms ||
-                [];
-
-
-              saveData(
-                STORAGE.athletes,
-                athletes
-              );
-
-
-              saveData(
-                STORAGE.records,
-                analysisRecords
-              );
-
-
-              saveData(
-                STORAGE.programs,
-                trainingPrograms
-              );
-
-
-              if (
-                data.settings
-              ) {
-
-                saveData(
-                  STORAGE.settings,
-                  data.settings
-                );
-
-              }
-
-
-              populateAllAthleteSelects();
-
-              renderAthleteList();
-
-              renderRecords();
-
-              renderDashboard();
-
-              showToast(
-                "데이터 복원 완료"
-              );
-
-
-            } catch (error) {
-
-              console.error(
-                error
-              );
-
-
-              showToast(
-                "백업 파일을 읽을 수 없습니다."
-              );
-
-            }
-
-          };
-
-
-        reader.readAsText(
-          file
-        );
-
-      }
-    );
-}
-
-
-/* =========================================================
-   93. CLEAR DATA
-========================================================= */
-
-function clearAllData() {
-
-  const confirmed =
-    confirm(
-      "선수·분석·훈련 프로그램 데이터를 모두 초기화할까요?"
-    );
-
-
-  if (!confirmed) return;
-
-
-  athletes = [];
-
-  analysisRecords = [];
-
-  trainingPrograms = [];
-
-
-  APP_STATE.selectedAthleteId =
-    null;
-
-
-  APP_STATE.currentProgramExercises =
-    [];
-
-
-  localStorage.removeItem(
-    STORAGE.athletes
-  );
-
-  localStorage.removeItem(
-    STORAGE.records
-  );
-
-  localStorage.removeItem(
-    STORAGE.programs
-  );
-
-
-  populateAllAthleteSelects();
-
-  renderAthleteList();
-
-  renderRecords();
-
-  renderCurrentProgram();
-
-  renderDashboard();
-
-
-  showToast(
-    "모든 데이터 초기화 완료"
-  );
-}
-
-
-/* =========================================================
-   94. SETTINGS
-========================================================= */
-
-function initializeSettings() {
-
-  const saved =
-    loadData(
-      STORAGE.settings,
-      {
-        skeleton: true,
-        angles: true,
-        reference: true,
-        barPath: true
-      }
-    );
-
-
-  APP_STATE.skeletonVisible =
-    saved.skeleton !== false;
-
-
-  APP_STATE.referenceVisible =
-    saved.reference !== false;
-
-
-  APP_STATE.barPathVisible =
-    saved.barPath !== false;
-
-
-  if ($("settingSkeleton")) {
-
-    $("settingSkeleton").checked =
-      APP_STATE.skeletonVisible;
-
-  }
-
-
-  if ($("settingReference")) {
-
-    $("settingReference").checked =
-      APP_STATE.referenceVisible;
-
-  }
-
-
-  if ($("settingBarPath")) {
-
-    $("settingBarPath").checked =
-      APP_STATE.barPathVisible;
-
-  }
-
-
-  const saveSettings =
-    () => {
-
-      const settings = {
-
-        skeleton:
-          $("settingSkeleton")
-            ?.checked ?? true,
-
-        angles:
-          $("settingAngles")
-            ?.checked ?? true,
-
-        reference:
-          $("settingReference")
-            ?.checked ?? true,
-
-        barPath:
-          $("settingBarPath")
-            ?.checked ?? true
-
-      };
-
-
-      APP_STATE.skeletonVisible =
-        settings.skeleton;
-
-
-      APP_STATE.referenceVisible =
-        settings.reference;
-
-
-      APP_STATE.barPathVisible =
-        settings.barPath;
-
-
-      saveData(
-        STORAGE.settings,
-        settings
-      );
-
-
-      updateReferenceLines();
-
-
-      if (
-        APP_STATE.latestLandmarks
-      ) {
-
-        drawPoseSkeleton(
-          APP_STATE.latestLandmarks
-        );
-
-      }
-
-
-      drawBarPath();
-
-    };
-
-
-  [
-    "settingSkeleton",
-    "settingAngles",
-    "settingReference",
-    "settingBarPath"
-  ]
-    .forEach(id => {
-
-      $(id)
-        ?.addEventListener(
-          "change",
-          saveSettings
-        );
-
-    });
-
-
-  updateReferenceLines();
-}
-
-
-/* =========================================================
-   95. REPORT RADAR
-========================================================= */
-
-let reportRadarChart = null;
-
-
-function initializeReportRadar() {
-
-  const canvas =
-    $("reportRadarChart");
-
-
-  if (
-    !canvas ||
-    typeof Chart ===
-      "undefined"
-  ) {
-    return;
-  }
-
-
-  reportRadarChart =
-    new Chart(
-      canvas,
-      {
-
-        type: "radar",
-
-        data: {
-
-          labels: [
-            "근력",
-            "파워",
-            "안정성",
-            "대칭성",
-            "가동성",
-            "기술"
-          ],
-
-          datasets: [
-
-            {
-
-              data: [
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-
-              borderWidth: 2,
-
-              pointRadius: 3
-
-            }
-
-          ]
-
-        },
-
-        options: {
-
-          responsive: true,
-
-          maintainAspectRatio: false,
-
-          scales: {
-
-            r: {
-
-              min: 0,
-
-              max: 100,
-
-              ticks: {
-                display: false
-              }
-
-            }
-
-          },
-
-          plugins: {
-
-            legend: {
-              display: false
-            }
-
-          }
-
-        }
-
-      }
-    );
-}
-
-
-/* =========================================================
-   96. GENERATE REPORT
-========================================================= */
-
-function generateReport() {
-
-  const athleteId =
-    $("reportAthlete")?.value;
-
-
-  if (!athleteId) {
-
-    showToast(
-      "선수를 선택하세요."
-    );
-
-    return;
-  }
-
-
-  const athlete =
-    athletes.find(
-      item =>
-        item.id === athleteId
-    );
-
-
-  if (!athlete) return;
-
-
-  const records =
-    analysisRecords.filter(
-      record =>
-        record.athleteId ===
-        athleteId
-    );
-
-
-  const latest =
-    records[0];
-
-
-  $("reportGeneratedDate")
-    .textContent =
-    new Date()
-      .toLocaleString(
-        "ko-KR"
-      );
-
-
-  $("reportAthleteName")
-    .textContent =
-    athlete.name;
-
-
-  $("reportSport")
-    .textContent =
-    athlete.sport || "-";
-
-
-  $("reportHeight")
-    .textContent =
-    athlete.height
-      ? `${athlete.height} cm`
-      : "-";
-
-
-  $("reportWeight")
-    .textContent =
-    athlete.weight
-      ? `${athlete.weight} kg`
-      : "-";
-
-
-  if (!latest) {
-
-    $("reportOverallScore")
-      .textContent =
-      "--";
-
-
-    $("reportExerciseName")
-      .textContent =
-      "운동 분석 기록 없음";
-
-
-    $("reportExerciseCategory")
-      .textContent =
-      "-";
-
-
-    $("reportExercisePictogram")
-      .textContent =
-      "🏋";
-
-
-    $("reportRecommendations")
-      .innerHTML =
-      "분석 결과가 없습니다.";
-
-
-    showToast(
-      "해당 선수의 분석 기록이 없습니다."
-    );
-
-    return;
-  }
-
-
-  $("reportOverallScore")
-    .textContent =
-    latest.score;
-
-
-  $("reportExerciseName")
-    .textContent =
-    latest.exerciseName;
-
-
-  $("reportExerciseCategory")
-    .textContent =
-    categoryLabel(
-      latest.category
-    );
-
-
-  $("reportExercisePictogram")
-    .textContent =
-    latest.pictogram || "🏋";
-
-
-  $("reportStrength")
-    .textContent =
-    latest.strength;
-
-
-  $("reportPower")
-    .textContent =
-    latest.power;
-
-
-  $("reportStability")
-    .textContent =
-    latest.stability;
-
-
-  $("reportSymmetry")
-    .textContent =
-    latest.symmetry;
-
-
-  $("reportMobility")
-    .textContent =
-    latest.mobility;
-
-
-  $("reportTechnique")
-    .textContent =
-    latest.technique;
-
-
-  if (
-    reportRadarChart
-  ) {
-
-    reportRadarChart
-      .data
-      .datasets[0]
-      .data = [
-
-        latest.strength,
-
-        latest.power,
-
-        latest.stability,
-
-        latest.symmetry,
-
-        latest.mobility,
-
-        latest.technique
-
-      ];
-
-
-    reportRadarChart.update();
-
-  }
-
-
-  const frame =
-    $("reportAnalysisFrame");
-
-
-  if (
-    latest.snapshot
-  ) {
-
-    frame.innerHTML = `
-      <img
-        src="${latest.snapshot}"
-        alt="${latest.exerciseName} 자세 분석"
-        class="report-analysis-image"
-      />
-    `;
-
-  } else {
-
-    frame.innerHTML = `
-      <div class="report-frame-placeholder">
-
-        <div class="report-frame-icon">
-          ${latest.pictogram || "🏋"}
-        </div>
-
-        <strong>
-          ${latest.exerciseName}
-        </strong>
-
-        <span>
-          자세 분석 대표 장면
-        </span>
-
-      </div>
-    `;
-
-  }
-
-
-  const recommendations =
-    latest.recommendations || [];
-
-
-  $("reportRecommendations")
-    .innerHTML =
-    recommendations.length
-
-      ? recommendations
-          .map(
-            (item, index) => `
-              <div class="report-recommendation-row">
-
-                <strong>
-                  ${index + 1}.
-                  ${item.name}
-                </strong>
-
-                <span>
-                  ${item.reason}
-                </span>
-
-              </div>
-            `
-          )
-          .join("")
-
-      : "권장 훈련 없음";
-
-
-  showToast(
-    "선수 리포트 생성 완료"
-  );
-}
-
-
-/* =========================================================
-   97. CATEGORY LABEL
-========================================================= */
-
-function categoryLabel(
-  category
-) {
-
-  const map = {
-
-    lower: "하체",
-    chest: "가슴",
-    back: "등",
-    shoulder: "어깨",
-    arms: "팔",
-    core: "코어",
-
-    olympic:
-      "올림픽 리프팅",
-
-    power: "파워",
-
-    plyometric:
-      "플라이오메트릭",
-
-    functional:
-      "기능성",
-
-    mobility:
-      "보강 · 가동성",
-
-    fullbody:
-      "전신",
-
-    bodyweight:
-      "맨몸"
-
-  };
-
-
-  return (
-    map[category] ||
-    category ||
-    "-"
-  );
-}
-
-
-/* =========================================================
-   98. REPORT EVENTS
-========================================================= */
-
-function initializeReportEvents() {
-
-  $("generateReportBtn")
-    ?.addEventListener(
-      "click",
-      generateReport
-    );
-
-
-  $("printReportBtn")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        window.print();
-
-      }
-    );
-}
-
-
-/* =========================================================
-   99. ANALYSIS EXERCISE CHANGE
-========================================================= */
-
-function initializeAnalysisExerciseChange() {
-
-  $("analysisExercise")
-    ?.addEventListener(
-      "change",
-      () => {
-
-        const exercise =
-          getCurrentExercise();
-
-
-        if (!exercise) {
-
-          $("motionAnalysisTitle")
-            .textContent =
-            "자세 분석";
-
-          return;
-        }
-
-
-        $("motionAnalysisTitle")
-          .textContent =
-          `${exercise.name} 자세 분석`;
-
-
-        updateExerciseCheckpoints(
-          exercise
-        );
-
-      }
-    );
-}
-
-
-/* =========================================================
-   100. CHECKPOINTS
-========================================================= */
-
-function updateExerciseCheckpoints(
-  exercise
-) {
-
-  const container =
-    $("checkpointList");
-
-
-  if (!container) return;
-
-
-  let checkpoints =
-    exercise.checkpoints ||
-    exercise.analysisPoints ||
-    [];
-
-
-  if (
-    typeof checkpoints ===
-    "string"
-  ) {
-
-    checkpoints =
-      checkpoints
-        .split(",")
-        .map(
-          item =>
-            item.trim()
-        )
-        .filter(Boolean);
-
-  }
-
-
-  if (
-    !checkpoints.length
-  ) {
-
-    checkpoints = [
-
-      "좌우 관절 대칭 확인",
-
-      "몸통 안정성 유지",
-
-      "주요 관절 가동범위 확인",
-
-      "동작 속도와 반복 일관성 확인",
-
-      "관절 정렬과 중심 이동 확인"
-
-    ];
-  }
-
-
-  container.innerHTML =
-    checkpoints
-      .map(
-        checkpoint => `
-          <div class="checkpoint-row">
-
-            <span>
-              ${checkpoint}
-            </span>
-
-            <strong>
-              CHECK
-            </strong>
-
-          </div>
-        `
-      )
-      .join("");
-}
-
-
-/* =========================================================
-   101. TARGET REPS
-========================================================= */
-
-function initializeTargetReps() {
-
-  $("analysisTargetReps")
-    ?.addEventListener(
-      "input",
-      event => {
-
-        const value =
-          Math.max(
-            1,
-            Number(
-              event.target.value
-            ) || 1
-          );
-
-
-        if ($("targetRepCount")) {
-
-          $("targetRepCount")
-            .textContent =
-            value;
-
-        }
-
-      }
-    );
-}
-
-
-/* =========================================================
-   102. GLOBAL RESIZE
-========================================================= */
-
-function initializeResize() {
-
-  window.addEventListener(
-    "resize",
-    () => {
-
-      resizePoseCanvas();
-
-
-      if (
-        APP_STATE.latestLandmarks
-      ) {
-
-        drawPoseSkeleton(
-          APP_STATE.latestLandmarks
-        );
-
-      }
-
-
-      drawBarPath();
-
-    }
-  );
-}
-
-
-/* =========================================================
-   103. VISIBILITY CHANGE
-========================================================= */
-
-function initializeVisibilityHandler() {
-
-  document.addEventListener(
-    "visibilitychange",
-    () => {
-
-      /*
-        iPad Safari에서
-        백그라운드 → 복귀 시
-        분석 루프 재연결
-      */
-
-      if (
-        document.visibilityState ===
-          "visible" &&
-        APP_STATE.analysisRunning &&
-        !APP_STATE.poseLoopId
-      ) {
-
-        startPoseLoop();
-
-      }
-
-    }
-  );
-}
-
-
-/* =========================================================
-   104. BEFORE UNLOAD
-========================================================= */
-
-function initializeUnload() {
-
-  window.addEventListener(
-    "beforeunload",
-    () => {
-
-      stopPoseLoop();
-
-      stopCameraStream();
-
-    }
-  );
-}
-
-
-/* =========================================================
-   105. EXPORT / BACKUP EVENTS
-========================================================= */
-
-function initializeDataEvents() {
-
-  $("exportCSVBtn")
-    ?.addEventListener(
-      "click",
-      exportRecordsCSV
-    );
-
-
-  $("backupDataBtn")
-    ?.addEventListener(
-      "click",
-      backupData
-    );
-
-
-  $("clearDataBtn")
-    ?.addEventListener(
-      "click",
-      clearAllData
-    );
-
-
-  initializeRestoreData();
-}
-
-
-/* =========================================================
-   106. COACH MODE
-========================================================= */
-
-function initializeCoachMode() {
-
-  $("coachModeBtn")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        document.body
-          .classList.toggle(
-            "coach-mode"
-          );
-
-
-        const active =
-          document.body
-            .classList
-            .contains(
-              "coach-mode"
-            );
-
-
-        $("coachModeBtn")
-          .textContent =
-          active
-            ? "👤 코치 모드 ON"
-            : "👤 코치 모드";
-
-
-        showToast(
-          active
-            ? "코치 모드 활성화"
-            : "코치 모드 해제"
-        );
-
-      }
-    );
-}
-
-
-/* =========================================================
-   107. EXERCISE → ANALYSIS BRIDGE
-
-   운동 카드에서 '분석하기' 누르면
-   분석 페이지 + 해당 종목 자동 선택
-========================================================= */
-
-window.startExerciseAnalysis =
-  function(exerciseId) {
-
-    navigateToPage(
-      "analysis"
-    );
-
-
-    setTimeout(
-      () => {
-
-        const select =
-          $("analysisExercise");
-
-
-        if (!select) return;
-
-
-        select.value =
-          exerciseId;
-
-
-        select.dispatchEvent(
-          new Event(
-            "change"
-          )
-        );
-
-
-        showToast(
-          "분석 운동이 설정되었습니다."
-        );
-
-      },
-      50
-    );
-  };
-
-
-/* =========================================================
-   108. SELECT EXERCISE FROM MODAL
-========================================================= */
-
-function initializeExerciseModalAnalysis() {
-
-  $("analyzeSelectedExerciseBtn")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        const button =
-          $("analyzeSelectedExerciseBtn");
-
-
-        const id =
-          button.dataset.exerciseId;
-
-
-        if (!id) {
-
-          showToast(
-            "운동을 다시 선택하세요."
-          );
-
-          return;
-        }
-
-
-        $("exerciseModal")
-          ?.classList.remove(
-            "open"
-          );
-
-
-        window.startExerciseAnalysis(
-          id
-        );
-
-      }
-    );
-}
-
-
-/* =========================================================
-   109. CAMERA PERMISSION CHECK
-========================================================= */
-
-function checkCameraSupport() {
-
-  if (
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices.getUserMedia
-  ) {
-
-    if (
-      $("connectCameraBtn")
-    ) {
-
-      $("connectCameraBtn")
-        .disabled =
-        true;
-
-    }
-
-
-    if (
-      $("analysisEngineStatus")
-    ) {
-
-      $("analysisEngineStatus")
-        .textContent =
-        "CAMERA UNSUPPORTED";
-
-    }
-
-  }
-}
-
-
-/* =========================================================
-   110. INITIAL STATUS
-========================================================= */
-
-function initializeAnalysisStatus() {
-
-  if (
-    $("analysisEngineStatus")
-  ) {
-
-    $("analysisEngineStatus")
-      .textContent =
-      "ENGINE READY";
-
-  }
-
-
-  if (
-    $("liveStatusBadge")
-  ) {
-
-    $("liveStatusBadge")
-      .textContent =
-      "● STANDBY";
-
-  }
-
-
-  updateReferenceLines();
-}
-
-
-/* =========================================================
-   111. INITIAL SELECTED ATHLETE
-========================================================= */
-
-function initializeSelectedAthlete() {
-
-  if (
-    athletes.length &&
-    !APP_STATE.selectedAthleteId
-  ) {
-
-    APP_STATE.selectedAthleteId =
-      athletes[0].id;
-
-  }
-}
-
-
-/* =========================================================
-   112. AUTO STOP TARGET OPTION
-
-   현재는 목표 도달해도 자동 종료하지 않음.
-   코치가 마지막 동작을 확인하고
-   직접 종료 가능.
-========================================================= */
-
-function checkTargetCompletion() {
-
-  const target =
-    Number(
-      $("analysisTargetReps")?.value
-    ) || 0;
-
-
-  if (
-    target > 0 &&
-    APP_STATE.repCount >= target
-  ) {
-
-    return true;
-
-  }
-
-
-  return false;
-}
-
-
-/* =========================================================
-   113. ANALYSIS DEBUG INFO
-========================================================= */
-
-window.WeightLabDebug = {
-
-  get state() {
-    return APP_STATE;
-  },
-
-  get athletes() {
-    return athletes;
-  },
-
-  get records() {
-    return analysisRecords;
-  },
-
-  get programs() {
-    return trainingPrograms;
-  },
-
-  stopAnalysis,
-
-  startAnalysis,
-
-  connectCamera
-
-};
-
-
-/* =========================================================
-   114. APP INITIALIZE
-========================================================= */
-
-async function initializeApp() {
+function initializeApp() {
 
   console.log(
-    "%cSEOLCHEON WEIGHT PERFORMANCE LAB",
-    "font-size:18px;font-weight:bold;"
+    "[WEIGHT LAB] Initializing..."
   );
 
 
-  console.log(
-    "System initializing..."
-  );
+  bindEvents();
 
 
-  /*
-    Navigation
-  */
+  ensureAnalysisTargetControls();
 
-  initializeNavigation();
-
-
-  /*
-    Clock
-  */
 
   updateClock();
 
@@ -8012,160 +4869,44 @@ async function initializeApp() {
   );
 
 
-  /*
-    Athlete
-  */
-
-  initializeSelectedAthlete();
-
-  initializeAthleteForm();
-
-  initializeAthleteSearch();
-
-  initializeAnalysisAthlete();
-
-  populateAllAthleteSelects();
-
-  renderAthleteList();
-
-
-  /*
-    Dashboard
-  */
-
-  initializePerformanceRadar();
-
-  initializePerformanceTrend();
-
-  initializeDashboardPeriod();
-
-
-  /*
-    Analysis
-  */
-
-  initializeAngleChart();
-
-  initializeVideoUpload();
-
-  initializeImageUpload();
-
-  initializePlayback();
-
-  initializeViewSelector();
-
-  initializeAnalysisMode();
-
-  initializeDisplayToggles();
-
-  initializeAnalysisButtons();
-
-  initializeAnalysisExerciseChange();
-
-  initializeTargetReps();
-
-  initializeAnalysisStatus();
-
-
-  /*
-    Records
-  */
-
-  initializeRecordFilters();
-
-  initializeModals();
-
-
-  /*
-    Training program
-  */
-
-  populateProgramExerciseSelect();
-
-  initializeProgramEvents();
-
-  renderCurrentProgram();
-
-
-  /*
-    Report
-  */
-
-  initializeReportRadar();
-
-  initializeReportEvents();
-
-
-  /*
-    Exercise bridge
-  */
-
-  initializeExerciseModalAnalysis();
-
-
-  /*
-    Settings
-  */
-
-  initializeSettings();
-
-
-  /*
-    Data
-  */
-
-  initializeDataEvents();
-
-
-  /*
-    Other
-  */
-
-  initializeCoachMode();
-
-  initializeResize();
-
-  initializeVisibilityHandler();
-
-  initializeUnload();
-
-  checkCameraSupport();
-
-
-  /*
-    First render
-  */
-
-  renderDashboard();
-
-  renderRecords();
-
-
-  console.log(
-    "WEIGHT PERFORMANCE LAB READY"
-  );
+  refreshAll();
 
 
   if (
-    $("analysisEngineStatus")
+    !APP_STATE.selectedAthleteId
   ) {
 
-    $("analysisEngineStatus")
-      .textContent =
-      "ENGINE READY";
+    const athletes =
+      getAthletes();
+
+
+    if (athletes.length) {
+
+      APP_STATE.selectedAthleteId =
+        athletes[0].id;
+
+    }
 
   }
 
+
+  refreshAllAthleteSelectors();
+
+  refreshDashboard();
+
+
+  console.log(
+    "[WEIGHT LAB] Application Ready"
+  );
 }
 
 
 /* =========================================================
-   115. DOM READY
+   DOM READY
 ========================================================= */
 
 if (
-  document.readyState ===
-  "loading"
+  document.readyState === "loading"
 ) {
 
   document.addEventListener(
@@ -8178,8 +4919,3 @@ if (
   initializeApp();
 
 }
-
-
-/* =========================================================
-   END APP.JS
-========================================================= */
