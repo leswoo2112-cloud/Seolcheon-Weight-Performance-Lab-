@@ -3868,3 +3868,1367 @@ select option {
   color:
     var(--accent) !important;
 }
+/* =========================================================
+   SEOLCHEON HIGH SCHOOL
+   WEIGHT PERFORMANCE LAB
+
+   STYLE.CSS
+   REPORT / ANALYSIS FINAL EXTENSION
+========================================================= */
+
+
+/* =========================================================
+   REPORT PAPER
+========================================================= */
+
+.report-paper {
+  width: 100%;
+  min-width: 0;
+  padding: 34px;
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(8, 30, 43, 0.98),
+      rgba(4, 18, 29, 0.99)
+    );
+
+  border: 1px solid rgba(122, 218, 255, 0.14);
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.28);
+
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   REPORT HEADER
+========================================================= */
+
+.report-header {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding-bottom: 26px;
+  margin-bottom: 28px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.report-header > div:first-child {
+  min-width: 0;
+}
+
+.report-header span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+
+  color: rgba(170, 218, 235, 0.72);
+}
+
+.report-header h2 {
+  margin: 7px 0 6px;
+
+  font-size: clamp(22px, 3vw, 36px);
+  line-height: 1.1;
+
+  color: #f5fcff;
+}
+
+.report-header p {
+  margin: 0;
+
+  color: rgba(210, 233, 241, 0.62);
+}
+
+
+/* =========================================================
+   REPORT SCORE
+========================================================= */
+
+.report-score {
+  flex: 0 0 auto;
+
+  width: 112px;
+  height: 112px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 24px;
+
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(56, 203, 255, 0.22),
+      rgba(12, 48, 67, 0.48)
+    );
+
+  border: 1px solid rgba(100, 220, 255, 0.28);
+
+  box-shadow:
+    inset 0 0 30px rgba(52, 204, 255, 0.06),
+    0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.report-score strong {
+  font-size: 38px;
+  line-height: 1;
+
+  color: #ffffff;
+}
+
+.report-score span {
+  margin-top: 7px;
+
+  font-size: 9px;
+  letter-spacing: 0.16em;
+
+  color: rgba(142, 221, 249, 0.8);
+}
+
+
+/* =========================================================
+   REPORT PR BADGE
+========================================================= */
+
+.report-pr-badge {
+  position: absolute;
+
+  right: 126px;
+  top: 4px;
+
+  min-width: 78px;
+
+  padding: 9px 12px;
+
+  text-align: center;
+
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 214, 94, 0.2),
+      rgba(255, 171, 46, 0.1)
+    );
+
+  border: 1px solid rgba(255, 215, 100, 0.36);
+}
+
+.report-pr-badge span {
+  display: block;
+
+  font-size: 7px;
+  letter-spacing: 0.12em;
+
+  color: rgba(255, 225, 145, 0.76);
+}
+
+.report-pr-badge strong {
+  display: block;
+
+  margin-top: 3px;
+
+  font-size: 20px;
+
+  color: #ffe08b;
+}
+
+
+/* =========================================================
+   REPORT SECTION
+========================================================= */
+
+.report-section {
+  margin-top: 30px;
+}
+
+.report-section > h3 {
+  position: relative;
+
+  margin: 0 0 16px;
+
+  padding-left: 14px;
+
+  font-size: 15px;
+  letter-spacing: 0.02em;
+
+  color: #edfaff;
+}
+
+.report-section > h3::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 2px;
+  bottom: 2px;
+
+  width: 3px;
+
+  border-radius: 20px;
+
+  background: #5dd5ff;
+}
+
+
+/* =========================================================
+   ATHLETE INFORMATION
+========================================================= */
+
+.report-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+.report-info-grid > div {
+  min-width: 0;
+
+  padding: 16px;
+
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.report-info-grid span {
+  display: block;
+
+  margin-bottom: 7px;
+
+  font-size: 10px;
+
+  color: rgba(185, 217, 228, 0.6);
+}
+
+.report-info-grid strong {
+  display: block;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-size: 15px;
+
+  color: #f4fbff;
+}
+
+
+/* =========================================================
+   EXERCISE CARD
+========================================================= */
+
+.report-exercise-card {
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  padding: 20px;
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(25, 83, 105, 0.28),
+      rgba(11, 39, 54, 0.34)
+    );
+
+  border: 1px solid rgba(99, 206, 246, 0.13);
+}
+
+.report-exercise-pictogram {
+  flex: 0 0 auto;
+
+  width: 76px;
+  height: 76px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 18px;
+
+  font-size: 38px;
+
+  background: rgba(7, 26, 38, 0.65);
+
+  border: 1px solid rgba(94, 211, 255, 0.15);
+}
+
+.report-exercise-card h4 {
+  margin: 0 0 6px;
+
+  font-size: 20px;
+
+  color: #f5fcff;
+}
+
+.report-exercise-card p {
+  margin: 0;
+
+  color: rgba(194, 222, 231, 0.65);
+}
+
+
+/* =========================================================
+   ANALYSIS INFO
+========================================================= */
+
+.report-analysis-info {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin-top: 12px;
+}
+
+.report-analysis-info > div {
+  padding: 12px 14px;
+
+  border-radius: 13px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.report-analysis-info span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  font-size: 9px;
+
+  color: rgba(180, 214, 225, 0.55);
+}
+
+.report-analysis-info strong {
+  font-size: 12px;
+
+  color: #eaf9ff;
+}
+
+
+/* =========================================================
+   RADAR / HEXAGON
+========================================================= */
+
+.report-radar {
+  position: relative;
+
+  width: 100%;
+  height: 340px;
+
+  padding: 18px;
+
+  border-radius: 20px;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(52, 184, 230, 0.08),
+      rgba(255, 255, 255, 0.015) 65%
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.report-radar canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+
+/* =========================================================
+   PERFORMANCE SCORE GRID
+========================================================= */
+
+.report-score-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+.report-score-grid > div {
+  position: relative;
+
+  overflow: hidden;
+
+  padding: 18px;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.018)
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.report-score-grid > div::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  bottom: 0;
+
+  width: 100%;
+  height: 2px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(83, 211, 255, 0.8),
+      transparent
+    );
+}
+
+.report-score-grid span {
+  display: block;
+
+  font-size: 10px;
+
+  color: rgba(183, 216, 228, 0.6);
+}
+
+.report-score-grid strong {
+  display: block;
+
+  margin-top: 7px;
+
+  font-size: 25px;
+
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   REPORT ANALYSIS FRAME
+========================================================= */
+
+.report-analysis-frame {
+  position: relative;
+
+  min-height: 300px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  border-radius: 20px;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(21, 70, 91, 0.5),
+      rgba(3, 16, 25, 0.96)
+    );
+
+  border: 1px solid rgba(82, 200, 243, 0.13);
+
+  color: rgba(188, 220, 231, 0.55);
+}
+
+.report-analysis-frame img,
+.report-analysis-frame canvas {
+  display: block;
+
+  width: 100%;
+  max-height: 460px;
+
+  object-fit: contain;
+}
+
+
+/* =========================================================
+   BIOMECHANICS
+========================================================= */
+
+.report-biomechanics-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+.report-bio-card {
+  min-width: 0;
+
+  padding: 18px;
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 49, 66, 0.46),
+      rgba(5, 25, 36, 0.7)
+    );
+
+  border: 1px solid rgba(86, 203, 245, 0.1);
+}
+
+.report-bio-code {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+
+  color: rgba(95, 210, 249, 0.62);
+}
+
+.report-bio-value {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 28px;
+
+  color: #ffffff;
+}
+
+.report-bio-card h4 {
+  margin: 0 0 8px;
+
+  font-size: 13px;
+
+  color: #dff7ff;
+}
+
+.report-bio-card p {
+  margin: 0;
+
+  font-size: 11px;
+  line-height: 1.6;
+
+  color: rgba(186, 215, 225, 0.62);
+}
+
+
+/* =========================================================
+   RECOMMENDATIONS
+========================================================= */
+
+.report-recommendations {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+.report-recommendation-card {
+  display: grid;
+
+  grid-template-columns:
+    42px minmax(0, 1fr);
+
+  gap: 12px;
+
+  padding: 15px;
+
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.028);
+
+  border: 1px solid rgba(255, 255, 255, 0.065);
+}
+
+.report-recommendation-number {
+  width: 42px;
+  height: 42px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+
+  background: rgba(65, 196, 242, 0.1);
+
+  border: 1px solid rgba(81, 210, 255, 0.14);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  color: #73dcff;
+}
+
+.report-recommendation-tag {
+  display: inline-block;
+
+  margin-bottom: 5px;
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+
+  color: #6fd9ff;
+}
+
+.report-recommendation-card h4 {
+  margin: 0 0 5px;
+
+  font-size: 13px;
+
+  color: #f0fbff;
+}
+
+.report-recommendation-card p {
+  margin: 0;
+
+  font-size: 10px;
+  line-height: 1.55;
+
+  color: rgba(184, 215, 225, 0.62);
+}
+
+
+/* =========================================================
+   COACH SUMMARY
+========================================================= */
+
+.report-coach-summary {
+  padding: 22px;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(11, 52, 71, 0.5),
+      rgba(5, 25, 36, 0.72)
+    );
+
+  border: 1px solid rgba(91, 210, 250, 0.12);
+}
+
+.coach-summary-top {
+  display: grid;
+
+  grid-template-columns:
+    120px minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 22px;
+}
+
+.coach-grade {
+  min-height: 118px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 20px;
+
+  background: rgba(48, 183, 228, 0.08);
+
+  border: 1px solid rgba(79, 210, 255, 0.16);
+}
+
+.coach-grade span {
+  font-size: 7px;
+  letter-spacing: 0.1em;
+
+  color: rgba(124, 218, 249, 0.65);
+}
+
+.coach-grade strong {
+  margin: 5px 0 2px;
+
+  font-size: 42px;
+  line-height: 1;
+
+  color: #ffffff;
+}
+
+.coach-grade small {
+  font-size: 8px;
+
+  color: #77ddff;
+}
+
+.coach-summary-text h4 {
+  margin: 0 0 8px;
+
+  font-size: 17px;
+
+  color: #f2fbff;
+}
+
+.coach-summary-text p {
+  margin: 0;
+
+  line-height: 1.7;
+
+  font-size: 12px;
+
+  color: rgba(196, 224, 233, 0.68);
+}
+
+.coach-summary-text strong {
+  color: #ffffff;
+}
+
+.coach-summary-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 10px;
+
+  margin-top: 18px;
+}
+
+.coach-summary-grid > div {
+  padding: 14px;
+
+  border-radius: 13px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.coach-summary-grid span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  font-size: 8px;
+  letter-spacing: 0.09em;
+
+  color: rgba(145, 213, 236, 0.62);
+}
+
+.coach-summary-grid strong {
+  display: block;
+
+  font-size: 12px;
+
+  color: #f1fbff;
+}
+
+.coach-summary-grid small {
+  display: block;
+
+  margin-top: 4px;
+
+  color: rgba(180, 215, 226, 0.55);
+}
+
+.report-analysis-note {
+  margin: 18px 0 0;
+
+  padding-top: 15px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+  font-size: 9px;
+  line-height: 1.6;
+
+  color: rgba(175, 205, 215, 0.48);
+}
+
+
+/* =========================================================
+   PREVIOUS COMPARISON
+========================================================= */
+
+.report-previous-date {
+  display: flex;
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+
+  padding: 12px 15px;
+
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: rgba(180, 213, 224, 0.6);
+
+  font-size: 10px;
+}
+
+.report-previous-date strong {
+  color: #eaf9ff;
+}
+
+.report-progress-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+.progress-card {
+  padding: 15px;
+
+  border-radius: 15px;
+
+  background: rgba(255, 255, 255, 0.028);
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.progress-card > span {
+  display: block;
+
+  font-size: 9px;
+
+  color: rgba(182, 214, 225, 0.6);
+}
+
+.progress-card > strong {
+  display: block;
+
+  margin: 7px 0 3px;
+
+  font-size: 24px;
+
+  color: #ffffff;
+}
+
+.progress-card > small {
+  display: block;
+
+  font-size: 9px;
+
+  color: rgba(175, 207, 218, 0.5);
+}
+
+.progress-difference {
+  margin-top: 9px;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.progress-difference.positive {
+  color: #80e7b0;
+}
+
+.progress-difference.negative {
+  color: #ff9a9a;
+}
+
+.progress-difference.neutral {
+  color: rgba(200, 220, 228, 0.55);
+}
+
+.report-first-measurement {
+  padding: 20px;
+
+  border-radius: 16px;
+
+  text-align: center;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.report-first-measurement strong {
+  display: block;
+
+  margin-bottom: 8px;
+
+  letter-spacing: 0.12em;
+
+  color: #72d9ff;
+}
+
+.report-first-measurement p {
+  margin: 0;
+
+  line-height: 1.6;
+
+  color: rgba(190, 218, 228, 0.6);
+}
+
+
+/* =========================================================
+   TREND CHART
+========================================================= */
+
+.report-trend-chart {
+  position: relative;
+
+  width: 100%;
+  height: 270px;
+
+  padding: 15px;
+
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.022);
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.report-trend-chart canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+
+/* =========================================================
+   REPORT HISTORY
+========================================================= */
+
+.report-history-wrapper {
+  margin-top: 28px;
+
+  padding-top: 22px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.report-history-header {
+  margin-bottom: 12px;
+}
+
+.report-history-header h3 {
+  margin: 4px 0 0;
+
+  font-size: 14px;
+}
+
+.report-history-list {
+  display: grid;
+
+  gap: 8px;
+}
+
+.report-history-item {
+  width: 100%;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 12px;
+
+  border-radius: 13px;
+
+  cursor: pointer;
+
+  text-align: left;
+
+  color: inherit;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  border: 1px solid rgba(255, 255, 255, 0.055);
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.report-history-item:hover {
+  transform: translateY(-1px);
+
+  background: rgba(67, 190, 233, 0.07);
+
+  border-color: rgba(80, 208, 252, 0.14);
+}
+
+.report-history-item > div:first-child {
+  min-width: 0;
+}
+
+.report-history-item strong,
+.report-history-item span {
+  display: block;
+}
+
+.report-history-item > div:first-child strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-size: 11px;
+
+  color: #eaf9ff;
+}
+
+.report-history-item > div:first-child span {
+  margin-top: 3px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-size: 9px;
+
+  color: rgba(175, 210, 221, 0.5);
+}
+
+.report-history-score {
+  flex: 0 0 auto;
+
+  text-align: right;
+}
+
+.report-history-score strong {
+  font-size: 17px;
+
+  color: #ffffff;
+}
+
+.report-history-score small {
+  color: #6edaff;
+}
+
+
+/* =========================================================
+   RESPONSIVE REPORT
+========================================================= */
+
+@media (max-width: 1100px) {
+
+  .report-info-grid,
+  .report-analysis-info {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+
+  .report-biomechanics-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+
+  .report-progress-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+
+@media (max-width: 760px) {
+
+  .report-paper {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+
+  .report-header {
+    align-items: flex-start;
+  }
+
+
+  .report-score {
+    width: 84px;
+    height: 84px;
+
+    border-radius: 18px;
+  }
+
+
+  .report-score strong {
+    font-size: 28px;
+  }
+
+
+  .report-pr-badge {
+    position: static;
+
+    margin-top: 10px;
+  }
+
+
+  .report-score-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+
+  .report-recommendations {
+    grid-template-columns: 1fr;
+  }
+
+
+  .coach-summary-top {
+    grid-template-columns: 1fr;
+  }
+
+
+  .coach-grade {
+    min-height: 100px;
+  }
+
+
+  .coach-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  .report-radar {
+    height: 290px;
+  }
+
+}
+
+
+@media (max-width: 520px) {
+
+  .report-header {
+    flex-direction: column;
+  }
+
+
+  .report-score {
+    width: 100%;
+
+    height: auto;
+
+    padding: 16px;
+  }
+
+
+  .report-info-grid,
+  .report-analysis-info,
+  .report-score-grid,
+  .report-biomechanics-grid,
+  .report-progress-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  .report-exercise-card {
+    align-items: flex-start;
+  }
+
+
+  .report-exercise-pictogram {
+    width: 58px;
+    height: 58px;
+
+    font-size: 28px;
+  }
+
+}
+
+
+/* =========================================================
+   PRINT / PDF MODE
+========================================================= */
+
+@media print {
+
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+
+  body {
+    background: #ffffff !important;
+  }
+
+
+  body * {
+    visibility: hidden;
+  }
+
+
+  #reportPaper,
+  #reportPaper * {
+    visibility: visible;
+  }
+
+
+  #reportPaper {
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    width: 100%;
+
+    padding: 0;
+
+    border: none;
+
+    border-radius: 0;
+
+    box-shadow: none;
+
+    background: #ffffff !important;
+
+    color: #111111 !important;
+  }
+
+
+  .report-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+
+  .report-header {
+    border-bottom:
+      1px solid #d7dde1;
+  }
+
+
+  .report-header h2,
+  .report-info-grid strong,
+  .report-exercise-card h4,
+  .report-score-grid strong,
+  .report-bio-value,
+  .report-bio-card h4,
+  .report-recommendation-card h4,
+  .coach-summary-text h4,
+  .coach-summary-text strong,
+  .coach-summary-grid strong,
+  .progress-card > strong,
+  .report-first-measurement strong {
+    color: #111111 !important;
+  }
+
+
+  .report-header span,
+  .report-header p,
+  .report-info-grid span,
+  .report-exercise-card p,
+  .report-analysis-info span,
+  .report-bio-code,
+  .report-bio-card p,
+  .report-recommendation-tag,
+  .report-recommendation-card p,
+  .coach-grade span,
+  .coach-grade small,
+  .coach-summary-text p,
+  .coach-summary-grid span,
+  .coach-summary-grid small,
+  .report-analysis-note,
+  .report-previous-date,
+  .progress-card > span,
+  .progress-card > small {
+    color: #5c6870 !important;
+  }
+
+
+  .report-score,
+  .report-info-grid > div,
+  .report-exercise-card,
+  .report-analysis-info > div,
+  .report-radar,
+  .report-score-grid > div,
+  .report-analysis-frame,
+  .report-bio-card,
+  .report-recommendation-card,
+  .report-coach-summary,
+  .coach-grade,
+  .coach-summary-grid > div,
+  .progress-card,
+  .report-trend-chart,
+  .report-first-measurement {
+
+    background: #ffffff !important;
+
+    border:
+      1px solid #dce3e7 !important;
+
+    box-shadow: none !important;
+
+  }
+
+
+  .report-score strong,
+  .coach-grade strong {
+    color: #111111 !important;
+  }
+
+
+  .report-pr-badge {
+    background: #ffffff !important;
+
+    border:
+      1px solid #d3aa3f !important;
+  }
+
+
+  .report-pr-badge strong {
+    color: #8a6500 !important;
+  }
+
+
+  .report-recommendation-number {
+    background: #f4f8fa !important;
+
+    border:
+      1px solid #dce5e9 !important;
+
+    color: #256d87 !important;
+  }
+
+
+  .progress-difference.positive {
+    color: #167644 !important;
+  }
+
+
+  .progress-difference.negative {
+    color: #b43838 !important;
+  }
+
+
+  .report-history-wrapper {
+    display: none !important;
+  }
+
+}
+
+
+/* =========================================================
+   REPORT EXTENSION COMPLETE
+========================================================= */
