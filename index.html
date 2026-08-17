@@ -10,42 +10,46 @@
 
   <meta
     name="description"
-    content="설천고 WEIGHT PERFORMANCE LAB"
+    content="설천고 Weight Performance Lab - 웨이트 트레이닝 및 AI 모션 분석 시스템"
   >
 
   <meta name="theme-color" content="#031521">
 
   <title>설천고 WEIGHT PERFORMANCE LAB</title>
 
-  <!-- Chart.js -->
+  <!-- =====================================================
+       CHART.JS
+  ====================================================== -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- MediaPipe Pose -->
+  <!-- =====================================================
+       MEDIAPIPE POSE
+       33 LANDMARK MOTION CAPTURE
+  ====================================================== -->
   <script
     src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
-    crossorigin="anonymous">
-  </script>
+    crossorigin="anonymous"
+  ></script>
 
   <script
     src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
-    crossorigin="anonymous">
-  </script>
+    crossorigin="anonymous"
+  ></script>
 
   <script
     src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"
-    crossorigin="anonymous">
-  </script>
+    crossorigin="anonymous"
+  ></script>
 
   <link rel="stylesheet" href="style.css">
 </head>
-
 
 <body>
 
 <div id="app">
 
   <!-- =====================================================
-       MOBILE HEADER
+       MOBILE TOP BAR
   ====================================================== -->
 
   <div class="mobile-topbar">
@@ -54,6 +58,7 @@
       id="mobileMenuBtn"
       class="mobile-menu-btn"
       type="button"
+      aria-label="메뉴 열기"
     >
       ☰
     </button>
@@ -70,10 +75,7 @@
        SIDEBAR
   ====================================================== -->
 
-  <aside
-    class="sidebar"
-    id="sidebar"
-  >
+  <aside class="sidebar" id="sidebar">
 
     <div class="sidebar-brand">
 
@@ -91,15 +93,14 @@
 
     </div>
 
-
     <div class="sidebar-divider"></div>
-
 
     <nav class="sidebar-nav">
 
       <button
         class="nav-item active"
         data-page="dashboard"
+        type="button"
       >
         <span class="nav-icon">⌂</span>
         <span>대시보드</span>
@@ -108,6 +109,7 @@
       <button
         class="nav-item"
         data-page="athletes"
+        type="button"
       >
         <span class="nav-icon">♙</span>
         <span>선수 관리</span>
@@ -116,6 +118,7 @@
       <button
         class="nav-item"
         data-page="exercises"
+        type="button"
       >
         <span class="nav-icon">🏋</span>
         <span>웨이트 종목</span>
@@ -124,6 +127,7 @@
       <button
         class="nav-item"
         data-page="analysis"
+        type="button"
       >
         <span class="nav-icon">◎</span>
         <span>자세 분석</span>
@@ -132,6 +136,7 @@
       <button
         class="nav-item"
         data-page="records"
+        type="button"
       >
         <span class="nav-icon">▣</span>
         <span>분석 기록</span>
@@ -140,6 +145,7 @@
       <button
         class="nav-item"
         data-page="program"
+        type="button"
       >
         <span class="nav-icon">▤</span>
         <span>훈련 프로그램</span>
@@ -148,6 +154,7 @@
       <button
         class="nav-item"
         data-page="report"
+        type="button"
       >
         <span class="nav-icon">◇</span>
         <span>리포트</span>
@@ -156,13 +163,13 @@
       <button
         class="nav-item"
         data-page="settings"
+        type="button"
       >
         <span class="nav-icon">⚙</span>
         <span>시스템</span>
       </button>
 
     </nav>
-
 
     <div class="sidebar-footer">
 
@@ -171,9 +178,7 @@
         SYSTEM ONLINE
       </div>
 
-      <strong>
-        SCIENCE FOR PERFORMANCE
-      </strong>
+      <strong>SCIENCE FOR PERFORMANCE</strong>
 
       <p>
         STRENGTH · POWER<br>
@@ -191,7 +196,9 @@
 
   <main class="main">
 
-    <!-- HEADER -->
+    <!-- ===================================================
+         HEADER
+    ==================================================== -->
 
     <header class="top-header">
 
@@ -202,19 +209,11 @@
         </div>
 
         <div>
-
-          <h1>
-            설천고 WEIGHT PERFORMANCE LAB
-          </h1>
-
-          <p>
-            STRENGTH · POWER · MOTION ANALYSIS
-          </p>
-
+          <h1>설천고 WEIGHT PERFORMANCE LAB</h1>
+          <p>STRENGTH · POWER · MOTION ANALYSIS</p>
         </div>
 
       </div>
-
 
       <div class="header-right">
 
@@ -230,7 +229,6 @@
 
         </div>
 
-
         <button
           id="coachModeBtn"
           class="coach-button"
@@ -239,11 +237,11 @@
           👤 코치 모드
         </button>
 
-
         <button
           class="icon-button"
           data-page-target="settings"
           type="button"
+          aria-label="설정"
         >
           ⚙
         </button>
@@ -252,6 +250,10 @@
 
     </header>
 
+
+    <!-- ===================================================
+         PAGE CONTAINER
+    ==================================================== -->
 
     <div class="page-container">
 
@@ -277,11 +279,10 @@
             </h2>
 
             <p>
-              선수 웨이트 퍼포먼스와 움직임 분석 데이터를 확인합니다.
+              선수의 웨이트 퍼포먼스와 모션 분석 데이터를 확인합니다.
             </p>
 
           </div>
-
 
           <button
             class="primary-button"
@@ -293,6 +294,8 @@
 
         </div>
 
+
+        <!-- KPI -->
 
         <div class="stats-grid">
 
@@ -308,7 +311,6 @@
 
           </article>
 
-
           <article class="stat-card">
 
             <span>총 분석</span>
@@ -321,7 +323,6 @@
 
           </article>
 
-
           <article class="stat-card">
 
             <span>평균 기술 점수</span>
@@ -333,7 +334,6 @@
             <small>/ 100</small>
 
           </article>
-
 
           <article class="stat-card">
 
@@ -350,11 +350,11 @@
         </div>
 
 
+        <!-- ATHLETE + RADAR -->
+
         <div class="dashboard-grid">
 
-          <!-- ATHLETE -->
-
-          <article class="panel">
+          <article class="panel athlete-overview-panel">
 
             <div class="panel-header">
 
@@ -371,7 +371,6 @@
               </span>
 
             </div>
-
 
             <div class="athlete-overview">
 
@@ -393,7 +392,6 @@
 
             </div>
 
-
             <div class="athlete-mini-info">
 
               <div>
@@ -413,7 +411,6 @@
 
             </div>
 
-
             <button
               class="secondary-button full"
               data-page-target="athletes"
@@ -424,8 +421,6 @@
 
           </article>
 
-
-          <!-- RADAR -->
 
           <article class="panel radar-panel">
 
@@ -438,18 +433,16 @@
                 </span>
 
                 <h3>
-                  퍼포먼스 육각형
+                  선수 퍼포먼스 육각형
                 </h3>
 
               </div>
 
             </div>
 
-
             <div class="radar-wrapper">
               <canvas id="performanceRadar"></canvas>
             </div>
-
 
             <div class="radar-label-grid">
 
@@ -508,7 +501,6 @@
 
             </div>
 
-
             <select id="dashboardPeriod">
 
               <option value="7">
@@ -526,7 +518,6 @@
             </select>
 
           </div>
-
 
           <div class="chart-large">
             <canvas id="performanceTrendChart"></canvas>
@@ -553,7 +544,6 @@
 
               </div>
 
-
               <button
                 class="text-button"
                 data-page-target="records"
@@ -563,7 +553,6 @@
               </button>
 
             </div>
-
 
             <div
               id="dashboardRecentList"
@@ -596,7 +585,6 @@
               </div>
 
             </div>
-
 
             <div
               id="dashboardPRList"
@@ -638,7 +626,7 @@
             </h2>
 
             <p>
-              선수 프로필과 웨이트 분석 데이터를 관리합니다.
+              선수 프로필과 웨이트 분석 기록을 관리합니다.
             </p>
 
           </div>
@@ -666,13 +654,16 @@
 
             </div>
 
-
             <form id="athleteForm">
+
+              <input
+                id="athleteEditId"
+                type="hidden"
+              >
 
               <div class="profile-avatar-large">
                 👤
               </div>
-
 
               <label class="form-field">
 
@@ -687,7 +678,6 @@
 
               </label>
 
-
               <label class="form-field">
 
                 <span>생년월일</span>
@@ -698,7 +688,6 @@
                 >
 
               </label>
-
 
               <label class="form-field">
 
@@ -712,7 +701,6 @@
 
               </label>
 
-
               <div class="form-row">
 
                 <label class="form-field">
@@ -725,6 +713,7 @@
                       id="athleteHeight"
                       type="number"
                       min="0"
+                      step="0.1"
                       placeholder="175"
                     >
 
@@ -733,7 +722,6 @@
                   </div>
 
                 </label>
-
 
                 <label class="form-field">
 
@@ -757,7 +745,6 @@
 
               </div>
 
-
               <label class="form-field">
 
                 <span>훈련 그룹</span>
@@ -770,7 +757,6 @@
 
               </label>
 
-
               <label class="form-field">
 
                 <span>선수 메모</span>
@@ -778,17 +764,26 @@
                 <textarea
                   id="athleteMemo"
                   rows="5"
-                  placeholder="훈련 목표와 참고사항"
+                  placeholder="훈련 목표 및 참고사항"
                 ></textarea>
 
               </label>
 
-
               <button
                 class="primary-button full"
                 type="submit"
+                id="saveAthleteBtn"
               >
-                선수 등록
+                선수 저장
+              </button>
+
+              <button
+                class="secondary-button full"
+                type="button"
+                id="cancelAthleteEditBtn"
+                hidden
+              >
+                수정 취소
               </button>
 
             </form>
@@ -812,7 +807,6 @@
 
               </div>
 
-
               <input
                 id="athleteSearch"
                 class="small-search"
@@ -821,7 +815,6 @@
               >
 
             </div>
-
 
             <div
               id="athleteList"
@@ -863,11 +856,10 @@
             </h2>
 
             <p>
-              웨이트·맨몸·파워·기능성 운동을 선택하고 바로 자세 분석할 수 있습니다.
+              웨이트·맨몸·올림픽 리프팅·기능성 운동을 선택합니다.
             </p>
 
           </div>
-
 
           <div class="exercise-count-box">
 
@@ -887,18 +879,17 @@
           <input
             id="exerciseSearch"
             type="search"
-            placeholder="스쿼트, 런지, 클린, 푸시업..."
+            placeholder="스쿼트, 런지, 벤치프레스, 클린..."
           >
-
 
           <select id="equipmentFilter">
 
             <option value="all">모든 장비</option>
-            <option value="bodyweight">맨몸</option>
             <option value="barbell">바벨</option>
             <option value="dumbbell">덤벨</option>
             <option value="machine">머신</option>
             <option value="cable">케이블</option>
+            <option value="bodyweight">맨몸</option>
             <option value="kettlebell">케틀벨</option>
             <option value="band">밴드</option>
             <option value="medicineball">메디신볼</option>
@@ -914,59 +905,55 @@
           id="exerciseCategoryTabs"
         >
 
-          <button class="category-tab active" data-category="all">
+          <button class="category-tab active" data-category="all" type="button">
             전체
           </button>
 
-          <button class="category-tab" data-category="bodyweight">
-            맨몸
-          </button>
-
-          <button class="category-tab" data-category="lower">
+          <button class="category-tab" data-category="lower" type="button">
             하체
           </button>
 
-          <button class="category-tab" data-category="chest">
+          <button class="category-tab" data-category="chest" type="button">
             가슴
           </button>
 
-          <button class="category-tab" data-category="back">
+          <button class="category-tab" data-category="back" type="button">
             등
           </button>
 
-          <button class="category-tab" data-category="shoulder">
+          <button class="category-tab" data-category="shoulder" type="button">
             어깨
           </button>
 
-          <button class="category-tab" data-category="arms">
+          <button class="category-tab" data-category="arms" type="button">
             팔
           </button>
 
-          <button class="category-tab" data-category="core">
+          <button class="category-tab" data-category="core" type="button">
             코어
           </button>
 
-          <button class="category-tab" data-category="olympic">
+          <button class="category-tab" data-category="olympic" type="button">
             올림픽 리프팅
           </button>
 
-          <button class="category-tab" data-category="power">
+          <button class="category-tab" data-category="power" type="button">
             파워
           </button>
 
-          <button class="category-tab" data-category="plyometric">
+          <button class="category-tab" data-category="plyometric" type="button">
             플라이오
           </button>
 
-          <button class="category-tab" data-category="functional">
+          <button class="category-tab" data-category="functional" type="button">
             기능성
           </button>
 
-          <button class="category-tab" data-category="mobility">
+          <button class="category-tab" data-category="mobility" type="button">
             보강·가동성
           </button>
 
-          <button class="category-tab" data-category="fullbody">
+          <button class="category-tab" data-category="fullbody" type="button">
             전신
           </button>
 
@@ -1003,11 +990,10 @@
             </h2>
 
             <p>
-              33관절 모션캡처 · 반복 카운트 · 관절각도 · 움직임 궤적을 분석합니다.
+              33관절 모션캡처와 운동별 반복·각도·대칭성을 분석합니다.
             </p>
 
           </div>
-
 
           <div class="analysis-status">
 
@@ -1024,9 +1010,7 @@
 
         <div class="analysis-layout">
 
-          <!-- =============================================
-               ANALYSIS CONTROL
-          ============================================== -->
+          <!-- CONTROLS -->
 
           <aside class="analysis-control panel">
 
@@ -1061,42 +1045,30 @@
             </label>
 
 
-            <!-- SESSION MODE -->
+            <!-- REP MODE -->
 
             <div class="control-section">
 
               <span class="control-title">
-                분석 방식
+                측정 종료 방식
               </span>
 
-
-              <div
-                class="analysis-session-selector"
-                id="analysisSessionSelector"
-              >
+              <div class="mode-selector">
 
                 <button
-                  class="session-mode-button active"
-                  data-session-mode="free"
+                  class="mode-button active"
+                  data-target-mode="manual"
                   type="button"
                 >
-                  ∞ 자유 분석
+                  자유 측정
                 </button>
 
                 <button
-                  class="session-mode-button"
-                  data-session-mode="reps"
+                  class="mode-button"
+                  data-target-mode="reps"
                   type="button"
                 >
                   반복 설정
-                </button>
-
-                <button
-                  class="session-mode-button"
-                  data-session-mode="sets"
-                  type="button"
-                >
-                  세트 설정
                 </button>
 
               </div>
@@ -1104,29 +1076,9 @@
             </div>
 
 
-            <!-- FREE -->
-
             <div
-              id="freeAnalysisSetting"
-              class="analysis-mode-description"
-            >
-
-              <strong>
-                FREE ANALYSIS
-              </strong>
-
-              <p>
-                반복 제한 없이 측정하고 원하는 시점에 종료합니다.
-              </p>
-
-            </div>
-
-
-            <!-- REPS -->
-
-            <div
-              id="repAnalysisSetting"
-              class="analysis-target-setting"
+              class="analysis-target-config"
+              id="analysisTargetConfig"
               hidden
             >
 
@@ -1134,82 +1086,20 @@
 
                 <span>목표 반복</span>
 
-                <div class="input-unit">
-
-                  <input
-                    id="analysisTargetReps"
-                    type="number"
-                    value="10"
-                    min="1"
-                    max="999"
-                  >
-
-                  <span>REP</span>
-
-                </div>
+                <input
+                  id="analysisTargetReps"
+                  type="number"
+                  value="10"
+                  min="1"
+                  max="200"
+                >
 
               </label>
 
             </div>
 
 
-            <!-- SETS -->
-
-            <div
-              id="setAnalysisSetting"
-              class="analysis-target-setting"
-              hidden
-            >
-
-              <div class="form-row">
-
-                <label class="form-field">
-
-                  <span>세트</span>
-
-                  <div class="input-unit">
-
-                    <input
-                      id="analysisTargetSets"
-                      type="number"
-                      value="3"
-                      min="1"
-                      max="99"
-                    >
-
-                    <span>SET</span>
-
-                  </div>
-
-                </label>
-
-
-                <label class="form-field">
-
-                  <span>세트당 반복</span>
-
-                  <div class="input-unit">
-
-                    <input
-                      id="analysisRepsPerSet"
-                      type="number"
-                      value="5"
-                      min="1"
-                      max="999"
-                    >
-
-                    <span>REP</span>
-
-                  </div>
-
-                </label>
-
-              </div>
-
-            </div>
-
-
-            <!-- VIEW -->
+            <!-- CAMERA DIRECTION -->
 
             <div class="control-section">
 
@@ -1282,7 +1172,7 @@
                   data-analysis-mode="3d"
                   type="button"
                 >
-                  3D
+                  3D 추정
                 </button>
 
               </div>
@@ -1290,31 +1180,29 @@
             </div>
 
 
-            <!-- INPUT -->
+            <!-- SOURCES -->
 
             <button
-              id="connectCameraBtn"
               class="primary-button full"
+              id="connectCameraBtn"
               type="button"
             >
               📷 카메라 연결
             </button>
 
-
             <button
-              id="switchCameraBtn"
               class="secondary-button full"
+              id="switchCameraBtn"
               type="button"
             >
-              🔄 카메라 전환
+              🔄 전·후면 카메라 전환
             </button>
-
 
             <label
               class="upload-button"
               for="analysisVideoUpload"
             >
-              🎬 분석 영상 업로드
+              🎬 영상 업로드
             </label>
 
             <input
@@ -1324,12 +1212,11 @@
               hidden
             >
 
-
             <label
               class="upload-button"
               for="analysisImageUpload"
             >
-              🖼 분석 사진 업로드
+              🖼 사진 업로드
             </label>
 
             <input
@@ -1340,29 +1227,37 @@
             >
 
 
+            <!-- ACTION -->
+
             <button
-              id="startAnalysisBtn"
               class="primary-button full"
+              id="startAnalysisBtn"
               type="button"
             >
               ▶ 자세 분석 시작
             </button>
 
+            <button
+              class="danger-button full"
+              id="stopAnalysisBtn"
+              type="button"
+              disabled
+            >
+              ■ 분석 종료
+            </button>
 
             <button
-              id="stopAnalysisBtn"
-              class="danger-button full analysis-finish-button"
+              class="secondary-button full"
+              id="resetAnalysisBtn"
               type="button"
             >
-              ■ 분석 종료 · 리포트 생성
+              ↻ 분석 초기화
             </button>
 
           </aside>
 
 
-          <!-- =============================================
-               MOTION ANALYSIS
-          ============================================== -->
+          <!-- MAIN ANALYSIS -->
 
           <div class="analysis-main">
 
@@ -1382,10 +1277,9 @@
 
                 </div>
 
-
                 <span
-                  id="liveStatusBadge"
                   class="live-badge standby"
+                  id="liveStatusBadge"
                 >
                   ● STANDBY
                 </span>
@@ -1399,50 +1293,19 @@
 
                 <div>
 
-                  <span>
-                    현재 반복
-                  </span>
-
-                  <strong id="analysisRepDisplay">
-                    <span id="currentRepCount">0</span>
-                    REP
-                  </strong>
-
-                </div>
-
-
-                <div>
-
-                  <span>
-                    현재 세트
-                  </span>
-
-                  <strong id="analysisSetDisplay">
-                    FREE
-                  </strong>
-
-                </div>
-
-
-                <div>
-
-                  <span>
-                    총 수행
-                  </span>
+                  <span>반복 횟수</span>
 
                   <strong>
-                    <span id="analysisTotalReps">0</span>
-                    REP
+                    <span id="currentRepCount">0</span>
+                    <span id="targetRepDivider"></span>
+                    <span id="targetRepCount"></span>
                   </strong>
 
                 </div>
 
-
                 <div>
 
-                  <span>
-                    자세 점수
-                  </span>
+                  <span>자세 점수</span>
 
                   <strong id="currentPoseScore">
                     --
@@ -1450,12 +1313,9 @@
 
                 </div>
 
-
                 <div>
 
-                  <span>
-                    측정 시간
-                  </span>
+                  <span>측정 시간</span>
 
                   <strong id="analysisTimer">
                     00:00
@@ -1463,12 +1323,9 @@
 
                 </div>
 
-
                 <div>
 
-                  <span>
-                    REP 템포
-                  </span>
+                  <span>평균 템포</span>
 
                   <strong id="analysisTempo">
                     --
@@ -1481,7 +1338,7 @@
 
               <!-- VIEWER -->
 
-              <div class="motion-viewer">
+              <div class="motion-viewer" id="motionViewer">
 
                 <video
                   id="cameraVideo"
@@ -1490,7 +1347,6 @@
                   muted
                 ></video>
 
-
                 <video
                   id="uploadedVideo"
                   playsinline
@@ -1498,42 +1354,35 @@
                   hidden
                 ></video>
 
-
                 <img
                   id="uploadedImage"
                   alt="분석 이미지"
                   hidden
                 >
 
-
-                <!-- 33 POINT SKELETON -->
-
                 <canvas id="poseCanvas"></canvas>
-
-
-                <!-- BAR / BODY PATH -->
 
                 <canvas id="barPathCanvas"></canvas>
 
 
-                <!-- REFERENCE -->
+                <!-- REFERENCES -->
 
                 <div
-                  id="referenceVertical"
                   class="reference-line reference-vertical"
+                  id="referenceVertical"
                 ></div>
 
                 <div
-                  id="referenceHorizontal"
                   class="reference-line reference-horizontal"
+                  id="referenceHorizontal"
                 ></div>
 
 
                 <!-- PLACEHOLDER -->
 
                 <div
-                  id="viewerPlaceholder"
                   class="viewer-placeholder"
+                  id="viewerPlaceholder"
                 >
 
                   <div class="camera-target">
@@ -1551,9 +1400,12 @@
                 </div>
 
 
-                <!-- ANGLE OVERLAY -->
+                <!-- ANGLES -->
 
-                <div class="angle-overlay">
+                <div
+                  class="angle-overlay"
+                  id="angleOverlay"
+                >
 
                   <div class="angle-card">
 
@@ -1565,7 +1417,6 @@
 
                   </div>
 
-
                   <div class="angle-card">
 
                     <span>고관절</span>
@@ -1575,7 +1426,6 @@
                     </strong>
 
                   </div>
-
 
                   <div class="angle-card">
 
@@ -1587,7 +1437,6 @@
 
                   </div>
 
-
                   <div class="angle-card">
 
                     <span>발목</span>
@@ -1597,67 +1446,6 @@
                     </strong>
 
                   </div>
-
-                </div>
-
-
-                <div class="motion-capture-label">
-                  33 JOINT MOTION CAPTURE
-                </div>
-
-              </div>
-
-
-              <!-- SET CONTROL -->
-
-              <div
-                id="analysisSetControl"
-                class="analysis-set-control"
-                hidden
-              >
-
-                <div class="set-progress-info">
-
-                  <span>
-                    SET PROGRESS
-                  </span>
-
-                  <strong id="setProgressText">
-                    1 / 3 SET
-                  </strong>
-
-                </div>
-
-
-                <div class="set-progress-bar">
-
-                  <div
-                    id="setProgressFill"
-                    class="set-progress-fill"
-                  ></div>
-
-                </div>
-
-
-                <div class="set-control-buttons">
-
-                  <button
-                    id="finishCurrentSetBtn"
-                    class="secondary-button"
-                    type="button"
-                  >
-                    ✓ 현재 세트 완료
-                  </button>
-
-
-                  <button
-                    id="startNextSetBtn"
-                    class="primary-button"
-                    type="button"
-                    disabled
-                  >
-                    다음 세트 시작 →
-                  </button>
 
                 </div>
 
@@ -1689,7 +1477,6 @@
                   1F ▶
                 </button>
 
-
                 <select id="playbackSpeed">
 
                   <option value="0.1">
@@ -1714,26 +1501,32 @@
 
                 </select>
 
-
                 <button
                   id="toggleSkeletonBtn"
                   type="button"
                 >
-                  스켈레톤
+                  스켈레톤 ON
+                </button>
+
+                <button
+                  id="toggleAnglesBtn"
+                  type="button"
+                >
+                  각도 ON
                 </button>
 
                 <button
                   id="toggleReferenceBtn"
                   type="button"
                 >
-                  기준선
+                  기준선 ON
                 </button>
 
                 <button
                   id="toggleBarPathBtn"
                   type="button"
                 >
-                  궤적
+                  궤적 ON
                 </button>
 
               </div>
@@ -1741,9 +1534,7 @@
             </article>
 
 
-            <!-- ===========================================
-                 LIVE BIOMECHANICS
-            ============================================ -->
+            <!-- LIVE BIOMECHANICS -->
 
             <article class="panel">
 
@@ -1756,13 +1547,12 @@
                   </span>
 
                   <h3>
-                    실시간 움직임 데이터
+                    실시간 분석값
                   </h3>
 
                 </div>
 
               </div>
-
 
               <div class="biomechanics-grid">
 
@@ -1780,7 +1570,6 @@
 
                 </div>
 
-
                 <div class="bio-card">
 
                   <span>고관절 각도</span>
@@ -1794,7 +1583,6 @@
                   </small>
 
                 </div>
-
 
                 <div class="bio-card">
 
@@ -1810,7 +1598,6 @@
 
                 </div>
 
-
                 <div class="bio-card">
 
                   <span>발목 각도</span>
@@ -1825,7 +1612,6 @@
 
                 </div>
 
-
                 <div class="bio-card">
 
                   <span>좌우 대칭</span>
@@ -1838,7 +1624,6 @@
 
                 </div>
 
-
                 <div class="bio-card">
 
                   <span>ROM</span>
@@ -1847,12 +1632,9 @@
                     --
                   </strong>
 
-                  <small>
-                    RANGE OF MOTION
-                  </small>
+                  <small>RANGE OF MOTION</small>
 
                 </div>
-
 
                 <div class="bio-card">
 
@@ -1865,7 +1647,6 @@
                   <small>/100</small>
 
                 </div>
-
 
                 <div class="bio-card">
 
@@ -1884,9 +1665,7 @@
             </article>
 
 
-            <!-- ===========================================
-                 ANGLE CHART
-            ============================================ -->
+            <!-- ANGLE CHART -->
 
             <article class="panel">
 
@@ -1904,8 +1683,15 @@
 
                 </div>
 
-              </div>
+                <button
+                  id="clearAngleChartBtn"
+                  class="text-button"
+                  type="button"
+                >
+                  그래프 초기화
+                </button>
 
+              </div>
 
               <div class="chart-large">
                 <canvas id="angleChart"></canvas>
@@ -1914,39 +1700,76 @@
             </article>
 
 
-            <!-- ===========================================
-                 SET ANALYSIS
-            ============================================ -->
+            <!-- MOVEMENT PHASE -->
 
-            <article
-              class="panel"
-              id="setAnalysisPanel"
-            >
+            <article class="panel">
 
               <div class="panel-header">
 
                 <div>
 
                   <span class="eyebrow">
-                    SET ANALYSIS
+                    MOVEMENT PHASE
                   </span>
 
                   <h3>
-                    세트별 퍼포먼스
+                    현재 동작 단계
                   </h3>
 
                 </div>
 
               </div>
 
+              <div class="biomechanics-grid">
 
-              <div
-                id="setAnalysisList"
-                class="set-analysis-list"
-              >
+                <div class="bio-card">
 
-                <div class="empty-state">
-                  세트 분석 기록이 아직 없습니다.
+                  <span>동작 상태</span>
+
+                  <strong id="movementPhase">
+                    READY
+                  </strong>
+
+                  <small>
+                    PHASE
+                  </small>
+
+                </div>
+
+                <div class="bio-card">
+
+                  <span>하강 시간</span>
+
+                  <strong id="eccentricTime">
+                    --
+                  </strong>
+
+                  <small>SEC</small>
+
+                </div>
+
+                <div class="bio-card">
+
+                  <span>상승 시간</span>
+
+                  <strong id="concentricTime">
+                    --
+                  </strong>
+
+                  <small>SEC</small>
+
+                </div>
+
+                <div class="bio-card">
+
+                  <span>최근 반복</span>
+
+                  <strong id="lastRepTime">
+                    --
+                  </strong>
+
+                  <small>SEC</small>
+
                 </div>
 
               </div>
@@ -1954,9 +1777,7 @@
             </article>
 
 
-            <!-- ===========================================
-                 CHECKPOINT
-            ============================================ -->
+            <!-- CHECKPOINTS -->
 
             <article class="panel">
 
@@ -1976,10 +1797,9 @@
 
               </div>
 
-
               <div
-                id="checkpointList"
                 class="checkpoint-list"
+                id="checkpointList"
               >
 
                 <div class="checkpoint-row">
@@ -1997,9 +1817,7 @@
             </article>
 
 
-            <!-- ===========================================
-                 RECOMMENDATIONS
-            ============================================ -->
+            <!-- RECOMMENDATIONS -->
 
             <article class="panel recommendation-panel">
 
@@ -2019,14 +1837,13 @@
 
               </div>
 
-
               <div
                 id="trainingRecommendations"
                 class="recommendation-grid"
               >
 
                 <div class="empty-state">
-                  분석 결과에 따라 보강 운동이 표시됩니다.
+                  분석 완료 후 추천 훈련이 표시됩니다.
                 </div>
 
               </div>
@@ -2062,15 +1879,14 @@
             </h2>
 
             <p>
-              선수별 웨이트 자세 분석 결과를 확인합니다.
+              저장된 선수별 웨이트 모션 분석 결과입니다.
             </p>
 
           </div>
 
-
           <button
-            id="exportCSVBtn"
             class="secondary-button"
+            id="exportCSVBtn"
             type="button"
           >
             CSV 저장
@@ -2114,15 +1930,14 @@
                   <th>측정일</th>
                   <th>선수</th>
                   <th>운동</th>
-                  <th>세트</th>
-                  <th>총 REP</th>
+                  <th>반복</th>
                   <th>점수</th>
                   <th>대칭성</th>
-                  <th>보기</th>
+                  <th>ROM</th>
+                  <th>상세</th>
                 </tr>
 
               </thead>
-
 
               <tbody id="recordsTableBody">
 
@@ -2204,7 +2019,9 @@
               <span>선수</span>
 
               <select id="programAthlete">
-                <option value="">선수 선택</option>
+                <option value="">
+                  선수 선택
+                </option>
               </select>
 
             </label>
@@ -2228,7 +2045,9 @@
               <span>운동</span>
 
               <select id="programExercise">
-                <option value="">운동 선택</option>
+                <option value="">
+                  운동 선택
+                </option>
               </select>
 
             </label>
@@ -2245,10 +2064,10 @@
                   type="number"
                   value="3"
                   min="1"
+                  max="20"
                 >
 
               </label>
-
 
               <label class="form-field">
 
@@ -2259,6 +2078,7 @@
                   type="number"
                   value="8"
                   min="1"
+                  max="100"
                 >
 
               </label>
@@ -2311,9 +2131,25 @@
             </div>
 
 
+            <label class="form-field">
+
+              <span>RPE 목표</span>
+
+              <input
+                id="programRPE"
+                type="number"
+                value="7"
+                min="1"
+                max="10"
+                step="0.5"
+              >
+
+            </label>
+
+
             <button
-              id="addProgramExerciseBtn"
               class="primary-button full"
+              id="addProgramExerciseBtn"
               type="button"
             >
               + 운동 추가
@@ -2340,7 +2176,6 @@
 
             </div>
 
-
             <div
               id="programExerciseList"
               class="program-exercise-list"
@@ -2352,47 +2187,28 @@
 
             </div>
 
-
             <div class="program-summary">
 
               <div>
-
                 <span>운동 수</span>
-
-                <strong id="programExerciseCount">
-                  0
-                </strong>
-
+                <strong id="programExerciseCount">0</strong>
               </div>
 
-
               <div>
-
                 <span>총 세트</span>
-
-                <strong id="programTotalSets">
-                  0
-                </strong>
-
+                <strong id="programTotalSets">0</strong>
               </div>
 
-
               <div>
-
                 <span>예상 볼륨</span>
-
-                <strong id="programTotalVolume">
-                  0 kg
-                </strong>
-
+                <strong id="programTotalVolume">0 kg</strong>
               </div>
 
             </div>
 
-
             <button
-              id="saveProgramBtn"
               class="primary-button full"
+              id="saveProgramBtn"
               type="button"
             >
               프로그램 저장
@@ -2401,6 +2217,38 @@
           </article>
 
         </div>
+
+
+        <article class="panel" style="margin-top:20px">
+
+          <div class="panel-header">
+
+            <div>
+
+              <span class="eyebrow">
+                SAVED PROGRAMS
+              </span>
+
+              <h3>
+                저장 프로그램
+              </h3>
+
+            </div>
+
+          </div>
+
+          <div
+            id="savedProgramList"
+            class="program-exercise-list"
+          >
+
+            <div class="empty-state">
+              저장된 프로그램이 없습니다.
+            </div>
+
+          </div>
+
+        </article>
 
       </section>
 
@@ -2427,7 +2275,7 @@
             </h2>
 
             <p>
-              움직임 분석과 세트별 퍼포먼스, 추천 훈련을 확인합니다.
+              분석 결과와 운동 이미지, 육각형 및 훈련 권장사항을 확인합니다.
             </p>
 
           </div>
@@ -2444,24 +2292,36 @@
               <span>선수 선택</span>
 
               <select id="reportAthlete">
-                <option value="">선수 선택</option>
+                <option value="">
+                  선수 선택
+                </option>
               </select>
 
             </label>
 
+            <label class="form-field">
+
+              <span>분석 기록</span>
+
+              <select id="reportRecord">
+                <option value="">
+                  최근 기록
+                </option>
+              </select>
+
+            </label>
 
             <button
-              id="generateReportBtn"
               class="primary-button full"
+              id="generateReportBtn"
               type="button"
             >
               보고서 생성
             </button>
 
-
             <button
-              id="printReportBtn"
               class="secondary-button full"
+              id="printReportBtn"
               type="button"
             >
               인쇄 · PDF 저장
@@ -2471,8 +2331,8 @@
 
 
           <article
-            id="reportPaper"
             class="report-paper"
+            id="reportPaper"
           >
 
             <header class="report-header">
@@ -2493,7 +2353,6 @@
 
               </div>
 
-
               <div class="report-score">
 
                 <strong id="reportOverallScore">
@@ -2509,12 +2368,13 @@
             </header>
 
 
+            <!-- 1 -->
+
             <section class="report-section">
 
               <h3>
                 1. 선수 정보
               </h3>
-
 
               <div class="report-info-grid">
 
@@ -2543,18 +2403,19 @@
             </section>
 
 
+            <!-- 2 -->
+
             <section class="report-section">
 
               <h3>
                 2. 분석 운동
               </h3>
 
-
               <div class="report-exercise-card">
 
                 <div
-                  id="reportExercisePictogram"
                   class="report-exercise-pictogram"
+                  id="reportExercisePictogram"
                 >
                   🏋
                 </div>
@@ -2576,44 +2437,12 @@
             </section>
 
 
-            <section class="report-section">
-
-              <h3>
-                3. 세션 결과
-              </h3>
-
-
-              <div class="report-score-grid">
-
-                <div>
-                  <span>분석 방식</span>
-                  <strong id="reportSessionMode">-</strong>
-                </div>
-
-                <div>
-                  <span>완료 세트</span>
-                  <strong id="reportCompletedSets">-</strong>
-                </div>
-
-                <div>
-                  <span>총 반복</span>
-                  <strong id="reportTotalReps">-</strong>
-                </div>
-
-                <div>
-                  <span>평균 템포</span>
-                  <strong id="reportAverageTempo">-</strong>
-                </div>
-
-              </div>
-
-            </section>
-
+            <!-- 3 -->
 
             <section class="report-section">
 
               <h3>
-                4. 퍼포먼스 육각형
+                3. 퍼포먼스 육각형
               </h3>
 
               <div class="report-radar">
@@ -2623,12 +2452,13 @@
             </section>
 
 
+            <!-- 4 -->
+
             <section class="report-section">
 
               <h3>
-                5. 움직임 분석
+                4. 움직임 분석
               </h3>
-
 
               <div class="report-score-grid">
 
@@ -2667,42 +2497,65 @@
             </section>
 
 
-            <section class="report-section">
-
-              <h3>
-                6. 세트별 분석
-              </h3>
-
-              <div
-                id="reportSetAnalysis"
-                class="report-set-analysis"
-              >
-                세트 기록이 없습니다.
-              </div>
-
-            </section>
-
+            <!-- 5 -->
 
             <section class="report-section">
 
               <h3>
-                7. 자세 분석 장면
+                5. 자세 분석 장면
               </h3>
 
               <div
-                id="reportAnalysisFrame"
                 class="report-analysis-frame"
+                id="reportAnalysisFrame"
               >
-                분석 영상의 대표 프레임이 표시됩니다.
+                분석 대표 프레임이 표시됩니다.
               </div>
 
             </section>
 
 
+            <!-- 6 -->
+
             <section class="report-section">
 
               <h3>
-                8. 훈련 권장사항
+                6. 측정 결과
+              </h3>
+
+              <div class="report-info-grid">
+
+                <div>
+                  <span>반복</span>
+                  <strong id="reportReps">-</strong>
+                </div>
+
+                <div>
+                  <span>평균 무릎 각도</span>
+                  <strong id="reportKneeAngle">-</strong>
+                </div>
+
+                <div>
+                  <span>평균 고관절 각도</span>
+                  <strong id="reportHipAngle">-</strong>
+                </div>
+
+                <div>
+                  <span>ROM</span>
+                  <strong id="reportROM">-</strong>
+                </div>
+
+              </div>
+
+            </section>
+
+
+            <!-- 7 -->
+
+            <section class="report-section">
+
+              <h3>
+                7. 훈련 권장사항
               </h3>
 
               <div
@@ -2743,7 +2596,7 @@
             </h2>
 
             <p>
-              모션캡처 표시와 데이터를 관리합니다.
+              분석 표시와 데이터 저장 옵션을 관리합니다.
             </p>
 
           </div>
@@ -2755,15 +2608,18 @@
 
           <article class="panel">
 
-            <h3>
-              모션캡처 표시
-            </h3>
+            <span class="eyebrow">
+              DISPLAY
+            </span>
 
+            <h3>
+              분석 표시
+            </h3>
 
             <label class="toggle-row">
 
               <span>
-                33관절 스켈레톤
+                스켈레톤 표시
               </span>
 
               <input
@@ -2774,11 +2630,10 @@
 
             </label>
 
-
             <label class="toggle-row">
 
               <span>
-                관절 각도
+                관절 각도 표시
               </span>
 
               <input
@@ -2789,11 +2644,10 @@
 
             </label>
 
-
             <label class="toggle-row">
 
               <span>
-                기준선
+                기준선 표시
               </span>
 
               <input
@@ -2803,7 +2657,6 @@
               >
 
             </label>
-
 
             <label class="toggle-row">
 
@@ -2824,19 +2677,21 @@
 
           <article class="panel">
 
+            <span class="eyebrow">
+              DATA
+            </span>
+
             <h3>
               데이터 관리
             </h3>
 
-
             <button
-              id="backupDataBtn"
               class="secondary-button full"
+              id="backupDataBtn"
               type="button"
             >
               데이터 백업
             </button>
-
 
             <label
               class="upload-button"
@@ -2852,10 +2707,9 @@
               hidden
             >
 
-
             <button
-              id="clearDataBtn"
               class="danger-button full"
+              id="clearDataBtn"
               type="button"
             >
               모든 데이터 초기화
@@ -2874,7 +2728,6 @@
               시스템 정보
             </h3>
 
-
             <div class="system-info-list">
 
               <div>
@@ -2883,8 +2736,15 @@
               </div>
 
               <div>
-                <span>Pose Tracking</span>
-                <strong>33 LANDMARKS</strong>
+                <span>Motion Engine</span>
+                <strong id="settingsMotionEngine">
+                  READY
+                </strong>
+              </div>
+
+              <div>
+                <span>Landmarks</span>
+                <strong>33 JOINTS</strong>
               </div>
 
               <div>
@@ -2898,13 +2758,8 @@
               </div>
 
               <div>
-                <span>Video Analysis</span>
-                <strong>SUPPORTED</strong>
-              </div>
-
-              <div>
-                <span>Session Mode</span>
-                <strong>FREE · REP · SET</strong>
+                <span>Storage</span>
+                <strong>LOCAL DATABASE</strong>
               </div>
 
             </div>
@@ -2927,75 +2782,97 @@
 ====================================================== -->
 
 <div
-  id="exerciseModal"
   class="modal"
+  id="exerciseModal"
 >
 
   <div class="modal-card">
 
     <button
-      id="closeExerciseModal"
       class="modal-close"
+      id="closeExerciseModal"
       type="button"
     >
       ×
     </button>
 
-
     <div
-      id="modalExercisePictogram"
       class="modal-pictogram"
+      id="modalExercisePictogram"
     >
       🏋
     </div>
 
-
     <span
-      id="modalExerciseCategory"
       class="eyebrow"
+      id="modalExerciseCategory"
     >
       EXERCISE
     </span>
-
 
     <h2 id="modalExerciseName">
       운동
     </h2>
 
-
     <p id="modalExerciseDescription">
       -
     </p>
 
-
     <div class="exercise-detail-grid">
 
       <div>
-        <span>주요 부위</span>
-        <strong id="modalExerciseMuscles">-</strong>
+
+        <span>
+          주요 부위
+        </span>
+
+        <strong id="modalExerciseMuscles">
+          -
+        </strong>
+
       </div>
 
       <div>
-        <span>장비</span>
-        <strong id="modalExerciseEquipment">-</strong>
+
+        <span>
+          장비
+        </span>
+
+        <strong id="modalExerciseEquipment">
+          -
+        </strong>
+
       </div>
 
       <div>
-        <span>권장 촬영</span>
-        <strong id="modalExerciseView">-</strong>
+
+        <span>
+          권장 촬영
+        </span>
+
+        <strong id="modalExerciseView">
+          -
+        </strong>
+
       </div>
 
       <div>
-        <span>분석 항목</span>
-        <strong id="modalExerciseMetrics">-</strong>
+
+        <span>
+          분석 항목
+        </span>
+
+        <strong id="modalExerciseMetrics">
+          -
+        </strong>
+
       </div>
 
     </div>
 
-
     <button
-      id="analyzeSelectedExerciseBtn"
       class="primary-button full"
+      id="analyzeSelectedExerciseBtn"
       type="button"
     >
       ◎ 이 운동 자세 분석
@@ -3007,24 +2884,23 @@
 
 
 <!-- =====================================================
-     RECORD MODAL
+     RECORD DETAIL MODAL
 ====================================================== -->
 
 <div
-  id="recordModal"
   class="modal"
+  id="recordModal"
 >
 
   <div class="modal-card large">
 
     <button
-      id="closeRecordModal"
       class="modal-close"
+      id="closeRecordModal"
       type="button"
     >
       ×
     </button>
-
 
     <span class="eyebrow">
       ANALYSIS DETAIL
@@ -3033,7 +2909,6 @@
     <h2>
       분석 상세
     </h2>
-
 
     <div
       id="recordDetailContent"
@@ -3045,7 +2920,77 @@
 </div>
 
 
-<!-- TOAST -->
+<!-- =====================================================
+     ANALYSIS FINISHED MODAL
+====================================================== -->
+
+<div
+  class="modal"
+  id="analysisFinishedModal"
+>
+
+  <div class="modal-card">
+
+    <span class="eyebrow">
+      ANALYSIS COMPLETE
+    </span>
+
+    <h2>
+      분석 완료
+    </h2>
+
+    <p>
+      측정 결과가 저장되었습니다.
+    </p>
+
+    <div class="exercise-detail-grid">
+
+      <div>
+        <span>반복</span>
+        <strong id="finishedReps">0</strong>
+      </div>
+
+      <div>
+        <span>점수</span>
+        <strong id="finishedScore">--</strong>
+      </div>
+
+      <div>
+        <span>대칭성</span>
+        <strong id="finishedSymmetry">--</strong>
+      </div>
+
+      <div>
+        <span>ROM</span>
+        <strong id="finishedROM">--</strong>
+      </div>
+
+    </div>
+
+    <button
+      class="primary-button full"
+      id="finishedReportBtn"
+      type="button"
+    >
+      리포트 보기
+    </button>
+
+    <button
+      class="secondary-button full"
+      id="finishedNewAnalysisBtn"
+      type="button"
+    >
+      새 분석
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     TOAST
+====================================================== -->
 
 <div
   id="toast"
@@ -3054,9 +2999,8 @@
 
 
 <!-- =====================================================
-     SCRIPTS
-
-     analysis.js / report.js 사용 안 함
+     SCRIPT
+     반드시 이 순서
 ====================================================== -->
 
 <script src="exercises.js"></script>
